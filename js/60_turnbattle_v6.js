@@ -3376,6 +3376,9 @@
         targetUid: target.uid,
         targetSide: enemySideKey,
         dmg: _atkDmg,   // 팅 밴드 판정용 (2026-06-16)
+        /* diagnosis-confirmed: 2026-06-16 사유: feature — 발사체 VFX 게임적용(사용자 "게임적용" 컨펌). unit-attack 에 dmgType+element 동봉 → UI 분기. */
+        dmgType: attacker.dmgType,   // ranged=화살 / magic=마법탄 / 그외=melee lunge
+        element: attacker.element,   // magic 원소색·모양 (fire/water/earth/lightning/holy/dark)
       });
     }
 
