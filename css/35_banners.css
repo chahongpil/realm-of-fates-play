@@ -1,0 +1,29 @@
+/* ==========================================================
+   35_banners.css — P0 배너 활성화 (2026-04-13)
+   교훈: 투명 여백이 있는 PNG 를 background-size:100% 100% 로 깔면
+   부모 배경이 여백으로 투과됨 → 반드시 불투명 폴백 레이어 동반.
+   (.claude/rules/08-garbage-lessons.md 참고)
+   ========================================================== */
+
+/* 2026-05-02: stone 텍스처 PNG 폐기 (사용자 결정) — 단순 색 + border 로 롤백.
+   banner_screen_title.png / banner_modal_box.png 모두 trash 이동. */
+
+/* 화면 타이틀 — 단순 황금 border + 어두운 그라디언트 */
+body.game-mode .char-select-title,
+body.game-mode .form-title,
+body.game-mode .upgrade-title,
+body.game-mode .choice-title,
+body.game-mode .reward-title,
+body.game-mode .pick-title {
+  background:linear-gradient(180deg, #2a1f14, #1a0f08);
+  border: 2px solid var(--curr-gold, #d4a84a);
+  border-radius: 4px;
+  padding: 14px 32px;
+}
+
+/* 일반 모달 박스 — 단순 색 (30_components.css 의 .modal-box default 와 통일) */
+body.game-mode .modal-box {
+  background:linear-gradient(180deg, #1f1812, #0f0a06);
+  border: 2px solid var(--curr-gold-dark, #6e4a2a);
+  border-radius: 6px;
+}

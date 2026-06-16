@@ -1,0 +1,714 @@
+/* design-confirmed: 2026-05-24 사유: 선술집 용병모집 v3 정본 적용 (시안 통째 ABC)
+   custom: 사용자 공급 시안 0.claulde.design/20260524/선술집_용병모집_디자인_0524/tavern_recruit.html 정합.
+   battle_system_decisions.md §선술집 용병 영입 표준 룰 / feature_manifest 3.18
+
+   범위: #tavern-screen 안 모든 element (tav- prefix)
+   옛 룰 (css/42_screens.css 의 #tavern-screen / .tavern-card-wrap / .tavern-grid / .tavern-reveal / --tav-grid-x 토큰 등)
+   은 이 파일이 override (cascade order 늦음, 더 specific selector). */
+
+/* ── 토큰 (시안 그대로) ── */
+body.game-mode #tavern-screen{
+  --tav-bg-0:#0a0805; --tav-bg-1:#1a0f08; --tav-bg-2:#2b1c13; --tav-bg-3:#3a2819;
+  --tav-text-0:#f6e9c4; --tav-text-1:#e8d5a3; --tav-text-2:#a89876; --tav-text-3:#7a6c52; --tav-text-4:#5a4a32;
+  --tav-gilt:#d4a84a; --tav-gilt-deep:#8b6914; --tav-gilt-pale:#f1d890;
+  --tav-border-1:#3a2819; --tav-border-2:#5a4022; --tav-border-3:#7a5a2e;
+  --tav-rubric:#8b1a1a;
+}
+
+/* ── #tavern-screen reset: 옛 .screen flex 풀고 1280×720 absolute layout ── */
+body.game-mode #tavern-screen.active{
+  display: block;
+  flex-direction: unset;
+  align-items: unset;
+}
+body.game-mode #tavern-screen{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 35%, rgba(232,150,60,.10), transparent 65%),
+    linear-gradient(180deg, #14100a 0%, #0a0805 100%);
+  color: var(--tav-text-1);
+  font-family: 'Noto Sans KR', sans-serif;
+}
+body.game-mode #tavern-screen::before{
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle 220px at 16% 92%, rgba(232,120,30,.22), transparent 70%),
+    radial-gradient(circle 200px at 84% 90%, rgba(232,90,30,.18), transparent 70%);
+  mix-blend-mode: screen;
+  animation: tav-flicker 5s ease-in-out infinite alternate;
+}
+@keyframes tav-flicker { 0%{opacity:.7;} 50%{opacity:1;} 100%{opacity:.75;} }
+
+/* inner wrapper takes shake (so we don't fight game-root scale) */
+body.game-mode .tav-screen-inner{
+  position: absolute; inset: 0;
+}
+
+/* ── TOPBAR (56px) ── */
+body.game-mode .tav-topbar{
+  position: absolute; top: 0; left: 0; right: 0; height: 56px;
+  display: flex; align-items: center; padding: 0 28px; z-index: 5;
+}
+body.game-mode .tav-iconbtn{
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #3a2819, #1a0f08 80%);
+  border: 1px solid var(--tav-border-3); color: var(--tav-gilt); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.15), 0 2px 6px rgba(0,0,0,.6);
+}
+body.game-mode .tav-iconbtn:hover{ border-color: var(--tav-gilt); }
+body.game-mode .tav-crumb{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .4em; color: var(--tav-text-2);
+  text-transform: uppercase; margin-left: 16px;
+}
+body.game-mode .tav-title{
+  font: 800 20px/1 'Cinzel','Noto Serif KR'; color: var(--tav-gilt-pale);
+  letter-spacing: .16em; margin-left: 12px;
+}
+body.game-mode .tav-gilt-line{
+  flex: 1; height: 1px; margin: 0 20px;
+  background: linear-gradient(90deg, transparent, var(--tav-gilt-deep) 12%, var(--tav-gilt) 50%, var(--tav-gilt-deep) 88%, transparent);
+}
+body.game-mode .tav-meta{ display: flex; gap: 10px; align-items: center; }
+body.game-mode .tav-coin{
+  display: flex; gap: 6px; align-items: center; padding: 6px 12px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tav-border-2); border-radius: 9999px;
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .12em; color: var(--tav-text-2);
+}
+body.game-mode .tav-coin b{
+  color: var(--tav-gilt-pale); font-weight: 800; font-variant-numeric: tabular-nums; font-size: 12px;
+}
+
+/* ── NPC BAR (top 68, 64px) ── */
+body.game-mode .tav-npc-bar{
+  position: absolute; top: 68px; left: 24px; right: 24px; height: 64px;
+  display: flex; align-items: center; gap: 14px; padding: 0 18px;
+  background: linear-gradient(180deg, rgba(43,28,19,.88), rgba(26,15,8,.88));
+  border: 1px solid var(--tav-border-2);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.08), 0 4px 10px rgba(0,0,0,.5);
+}
+body.game-mode .tav-npc-bar::before,
+body.game-mode .tav-npc-bar::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 10px; height: 10px; border: 1px solid var(--tav-gilt);
+}
+body.game-mode .tav-npc-bar::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tav-npc-bar::after { right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tav-npc-portrait{
+  width: 46px; height: 46px; border-radius: 50%; flex: 0 0 46px;
+  background: radial-gradient(circle at 30% 30%, #5a3a22, #1a0f08 80%);
+  border: 2px solid var(--tav-gilt-deep);
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+  box-shadow: 0 0 10px rgba(232,150,60,.4);
+}
+body.game-mode .tav-npc-meta{ flex: 0 0 auto; }
+body.game-mode .tav-npc-name{
+  font: 800 13px/1 'Cinzel','Noto Serif KR'; color: var(--tav-gilt-pale); letter-spacing: .04em;
+}
+body.game-mode .tav-npc-role{
+  font: 400 8px/1 'Noto Sans KR'; color: var(--tav-text-3);
+  letter-spacing: .3em; margin-top: 4px; text-transform: uppercase;
+}
+body.game-mode .tav-npc-line{
+  flex: 1; padding: 10px 14px;
+  background: rgba(10,6,4,.5); border: 1px solid var(--tav-border-1);
+  font: 400 12px/1.4 'Noto Serif KR', serif; color: var(--tav-text-1); font-style: italic;
+  position: relative;
+}
+body.game-mode .tav-npc-line::before{
+  content: ""; position: absolute; left: -7px; top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 11px; height: 11px; background: rgba(10,6,4,.5);
+  border-left: 1px solid var(--tav-border-1); border-bottom: 1px solid var(--tav-border-1);
+}
+body.game-mode .tav-btn-refresh{
+  padding: 8px 14px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tav-border-3); color: var(--tav-gilt-pale);
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .2em; text-transform: uppercase; cursor: pointer;
+  position: relative; flex: 0 0 auto;
+}
+body.game-mode .tav-btn-refresh::before,
+body.game-mode .tav-btn-refresh::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 6px; height: 6px; border: 1px solid var(--tav-gilt);
+}
+body.game-mode .tav-btn-refresh::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tav-btn-refresh::after { right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tav-btn-refresh:hover{ border-color: var(--tav-gilt); color: var(--tav-gilt); }
+body.game-mode .tav-btn-refresh .cost{
+  color: var(--tav-gilt); font-weight: 800; margin-left: 5px; font-size: 10px;
+}
+
+/* ── SECTION HEADING (top 142) ── */
+body.game-mode .tav-heading{
+  position: absolute; top: 142px; left: 24px; right: 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+body.game-mode .tav-heading .label{
+  font: 700 8px/1 'Noto Sans KR'; letter-spacing: .5em;
+  color: var(--tav-gilt-pale); text-transform: uppercase;
+}
+body.game-mode .tav-heading .ko{
+  font: 800 14px/1 'Cinzel','Noto Serif KR'; color: var(--tav-text-0); letter-spacing: .16em;
+}
+body.game-mode .tav-heading .tav-gilt-line{ flex: 1; }
+body.game-mode .tav-deck-pill{
+  padding: 4px 10px; background: rgba(10,6,4,.6); border: 1px solid var(--tav-border-2);
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .14em; color: var(--tav-text-2);
+}
+body.game-mode .tav-deck-pill b{
+  color: var(--tav-gilt); font-weight: 800; font-variant-numeric: tabular-nums; font-size: 11px;
+}
+
+/* ── RECRUIT GRID (top 178 ~ bottom 78) — 옛 #tav-grid override ── */
+body.game-mode #tavern-screen > .tav-screen-inner > #tav-grid,
+body.game-mode #tav-grid.tav-recruit{
+  position: absolute; top: 178px; left: 24px; right: 24px; bottom: 78px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+  align-items: start;
+  /* 옛 inline style override (display:flex 등) */
+  flex-wrap: unset; padding: 0; justify-content: unset;
+  width: auto; height: auto;
+}
+
+/* ── SLOT (244×374 안 — 4 column / gap 18) ── */
+body.game-mode .tav-slot{
+  position: relative;
+  background: linear-gradient(180deg, rgba(20,16,10,.78), rgba(10,8,5,.92));
+  border: 1px solid var(--tav-border-2);
+  overflow: visible;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 42px 14px 14px; gap: 10px; height: 100%; box-sizing: border-box;
+}
+body.game-mode .tav-slot::before{
+  content: ""; position: absolute; inset: 4px;
+  border: 1px solid rgba(212,168,74,.18); pointer-events: none;
+}
+body.game-mode .tav-slot::after{
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--tav-gilt-deep), transparent);
+}
+body.game-mode .tav-slot:hover{ border-color: var(--tav-gilt); }
+body.game-mode .tav-slot:hover::before{ border-color: var(--tav-gilt-deep); }
+
+body.game-mode .tav-slot.is-hired{
+  background: repeating-linear-gradient(45deg, #1a0f08 0 5px, #221610 5px 10px);
+  border-style: dashed; border-color: var(--tav-border-2);
+  justify-content: center; cursor: not-allowed; padding: 14px;
+}
+body.game-mode .tav-slot.is-hired::before{ border-color: rgba(212,168,74,.1); }
+body.game-mode .tav-slot.is-hired:hover{ border-color: var(--tav-border-2); }
+body.game-mode .tav-slot.is-hired .tav-empty-msg{
+  font: 700 9px/1.5 'Noto Sans KR'; letter-spacing: .3em;
+  color: var(--tav-text-4); text-transform: uppercase; text-align: center;
+}
+body.game-mode .tav-slot.is-hired .tav-empty-msg .ko{
+  display: block; color: var(--tav-gilt-pale);
+  font: 800 12px/1 'Cinzel','Noto Serif KR'; letter-spacing: .16em; margin-bottom: 6px;
+}
+
+/* ROLE CHIP (top-left) */
+body.game-mode .tav-role-chip{
+  position: absolute; top: 8px; left: 10px; z-index: 3;
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
+  background: rgba(10,6,4,.85); border: 1px solid var(--tav-border-3); border-radius: 9999px;
+  font: 700 8px/1 'Noto Sans KR'; letter-spacing: .2em;
+  color: var(--tav-gilt-pale); text-transform: uppercase;
+}
+body.game-mode .tav-role-chip .icon{ font-size: 10px; color: var(--tav-gilt); }
+
+/* DAILY (top-right) */
+body.game-mode .tav-daily{
+  position: absolute; top: 8px; right: 10px; z-index: 3;
+  padding: 3px 8px;
+  background: rgba(10,6,4,.85); border: 1px solid var(--tav-border-1); border-radius: 9999px;
+  font: 400 8px/1 'Noto Sans KR'; letter-spacing: .2em;
+  color: var(--tav-text-3); text-transform: uppercase;
+}
+body.game-mode .tav-daily b{ color: var(--tav-gilt-pale); font-weight: 700; }
+
+/* CARD WRAP — V4 240×336 scale .9 fit slot */
+body.game-mode .tav-card-wrap{
+  transform: scale(.9); transform-origin: top center;
+  margin-top: -2px; margin-bottom: -30px;
+}
+
+/* ── FLIPPER (3D rotateY 700ms) ── */
+body.game-mode .tav-flipper{
+  position: relative; width: 240px; height: 336px;
+  perspective: 1400px;
+}
+body.game-mode .tav-flip-inner{
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(.4,.2,.2,1);
+}
+body.game-mode .tav-flipper.is-revealed .tav-flip-inner{
+  transform: rotateY(180deg);
+}
+body.game-mode .tav-flip-face{
+  position: absolute; inset: 0;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transform: translateZ(0); -webkit-transform: translateZ(0);
+}
+body.game-mode .tav-flip-back{ transform: rotateY(0deg) translateZ(0); }
+body.game-mode .tav-flip-front{ transform: rotateY(180deg) translateZ(0); }
+
+/* CARD BACK (사용자 공급 img/card_back_0523.png + amber glow pulse) */
+body.game-mode .tav-card-back-art{
+  width: 240px; height: 336px; position: relative;
+  /* url 은 CSS 파일 (css/) 기준 → ../img/ 로 game root 의 img 폴더 참조
+     2026-05-24 v3 자산 교체 — card_back_0523 → card_back_0524 (사용자 공급 투명 배경 버전, 23MB) */
+  background: url('../img/ui/card_backs/card_back_0524.png') center/cover no-repeat,
+              linear-gradient(180deg, #14100a, #0a0805);
+  border: 2px solid var(--tav-gilt);
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0,0,0,.7), inset 0 0 0 1px rgba(0,0,0,.7);
+}
+body.game-mode .tav-card-back-art.has-glow::after{
+  content: ""; position: absolute; inset: -2px; pointer-events: none;
+  box-shadow: 0 0 18px rgba(232,189,74,.4);
+  border-radius: inherit;
+  animation: tav-back-glow 2.4s ease-in-out infinite alternate;
+}
+@keyframes tav-back-glow { 0%{opacity:0;} 100%{opacity:1;} }
+
+/* CARD lift + brightness settle on reveal */
+body.game-mode .tav-flipper.is-revealing{ z-index: 50; }
+body.game-mode .tav-flipper.is-revealed .tav-flip-front{
+  animation: tav-card-settle 600ms ease-out 700ms backwards;
+}
+@keyframes tav-card-settle{
+  0%   { filter: brightness(2) saturate(1.3); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+/* ── REVEAL FX (slot 내부 burst, 5단계) ── */
+body.game-mode .tav-reveal-fx{
+  position: absolute; inset: 0; pointer-events: none;
+  opacity: 0; z-index: 0;
+}
+body.game-mode .tav-flipper.is-revealing .tav-reveal-fx{
+  animation: tav-fx-life 1400ms ease-out forwards;
+}
+@keyframes tav-fx-life{
+  0%{opacity:0;} 15%{opacity:1;} 65%{opacity:1;} 100%{opacity:0;}
+}
+
+/* common (bronze) — silent dust mote */
+body.game-mode .tav-reveal-fx.tier-common{
+  background: radial-gradient(circle at 50% 50%, rgba(184,184,176,.35), transparent 55%);
+}
+
+/* rare (silver) — blue spark ring */
+body.game-mode .tav-reveal-fx.tier-rare::before{
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(74,128,232,.5), transparent 55%);
+}
+body.game-mode .tav-reveal-fx.tier-rare::after{
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 80px; height: 80px; margin: -40px 0 0 -40px;
+  border-radius: 50%; border: 2px solid #6aa0ff;
+  box-shadow: 0 0 24px #6aa0ff, inset 0 0 16px #6aa0ff;
+  animation: tav-ring-expand 1.4s ease-out forwards;
+}
+@keyframes tav-ring-expand{
+  0%{transform:scale(.3);opacity:0;}
+  20%{transform:scale(.6);opacity:1;}
+  100%{transform:scale(2.6);opacity:0;}
+}
+
+/* noble (gold) — purple sparkles + double ring */
+body.game-mode .tav-reveal-fx.tier-noble::before{
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(170,80,220,.55), transparent 55%),
+    radial-gradient(circle at 30% 25%, rgba(255,170,255,.8) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 30%, rgba(255,200,255,.7) 0 2px, transparent 3px),
+    radial-gradient(circle at 60% 75%, rgba(255,180,255,.7) 0 2px, transparent 3px),
+    radial-gradient(circle at 25% 70%, rgba(255,210,255,.8) 0 2px, transparent 3px);
+}
+body.game-mode .tav-reveal-fx.tier-noble::after{
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 80px; height: 80px; margin: -40px 0 0 -40px;
+  border-radius: 50%; border: 2px solid #c87dff;
+  box-shadow: 0 0 32px #c87dff, inset 0 0 18px #c87dff;
+  animation: tav-ring-expand 1.4s ease-out forwards;
+}
+
+/* legendary — golden burst + radiating rays */
+body.game-mode .tav-reveal-fx.tier-legendary::before{
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,210,90,.7), rgba(255,160,50,.3) 35%, transparent 60%),
+    conic-gradient(from 0deg at 50% 50%,
+      transparent 0deg, rgba(255,220,120,.45) 8deg, transparent 16deg,
+      transparent 36deg, rgba(255,220,120,.45) 44deg, transparent 52deg,
+      transparent 72deg, rgba(255,220,120,.45) 80deg, transparent 88deg,
+      transparent 108deg, rgba(255,220,120,.45) 116deg, transparent 124deg,
+      transparent 144deg, rgba(255,220,120,.45) 152deg, transparent 160deg,
+      transparent 180deg, rgba(255,220,120,.45) 188deg, transparent 196deg,
+      transparent 216deg, rgba(255,220,120,.45) 224deg, transparent 232deg,
+      transparent 252deg, rgba(255,220,120,.45) 260deg, transparent 268deg,
+      transparent 288deg, rgba(255,220,120,.45) 296deg, transparent 304deg,
+      transparent 324deg, rgba(255,220,120,.45) 332deg, transparent 340deg, transparent 360deg);
+  mix-blend-mode: screen;
+  animation: tav-rays-spin 1.4s linear;
+}
+body.game-mode .tav-reveal-fx.tier-legendary::after{
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 100px; height: 100px; margin: -50px 0 0 -50px;
+  border-radius: 50%; border: 3px solid #ffd76a;
+  box-shadow: 0 0 48px #ffb84a, inset 0 0 22px #ffe084;
+  animation: tav-ring-expand 1.4s ease-out forwards;
+}
+@keyframes tav-rays-spin{
+  0%{transform:scale(.4) rotate(0deg);opacity:0;}
+  20%{transform:scale(.8) rotate(45deg);opacity:1;}
+  100%{transform:scale(2.4) rotate(180deg);opacity:0;}
+}
+
+/* divine — white pillar + shockwave */
+body.game-mode .tav-reveal-fx.tier-divine{ overflow: visible; }
+body.game-mode .tav-reveal-fx.tier-divine::before{
+  content: ""; position: absolute; left: 50%; top: -30%;
+  width: 120px; height: 160%; margin-left: -60px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.85) 30%, rgba(255,255,255,.95) 50%, rgba(255,255,255,.85) 70%, transparent 100%);
+  filter: blur(8px);
+  animation: tav-divine-pillar 1.4s ease-out forwards;
+  mix-blend-mode: screen;
+}
+body.game-mode .tav-reveal-fx.tier-divine::after{
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 120px; height: 120px; margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.85), rgba(255,240,180,.5) 40%, transparent 70%);
+  animation: tav-divine-shock 1.4s ease-out forwards;
+}
+@keyframes tav-divine-pillar{
+  0%{transform:scaleY(0) scaleX(.3);opacity:0;}
+  25%{transform:scaleY(1) scaleX(1);opacity:1;}
+  100%{transform:scaleY(1) scaleX(2.5);opacity:0;}
+}
+@keyframes tav-divine-shock{
+  0%{transform:scale(.2);opacity:0;}
+  25%{transform:scale(1);opacity:1;}
+  100%{transform:scale(3.2);opacity:0;}
+}
+
+/* ── PRICE STRIP (slot 하단) ── */
+body.game-mode .tav-price-strip{
+  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: auto;
+}
+body.game-mode .tav-price-tag{
+  display: flex; align-items: center; gap: 6px; padding: 4px 12px;
+  background: linear-gradient(180deg, rgba(30,20,10,.92), rgba(15,10,6,.92));
+  border: 1px solid var(--tav-gilt-deep);
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .2em; color: var(--tav-text-2);
+}
+body.game-mode .tav-price-tag .coin-sm{
+  width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--tav-gilt-pale), var(--tav-gilt) 55%, var(--tav-gilt-deep));
+  border: 1px solid var(--tav-gilt-deep);
+  display: flex; align-items: center; justify-content: center;
+  font: 900 9px/1 'Cinzel'; color: #3a1f00;
+}
+body.game-mode .tav-price-tag b{
+  color: var(--tav-gilt-pale); font-weight: 800; font-variant-numeric: tabular-nums;
+  font-size: 12px; letter-spacing: .04em;
+}
+
+body.game-mode .tav-btn-reveal{
+  width: 100%; padding: 11px 0;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tav-gilt); color: var(--tav-gilt-pale);
+  font: 800 11px/1 'Cinzel','Noto Serif KR'; letter-spacing: .4em; text-transform: uppercase; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.18), 0 3px 10px rgba(0,0,0,.5);
+  position: relative;
+  transition: background .15s, color .15s;
+}
+body.game-mode .tav-btn-reveal::before,
+body.game-mode .tav-btn-reveal::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 7px; height: 7px; border: 1px solid var(--tav-gilt-pale);
+}
+body.game-mode .tav-btn-reveal::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tav-btn-reveal::after { right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tav-btn-reveal:hover{
+  background: linear-gradient(180deg, #3a2818, #221610); color: #fff;
+}
+body.game-mode .tav-btn-reveal:disabled{ opacity: .5; cursor: not-allowed; }
+
+body.game-mode .tav-btn-hire{
+  width: 100%; padding: 11px 0;
+  background: linear-gradient(180deg, #a02828, #5a0e0e);
+  border: 1px solid var(--tav-gilt); color: var(--tav-text-0);
+  font: 800 11px/1 'Cinzel','Noto Serif KR'; letter-spacing: .4em; text-transform: uppercase; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.3), 0 3px 10px rgba(110,20,20,.5), 0 0 16px rgba(232,189,74,.16);
+  position: relative;
+}
+body.game-mode .tav-btn-hire::before,
+body.game-mode .tav-btn-hire::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 7px; height: 7px; border: 1px solid var(--tav-gilt-pale);
+}
+body.game-mode .tav-btn-hire::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tav-btn-hire::after { right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tav-btn-hire:hover{
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.4), 0 4px 14px rgba(110,20,20,.7), 0 0 22px rgba(232,189,74,.28);
+}
+
+/* ── BOTTOM ACTION BAR (62px) ── */
+body.game-mode .tav-actionbar{
+  position: absolute; bottom: 0; left: 0; right: 0; height: 62px;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 28px;
+  background: linear-gradient(180deg, rgba(10,6,4,0), rgba(10,6,4,.9) 40%);
+}
+body.game-mode .tav-actionbar .left,
+body.game-mode .tav-actionbar .right{ display: flex; gap: 10px; align-items: center; }
+body.game-mode .tav-btn{
+  padding: 10px 18px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tav-border-3); color: var(--tav-gilt-pale);
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .26em; text-transform: uppercase; cursor: pointer;
+  position: relative;
+}
+body.game-mode .tav-btn::before,
+body.game-mode .tav-btn::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 7px; height: 7px; border: 1px solid var(--tav-gilt);
+}
+body.game-mode .tav-btn::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tav-btn::after { right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tav-btn:hover{ border-color: var(--tav-gilt); color: var(--tav-gilt-pale); }
+body.game-mode .tav-deck-info{
+  font: 400 9px/1 'Noto Sans KR'; letter-spacing: .26em;
+  color: var(--tav-text-3); text-transform: uppercase;
+}
+body.game-mode .tav-deck-info b{ color: var(--tav-gilt-pale); font-weight: 700; }
+
+/* ── SCREEN FX (전체 화면 등급별 overlay + shake) ── */
+body.game-mode .tav-screen-dim{
+  position: absolute; inset: 0; pointer-events: none; z-index: 9998;
+  opacity: 0; background: rgba(0,0,0,.55); transition: opacity .25s;
+}
+body.game-mode .tav-screen-dim.active{ opacity: 1; }
+
+body.game-mode .tav-screen-fx{
+  position: absolute; inset: 0; pointer-events: none; z-index: 9999; opacity: 0;
+}
+body.game-mode .tav-screen-fx.active{ opacity: 1; }
+body.game-mode .tav-screen-fx.tier-common{
+  background: radial-gradient(ellipse at center, rgba(184,184,176,.06), transparent 70%);
+  transition: opacity 1.2s;
+}
+body.game-mode .tav-screen-fx.tier-rare{
+  background:
+    radial-gradient(circle at center, rgba(80,140,255,.15), transparent 60%),
+    radial-gradient(circle at 50% 100%, rgba(80,140,255,.25), transparent 50%);
+  animation: tav-fx-screen-soft 1.4s ease-out;
+}
+body.game-mode .tav-screen-fx.tier-noble{
+  background:
+    radial-gradient(circle at center, rgba(180,90,230,.22), transparent 65%),
+    radial-gradient(circle 4px at 20% 30%, rgba(255,200,255,.9), transparent),
+    radial-gradient(circle 3px at 80% 22%, rgba(255,200,255,.85), transparent),
+    radial-gradient(circle 4px at 70% 70%, rgba(255,200,255,.9), transparent),
+    radial-gradient(circle 3px at 25% 75%, rgba(255,200,255,.85), transparent);
+  animation: tav-fx-screen-soft 1.6s ease-out;
+}
+@keyframes tav-fx-screen-soft{ 0%{opacity:0;} 20%{opacity:1;} 100%{opacity:0;} }
+body.game-mode .tav-screen-fx.tier-legendary{
+  background: radial-gradient(circle at center, rgba(255,210,90,.45), rgba(255,160,50,.18) 35%, transparent 65%);
+  animation: tav-fx-legendary 1.6s ease-out;
+}
+@keyframes tav-fx-legendary{ 0%{opacity:0;} 8%{opacity:1;} 25%{opacity:.95;} 100%{opacity:0;} }
+body.game-mode .tav-screen-fx.tier-divine{
+  background: radial-gradient(circle at center, rgba(255,255,255,.95), rgba(255,250,210,.5) 30%, rgba(255,200,80,.2) 60%, transparent 80%);
+  animation: tav-fx-divine 2s ease-out;
+}
+@keyframes tav-fx-divine{ 0%{opacity:0;} 6%{opacity:1;} 20%{opacity:.85;} 100%{opacity:0;} }
+
+/* shake (tav-screen-inner 에 부여) */
+body.game-mode .tav-screen-inner.shake-l{ animation: tav-shake-l 600ms ease-out; }
+@keyframes tav-shake-l{
+  0%,100%{transform:translate(0,0);}
+  10%{transform:translate(-3px,2px);}
+  25%{transform:translate(4px,-2px);}
+  55%{transform:translate(3px,-1px);}
+}
+body.game-mode .tav-screen-inner.shake-d{ animation: tav-shake-d 900ms ease-out; }
+@keyframes tav-shake-d{
+  0%,100%{transform:translate(0,0);}
+  8%{transform:translate(-6px,3px);}
+  20%{transform:translate(7px,-4px);}
+  35%{transform:translate(-5px,5px);}
+  50%{transform:translate(6px,-2px);}
+}
+
+/* ── HIRE DIALOG (380ms slide-up + 3줄 stagger fade) ── */
+body.game-mode .tav-hire-dialog{
+  position: absolute; left: 0; right: 0; bottom: 0; height: 240px; z-index: 10001;
+  display: none; align-items: flex-end; justify-content: center;
+  pointer-events: none;
+}
+body.game-mode .tav-hire-dialog.active{
+  display: flex; animation: tav-dialog-rise 380ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes tav-dialog-rise{
+  0%{transform:translateY(40px);opacity:0;}
+  100%{transform:translateY(0);opacity:1;}
+}
+body.game-mode .tav-hire-box{
+  position: relative; display: flex; gap: 20px; align-items: stretch;
+  width: 880px; padding: 18px 22px 18px 18px; margin-bottom: 20px;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tav-gilt);
+  box-shadow: 0 -8px 30px rgba(0,0,0,.7), inset 0 1px 0 rgba(241,228,195,.15);
+  pointer-events: auto;
+}
+body.game-mode .tav-hire-box::before,
+body.game-mode .tav-hire-box::after{
+  content: ""; position: absolute; width: 18px; height: 18px; border: 2px solid var(--tav-gilt-pale);
+}
+body.game-mode .tav-hire-box::before{ top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+body.game-mode .tav-hire-box::after { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
+body.game-mode .tav-hire-portrait{
+  width: 200px; height: 200px; flex: 0 0 200px;
+  background: #000; border: 2px solid var(--tav-gilt-deep);
+  overflow: hidden; position: relative;
+  box-shadow: inset 0 0 24px rgba(0,0,0,.7);
+}
+body.game-mode .tav-hire-portrait img{
+  width: 100%; height: 100%; object-fit: cover; object-position: center 22%;
+  filter: saturate(.95) contrast(1.06);
+}
+body.game-mode .tav-hire-portrait::after{
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 30%, transparent 50%, rgba(0,0,0,.5));
+}
+body.game-mode .tav-hire-text{
+  flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 6px 4px;
+}
+body.game-mode .tav-hire-name{
+  font: 800 22px/1 'Cinzel','Noto Serif KR'; color: var(--tav-gilt-pale);
+  letter-spacing: .1em; text-shadow: 0 2px 4px rgba(0,0,0,.85); margin-bottom: 14px;
+}
+body.game-mode .tav-hire-name .role{
+  font: 400 11px/1 'Noto Sans KR'; letter-spacing: .4em;
+  color: var(--tav-text-3); margin-left: 12px; text-transform: uppercase;
+}
+body.game-mode .tav-hire-line{
+  font: 400 14px/1.7 'Noto Serif KR','Noto Sans KR';
+  color: var(--tav-text-1); font-style: italic;
+  opacity: 0; animation: tav-line-in 280ms ease-out forwards;
+}
+body.game-mode .tav-hire-line + .tav-hire-line{ margin-top: 2px; }
+body.game-mode .tav-hire-line:nth-of-type(2){ animation-delay: 200ms; }
+body.game-mode .tav-hire-line:nth-of-type(3){ animation-delay: 500ms; }
+@keyframes tav-line-in{
+  from{opacity:0;transform:translateX(-8px);}
+  to{opacity:1;transform:translateX(0);}
+}
+body.game-mode .tav-hire-next{
+  position: absolute; right: 14px; bottom: 10px;
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .3em;
+  color: var(--tav-gilt); text-transform: uppercase;
+  animation: tav-next-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tav-next-pulse{ 0%,100%{opacity:.5;} 50%{opacity:1;} }
+
+/* ── CARD ZOOM (도감 패턴) ── */
+body.game-mode .tav-card-zoom{
+  position: absolute; inset: 0; z-index: 10000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.78); backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+body.game-mode .tav-card-zoom.active{
+  display: flex; animation: tav-zoom-fade 200ms ease-out;
+}
+@keyframes tav-zoom-fade{ 0%{opacity:0;} 100%{opacity:1;} }
+body.game-mode .tav-zoom-layout{
+  display: flex; align-items: center; justify-content: center; gap: 32px; cursor: default;
+  animation: tav-zoom-pop 360ms cubic-bezier(.2,.8,.2,1.05);
+}
+body.game-mode .tav-zoom-card-side{
+  flex: 0 0 240px;
+  transform: scale(1.5); transform-origin: center right;
+  filter: drop-shadow(0 30px 50px rgba(0,0,0,.85));
+}
+@keyframes tav-zoom-pop{
+  0%{transform:scale(.7);opacity:0;}
+  60%{transform:scale(1.04);opacity:1;}
+  100%{transform:scale(1);}
+}
+body.game-mode .tav-zoom-skill-side{
+  display: grid; grid-template-columns: repeat(3, 168px); grid-template-rows: repeat(2, 230px);
+  gap: 16px;
+}
+body.game-mode .tav-zoom-sk{
+  position: relative; width: 168px; height: 230px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tav-border-3);
+  box-shadow: 0 8px 18px rgba(0,0,0,.7), inset 0 1px 0 rgba(241,228,195,.1);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+body.game-mode .tav-zoom-sk::before{
+  content: ""; position: absolute; inset: 5px;
+  border: 1px solid rgba(212,168,74,.32); pointer-events: none;
+}
+body.game-mode .tav-zoom-sk .sk-art{
+  height: 124px; background-size: cover; background-position: center;
+  border-bottom: 1px solid var(--tav-border-2); position: relative;
+}
+body.game-mode .tav-zoom-sk .sk-art::after{
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,.8));
+}
+body.game-mode .tav-zoom-sk .sk-cost{
+  position: absolute; top: 7px; left: 7px;
+  width: 36px; height: 36px; border-radius: 50%; z-index: 2;
+  background: radial-gradient(circle at 30% 30%, var(--tav-gilt-pale), var(--tav-gilt) 55%, var(--tav-gilt-deep));
+  border: 2px solid var(--tav-gilt-deep);
+  font: 900 17px/32px 'Cinzel','Noto Serif KR'; color: #3a1f00; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.8);
+}
+body.game-mode .tav-zoom-sk .sk-name{
+  padding: 9px 10px 5px;
+  font: 800 14px/1.2 'Cinzel','Noto Serif KR'; color: var(--tav-gilt-pale); text-align: center;
+  letter-spacing: .04em; text-shadow: 0 1px 2px rgba(0,0,0,.85);
+}
+body.game-mode .tav-zoom-sk .sk-desc{
+  padding: 0 10px 10px;
+  font: 400 11px/1.45 'Noto Sans KR'; color: var(--tav-text-2); text-align: center;
+}
+body.game-mode .tav-zoom-sk.locked .lock-q{
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font: 900 64px/1 'Cinzel','Noto Serif KR'; color: var(--tav-text-3);
+  text-shadow: 0 0 18px rgba(212,168,74,.35);
+}
+body.game-mode .tav-zoom-hint{
+  position: absolute; bottom: 36px; left: 0; right: 0; text-align: center;
+  font: 400 11px/1 'Noto Sans KR'; letter-spacing: .5em;
+  color: var(--tav-text-2); text-transform: uppercase;
+}
+body.game-mode .tav-zoom-close{
+  position: absolute; top: 24px; right: 24px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(43,28,19,.92); border: 1px solid var(--tav-gilt); color: var(--tav-gilt-pale);
+  display: flex; align-items: center; justify-content: center;
+  font: 700 18px/1 'Cinzel'; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,.7);
+}
+body.game-mode .tav-zoom-close:hover{ background: rgba(60,40,24,.95); }
+
+/* V4 카드 안 zoomable cursor */
+body.game-mode .tav-flipper.is-revealed .tav-flip-front .card-v4{
+  cursor: zoom-in;
+}

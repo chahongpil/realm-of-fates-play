@@ -1,0 +1,151 @@
+/* ============================================================
+   카드 오버레이 — 레벨업(통합) + 카드 부여 보상(팩오픈)
+   design-confirmed: 2026-06-07 사유: 사용자 컨펌 (#1 레벨업 v2 + #2 카드보상 v2, "게임 적용하자")
+   시안: mockup/card_levelup/v2 + mockup/card_reward_pack/v2.
+   - 레벨업: RoF.UI.showLevelUp(cardInst,{fromLv,toLv,pointsGained})
+   - 카드보상: RoF.UI.showCardReward(card,{isNew}) — 선술집 tav-flipper(47_tavern.css) 재사용
+   position:fixed 풀뷰포트 (modal-overlay 규약). 기본 display:none, .is-open 으로 표시.
+   ============================================================ */
+
+/* ───────── 공통 오버레이 ───────── */
+body.game-mode .rof-cov{
+  display:none; position:fixed; inset:0; z-index:var(--z-modal, 200);
+  align-items:center; justify-content:center;
+  font-family:'Noto Sans KR',sans-serif;
+}
+body.game-mode .rof-cov.is-open{ display:flex; }
+
+/* ============================================================
+   레벨업 오버레이  (#rof-levelup)
+   ============================================================ */
+body.game-mode #rof-levelup{
+  gap:56px;
+  background:radial-gradient(ellipse at 38% 45%, rgba(40,32,12,.5) 0%, rgba(7,6,12,.92) 62%);
+  transition:opacity .35s; opacity:1;
+}
+body.game-mode #rof-levelup.is-closing{ opacity:0; pointer-events:none; }
+
+body.game-mode .lvc-cardwrap{ position:relative; transform:scale(.7); transition:transform .55s cubic-bezier(.2,1.4,.4,1); }
+body.game-mode #rof-levelup.is-on .lvc-cardwrap{ transform:scale(1); }
+body.game-mode .lvc-cardwrap .card-v4{ filter:drop-shadow(0 0 22px rgba(255,210,120,.45)); cursor:default; }
+body.game-mode .lvc-halo{ position:absolute; left:50%; top:50%; width:360px; height:360px; transform:translate(-50%,-50%); z-index:-1;
+  background:radial-gradient(circle, rgba(255,224,130,.4) 0%, transparent 68%); opacity:0; transition:.5s; }
+body.game-mode #rof-levelup.is-on .lvc-halo{ opacity:1; animation:lvc-halo 2.4s ease-in-out infinite; }
+@keyframes lvc-halo{ 0%,100%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(-50%,-50%) scale(1.1);} }
+
+body.game-mode .lvc-cardwrap{ position:relative; }
+body.game-mode .lvc-cardwrap > .card-v4{ position:relative; z-index:1; }
+
+body.game-mode .lvc-panel{ width:380px; opacity:0; transform:translateX(20px); transition:.5s .2s; }
+body.game-mode #rof-levelup.is-on .lvc-panel{ opacity:1; transform:none; }
+body.game-mode .lvc-eyebrow{ font:700 10px 'Noto Sans KR'; letter-spacing:.4em; color:#a89876; text-transform:uppercase; margin-bottom:2px; }
+body.game-mode .lvc-bigtitle{ font:800 30px/1 'Cinzel','Noto Serif KR'; color:#f1d890; text-shadow:0 0 16px rgba(255,210,120,.55); margin-bottom:4px; }
+body.game-mode .lvc-name{ font:700 15px 'Noto Serif KR'; color:#e8d5a3; margin-bottom:16px; }
+body.game-mode .lvc-lvrow{ display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
+body.game-mode .lvc-lv-old{ font:700 18px 'Cinzel'; color:#7a6c52; }
+body.game-mode .lvc-lv-arrow{ color:#d4a84a; }
+body.game-mode .lvc-lv-new{ font:800 38px 'Cinzel'; color:#f1d890; display:inline-block; }
+body.game-mode .lvc-lv-new.tick{ animation:lvc-tick .4s; }
+@keyframes lvc-tick{ 40%{transform:scale(1.4);} }
+body.game-mode .lvc-xpbar{ height:14px; border-radius:8px; background:#1c160e; border:1px solid #3a2819; overflow:hidden; margin-bottom:6px; }
+body.game-mode .lvc-xpfill{ height:100%; width:0; background:linear-gradient(90deg,#8b6914,#f1d890); transition:width 1.1s cubic-bezier(.3,.8,.3,1); box-shadow:0 0 10px rgba(255,210,120,.6); }
+body.game-mode .lvc-xptxt{ font:600 11px 'Noto Sans KR'; color:#a89876; margin-bottom:18px; }
+body.game-mode .lvc-xptxt b{ color:#f1d890; }
+
+/* 스탯포인트 (5의 배수) */
+body.game-mode .lvc-sp{ border:1px solid #6a5320; border-radius:10px; padding:14px 16px;
+  background:linear-gradient(180deg,rgba(60,44,16,.6),rgba(26,18,10,.6)); box-shadow:0 0 18px rgba(232,189,74,.12);
+  opacity:0; transform:scale(.9); }
+body.game-mode #rof-levelup.is-on .lvc-sp.show{ animation:lvc-sp-pop .5s cubic-bezier(.2,1.5,.4,1) 1s forwards; }
+@keyframes lvc-sp-pop{ to{opacity:1; transform:scale(1);} }
+body.game-mode .lvc-sp-head{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+body.game-mode .lvc-sp-glyph{ font-size:20px; filter:drop-shadow(0 0 8px rgba(255,210,120,.7)); }
+body.game-mode .lvc-sp-title{ font:800 15px 'Noto Serif KR'; color:#f1d890; }
+body.game-mode .lvc-sp-amt{ margin-left:auto; font:800 18px 'Cinzel'; color:#bdf0c4; }
+body.game-mode .lvc-sp-desc{ font:400 11px/1.5 'Noto Sans KR'; color:#c9b68f; margin-bottom:2px; }
+body.game-mode .lvc-sp-desc b{ color:#e8d5a3; }
+body.game-mode .lvc-sp-picks{ margin-top:12px; display:flex; gap:8px; }
+body.game-mode .lvc-pick{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px 6px; border-radius:8px; cursor:pointer;
+  border:1px solid #5a4022; background:rgba(26,18,10,.6); transition:.15s; }
+body.game-mode .lvc-pick:hover{ border-color:#d4a84a; transform:translateY(-2px); background:rgba(43,28,19,.85); }
+body.game-mode .lvc-pick .ic{ font:800 17px 'Noto Serif KR'; }
+body.game-mode .lvc-pick.atk .ic{ color:#ff8a6e; } body.game-mode .lvc-pick.hp .ic{ color:#8fe08f; } body.game-mode .lvc-pick.soul .ic{ color:#9b7fd5; }
+body.game-mode .lvc-pick .k{ font:700 11px 'Noto Sans KR'; color:#e8d5a3; }
+body.game-mode .lvc-pick .v{ font:800 13px 'Cinzel'; color:#f1d890; }
+body.game-mode .lvc-sp-defer{ margin-top:10px; width:100%; padding:8px; border-radius:7px; cursor:pointer;
+  border:1px dashed #5a4022; background:transparent; color:#a89876; font:700 11px 'Noto Sans KR'; }
+body.game-mode .lvc-sp-defer:hover{ border-color:#d4a84a; color:#e8d27a; }
+body.game-mode .lvc-sp.done .lvc-sp-picks, body.game-mode .lvc-sp.done .lvc-sp-defer{ display:none; }
+body.game-mode .lvc-sp-result{ display:none; margin-top:12px; text-align:center; font:800 13px 'Noto Sans KR'; color:#bdf0c4; }
+body.game-mode .lvc-sp.done .lvc-sp-result{ display:block; }
+
+/* 일반 레벨 안내 */
+body.game-mode .lvc-plain{ font:400 12px/1.6 'Noto Sans KR'; color:#7a6c52; opacity:0; transition:.4s 1s; }
+body.game-mode #rof-levelup.is-on .lvc-plain.show{ opacity:1; }
+body.game-mode .lvc-plain b{ color:#a89876; }
+
+/* 닫기 (확인) */
+body.game-mode .lvc-close{ margin-top:20px; width:100%; padding:12px; border-radius:8px; cursor:pointer;
+  border:1px solid #8b6914; background:linear-gradient(180deg,#3a2819,#241712); color:#f1d890;
+  font:800 13px 'Noto Sans KR'; letter-spacing:.1em; opacity:0; transition:.4s 1.2s; }
+body.game-mode #rof-levelup.is-on .lvc-close{ opacity:1; }
+body.game-mode .lvc-close:hover{ background:linear-gradient(180deg,#8b6914,#3a2819); }
+
+/* ============================================================
+   카드 부여 보상 팝업  (#rof-cardreward) — 선술집 효과 재사용
+   ============================================================ */
+body.game-mode #rof-cardreward{ background:rgba(7,6,12,.8); }
+body.game-mode .crw-box{ position:relative; width:780px; min-height:470px; padding:24px 30px; border-radius:14px;
+  display:flex; align-items:center;
+  background:linear-gradient(180deg,#1c130b 0%,#120c07 100%);
+  border:1px solid #5a4022; box-shadow:0 24px 60px rgba(0,0,0,.7), inset 0 0 0 1px rgba(232,189,74,.12); }
+body.game-mode .crw-cb{ position:absolute; width:14px; height:14px; border:1px solid #d4a84a; z-index:2; }
+body.game-mode .crw-cb.tl{ top:8px; left:8px; border-right:0; border-bottom:0; } body.game-mode .crw-cb.tr{ top:8px; right:8px; border-left:0; border-bottom:0; }
+body.game-mode .crw-cb.bl{ bottom:8px; left:8px; border-right:0; border-top:0; } body.game-mode .crw-cb.br{ bottom:8px; right:8px; border-left:0; border-top:0; }
+
+body.game-mode .crw-header{ position:absolute; top:14px; left:0; right:0; text-align:center; }
+body.game-mode .crw-eyebrow{ font:700 10px 'Noto Sans KR'; letter-spacing:.45em; color:#a89876; text-transform:uppercase; }
+body.game-mode .crw-title{ font:800 18px 'Cinzel','Noto Serif KR'; color:#f1d890; text-shadow:0 0 12px rgba(255,210,120,.4); margin-top:2px; }
+
+body.game-mode .crw-row{ display:flex; gap:30px; align-items:center; width:100%; }
+body.game-mode .crw-stage{ position:relative; width:240px; height:336px; flex:0 0 auto; }
+body.game-mode .crw-stage .tav-screen-fx{ position:absolute; inset:-50px; z-index:0; pointer-events:none; }
+body.game-mode .crw-badge{ position:absolute; top:-10px; left:50%; transform:translateX(-50%); z-index:60;
+  padding:4px 14px; border-radius:9999px; font:800 11px 'Noto Sans KR'; letter-spacing:.1em;
+  background:linear-gradient(180deg,#2e7a3a,#1c4a24); color:#bdf0c4; border:1px solid #4a9a5a; opacity:0; transition:.4s .4s; }
+body.game-mode .crw-row.revealed .crw-badge{ opacity:1; }
+body.game-mode .crw-badge.dup{ background:linear-gradient(180deg,#5a4022,#2b1c13); color:#e8d27a; border-color:#8b6914; }
+
+body.game-mode .crw-info{ flex:1; opacity:0; transform:translateX(18px); transition:.5s .2s; pointer-events:none; }
+body.game-mode .crw-row.revealed .crw-info{ opacity:1; transform:none; pointer-events:auto; }
+body.game-mode .crw-name{ font:800 24px 'Noto Serif KR'; color:#f1d890; margin-bottom:8px; }
+body.game-mode .crw-chips{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+body.game-mode .crw-chip{ font:700 10px 'Noto Sans KR'; letter-spacing:.08em; padding:4px 10px; border-radius:9999px; border:1px solid #5a4022; color:#c9b68f; }
+body.game-mode .crw-owner{ font:400 12px 'Noto Sans KR'; color:#a89876; margin-bottom:14px; }
+body.game-mode .crw-owner b{ color:#e8d5a3; }
+body.game-mode .crw-desc{ font:400 12px/1.6 'Noto Sans KR'; color:#c9b68f; font-style:italic; border-left:2px solid #5a4022; padding-left:12px; margin-bottom:16px; min-height:38px; }
+body.game-mode .crw-sig-label{ font:700 10px 'Noto Sans KR'; letter-spacing:.3em; color:#7a6c52; text-transform:uppercase; margin-bottom:8px; }
+body.game-mode .crw-sigs{ display:flex; gap:8px; margin-bottom:20px; }
+body.game-mode .crw-sig{ width:42px; height:42px; border-radius:7px; background-size:cover; background-position:center top; border:1px solid #3a2819; }
+body.game-mode .crw-ability{ font:400 13px/1.6 'Noto Sans KR'; color:#e8d5a3; margin-bottom:8px; }
+body.game-mode .crw-needsoul{ font:700 12px 'Noto Sans KR'; color:#9b7fd5; margin-bottom:20px; }
+body.game-mode .crw-actions{ display:flex; gap:10px; }
+body.game-mode .crw-btn{ padding:11px 18px; border-radius:8px; font:700 12px 'Noto Sans KR'; letter-spacing:.05em; cursor:pointer; border:1px solid; }
+body.game-mode .crw-btn.primary{ background:linear-gradient(180deg,#8b6914,#3a2819); border-color:#8b6914; color:#f1d890; }
+body.game-mode .crw-btn.primary.on{ background:linear-gradient(180deg,#2e7a3a,#1c4a24); border-color:#4a9a5a; color:#bdf0c4; }
+body.game-mode .crw-btn.ghost{ background:rgba(26,18,10,.6); border-color:#5a4022; color:#c9b68f; }
+body.game-mode .crw-btn.ghost:hover{ color:#f1d890; border-color:#d4a84a; }
+
+/* 스킬 해금 변형 (v1 초록) — design-confirmed: 2026-06-08 사유: 갤러리 검수 후 사용자 "적용하자" */
+body.game-mode #rof-cardreward .crw-unlock-cond{ display:inline-block; font:700 12px 'Noto Sans KR'; color:#bdf0c4;
+  background:rgba(28,52,30,.5); border:1px solid #3a6a44; border-radius:8px; padding:8px 12px; margin-bottom:16px; }
+body.game-mode #rof-cardreward .crw-unlock-cond b{ color:#e8f5d0; }
+body.game-mode #rof-cardreward[data-mode="unlock"] .crw-eyebrow{ color:#7fd6a0; }
+
+body.game-mode .crw-reveal-btn{ position:absolute; left:50%; bottom:-52px; transform:translateX(-50%); z-index:60;
+  padding:12px 30px; border-radius:9999px; font:800 13px 'Noto Sans KR'; letter-spacing:.15em; white-space:nowrap;
+  background:linear-gradient(180deg,#d4a84a,#8b6914); border:1px solid #8b6914; color:#160d07; cursor:pointer;
+  box-shadow:0 4px 14px rgba(232,189,74,.3); }
+body.game-mode .crw-row.revealed .crw-reveal-btn{ display:none; }
+body.game-mode .crw-pre{ flex:1; text-align:center; color:#5a4a32; font:400 12px/1.8 'Noto Sans KR'; }
+body.game-mode .crw-row.revealed .crw-pre{ display:none; }

@@ -1,0 +1,1151 @@
+/* design-confirmed: 2026-05-18 사유: 시안 (0.claulde.design/20260517/전열정비_디자인/design_handoff_formation_screen/README.md) 의 "Color Palette / Typography / Shadows / Glows" 디자인 토큰을 그대로 옮긴 것. 사용자 명시 "전열정비_디자인 여기랑 무조건 똑같이 해야해" — 시안 자체가 사용자 제공/컨펌. */
+
+/* Formation screen — 2026-05-18 Step 1 시안 외곽 정합.
+   알맹이 (카드 그림 = mkCardElV4) 옛 거 유지. 외곽 토큰 / 레이아웃 / 색조 시안 그대로. */
+
+/* ── 디자인 토큰 (시안 README "Color Palette / Typography") ── */
+:root {
+  --rof-form-gold:        #f3d676;
+  --rof-form-gold-deep:   #c89030;
+  --rof-form-gold-dark:   #5a3a18;
+  --rof-form-border:      #3a2410;
+  --rof-form-border-lt:   #5a4020;
+  --rof-form-panel-bg:    rgba(20, 12, 6, .55);
+  --rof-form-panel-inset: rgba(8, 4, 2, .7);
+  --rof-form-text:        #e8d5a3;
+  --rof-form-text-dim:    #a89478;
+  --rof-form-text-mute:   #7a6c52;
+  --rof-form-text-dark:   #5a4020;
+  --rof-form-stat-hp:     #ffd0d0;
+  --rof-form-stat-atk:    #dff0ff;
+  --rof-form-stat-soul:   #e0c8ff;
+  --rof-form-ft:    'Cinzel', 'Noto Serif KR', serif;
+  --rof-form-fd:    'Cinzel Decorative', serif;
+  --rof-form-fb:    'Noto Sans KR', sans-serif;
+}
+
+/* ── 화면 (1280×720 고정 viewport 안에서 세로 스크롤) ── */
+body.game-mode #formation-screen {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, #1a1208 0%, transparent 50%),
+    linear-gradient(180deg, #0a0604 0%, #050302 100%);
+  color: var(--rof-form-text);
+  font: 400 13px/1.4 var(--rof-form-fb);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* form-stage 가 시안 1280 폭 콘텐츠 컨테이너 */
+body.game-mode #formation-screen .form-stage {
+  width: 1280px;
+  margin: 0 auto;
+  padding: 18px 28px 40px;
+  min-height: 720px;
+  box-sizing: border-box;
+}
+
+/* ── TOP ACTION BAR ── */
+body.game-mode #formation-screen .form-top-bar {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  padding: 14px 18px;
+  background: rgba(8, 4, 2, .85);
+  border: 1.5px solid var(--rof-form-gold-deep);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(243, 214, 118, .2);
+  margin-bottom: 18px;
+}
+
+body.game-mode #formation-screen .form-title-block {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+body.game-mode #formation-screen .form-micro-label {
+  font: 400 8px/1 var(--rof-form-fb);
+  letter-spacing: .5em;
+  color: var(--rof-form-text-mute);
+  margin-bottom: 4px;
+}
+
+body.game-mode #formation-screen .form-title {
+  font: 900 22px/1 var(--rof-form-fd);
+  color: var(--rof-form-gold);
+  letter-spacing: .04em;
+  text-shadow: 0 0 10px rgba(243, 214, 118, .5);
+  margin: 0;
+}
+
+body.game-mode #formation-screen .form-group-controls {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 1px solid var(--rof-form-border);
+  min-width: 0;
+}
+
+body.game-mode #formation-screen .form-group-label {
+  font: 700 9px/1 var(--rof-form-ft);
+  letter-spacing: .3em;
+  color: var(--rof-form-text-dim);
+  flex-shrink: 0;
+}
+
+body.game-mode #formation-screen .form-group-input {
+  flex: 0 0 180px;
+  padding: 7px 10px;
+  background: rgba(20, 12, 6, .85);
+  border: 1px solid var(--rof-form-border-lt);
+  color: #f6e9c4;
+  font: 700 11px/1 var(--rof-form-fb);
+  letter-spacing: .04em;
+  outline: none;
+}
+
+body.game-mode #formation-screen .form-btn-gold {
+  padding: 7px 12px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--rof-form-gold-dark), #1a0e04);
+  border: 1px solid var(--rof-form-gold-deep);
+  color: var(--rof-form-gold);
+  font: 700 10px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+  flex-shrink: 0;
+}
+
+body.game-mode #formation-screen .form-load-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+body.game-mode #formation-screen .form-btn-dim {
+  padding: 7px 12px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--rof-form-border), #1a0e04);
+  border: 1px solid var(--rof-form-border-lt);
+  color: var(--rof-form-text-dim);
+  font: 700 10px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+}
+
+body.game-mode #formation-screen .form-load-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 260px;
+  z-index: 60;
+  background: #0f0905;
+  border: 1.5px solid var(--rof-form-gold-deep);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .85);
+  display: none;
+}
+body.game-mode #formation-screen .form-load-menu.is-open { display: block; }
+
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx 그룹 dropdown 내부 element (cluster B/Step 2-4) */
+body.game-mode #formation-screen .form-load-item {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--rof-form-border);
+}
+body.game-mode #formation-screen .form-load-item:last-child {
+  border-bottom: none;
+}
+body.game-mode #formation-screen .form-load-item-name {
+  flex: 1;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #e8d5a3;
+  font: 700 11px/1.2 var(--rof-form-fb);
+  text-align: left;
+}
+body.game-mode #formation-screen .form-load-item-name:hover {
+  background: rgba(243, 214, 118, .08);
+  color: var(--rof-form-gold);
+}
+body.game-mode #formation-screen .form-load-item-del {
+  padding: 10px 12px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #7a4040;
+  font: 700 12px/1 var(--rof-form-fb);
+}
+body.game-mode #formation-screen .form-load-item-del:hover {
+  color: #c84040;
+}
+body.game-mode #formation-screen .form-load-empty {
+  padding: 14px 16px;
+  font: 400 11px/1.4 var(--rof-form-fb);
+  color: #5a4020;
+  text-align: center;
+}
+
+body.game-mode #formation-screen .form-btn-secondary {
+  flex: 0 0 auto;
+  padding: 0 22px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--rof-form-border), #1a0e04);
+  border: 1.5px solid var(--rof-form-border-lt);
+  color: var(--rof-form-text-dim);
+  font: 700 11px/1 var(--rof-form-ft);
+  letter-spacing: .22em;
+}
+
+body.game-mode #formation-screen .form-btn-primary {
+  flex: 0 0 auto;
+  padding: 0 26px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--rof-form-gold-deep), var(--rof-form-gold-dark));
+  border: 2px solid var(--rof-form-gold);
+  color: #1a0e04;
+  font: 900 14px/1 var(--rof-form-fd);
+  letter-spacing: .3em;
+  box-shadow: 0 0 18px rgba(243, 214, 118, .5), inset 0 1px 0 rgba(255, 255, 255, .3);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .3);
+}
+
+/* ── 섹션 공통 ── */
+body.game-mode #formation-screen .form-section {
+  padding: 14px;
+  background: var(--rof-form-panel-bg);
+  border: 1px solid var(--rof-form-border);
+  margin-bottom: 14px;
+}
+
+body.game-mode #formation-screen .form-section-label {
+  font: 700 9px/1 var(--rof-form-ft);
+  letter-spacing: .3em;
+  color: var(--rof-form-text-dim);
+  margin-bottom: 10px;
+}
+
+/* ── PARTY ROW (영웅 1 + 동료 4 = 5 슬롯 가로) ── */
+body.game-mode #formation-screen .form-party-row {
+  display: flex;
+  gap: 8px;
+}
+
+body.game-mode #formation-screen .form-party-slot {
+  flex: 1;
+  padding: 14px 10px;
+  cursor: pointer;
+  min-height: 180px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: all .2s;
+}
+
+body.game-mode #formation-screen .form-party-slot.is-empty {
+  background: rgba(8, 4, 2, .4);
+  border: 1.5px dashed var(--rof-form-border-lt);
+}
+
+body.game-mode #formation-screen .form-party-slot.is-selected {
+  background: linear-gradient(180deg, #2a1a08, #1a0e04);
+  border: 2px solid var(--rof-form-gold);
+  box-shadow: 0 0 14px rgba(243, 214, 118, .4);
+}
+
+body.game-mode #formation-screen .form-party-portrait {
+  width: 96px;
+  height: 96px;
+  position: relative;
+  background-color: #1a0e04;
+  background-position: center 14%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border: 2.5px solid var(--rof-form-border-lt);
+}
+
+body.game-mode #formation-screen .form-party-slot.is-hero .form-party-portrait {
+  border-color: var(--rof-form-gold);
+  box-shadow: 0 0 10px rgba(243, 214, 118, .55);
+}
+
+body.game-mode #formation-screen .form-party-slot.is-selected:not(.is-hero) .form-party-portrait {
+  border-color: var(--rof-form-gold-deep);
+  box-shadow: 0 0 8px rgba(243, 214, 118, .3);
+}
+
+body.game-mode #formation-screen .form-party-portrait-empty {
+  width: 96px;
+  height: 96px;
+  border: 1.5px dashed var(--rof-form-border-lt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  opacity: .5;
+  color: var(--rof-form-text-dark);
+}
+
+/* ── 동료 영입 영웅레벨 게이팅 잠금 슬롯 (2026-06-13, mockup/companion_lock/gallery C안) ── */
+/* design-confirmed: 2026-06-13 사유: mockup/companion_lock/gallery.html 갤러리 C안 사용자 컨펌 ("c로 하자"). 골드 자물쇠 + 해금 진행도 게이지. 스킬 progressive unlock(2026-06-08) 패턴 계승. */
+body.game-mode #formation-screen .form-party-slot.is-locked {
+  cursor: pointer;
+  background: rgba(8, 4, 2, .55);
+  border: 1.5px solid var(--rof-form-border-lt);
+  justify-content: center;
+  gap: 8px;
+}
+body.game-mode #formation-screen .form-party-slot.is-locked:hover {
+  border-color: var(--rof-form-gold-deep);
+}
+body.game-mode #formation-screen .form-lock-ico {
+  font-size: 40px;
+  color: var(--rof-form-gold);
+  filter: drop-shadow(0 0 8px rgba(243, 214, 118, .45));
+}
+body.game-mode #formation-screen .form-lock-req {
+  font: 800 11px/1 var(--rof-form-ft);
+  letter-spacing: .1em;
+  color: var(--rof-form-gold);
+}
+body.game-mode #formation-screen .form-lock-prog {
+  width: 88px; height: 6px; border-radius: 3px;
+  background: rgba(8, 4, 2, .8); border: 1px solid var(--rof-form-border-lt);
+  overflow: hidden;
+}
+body.game-mode #formation-screen .form-lock-prog > i {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--rof-form-gold-deep), var(--rof-form-gold));
+}
+body.game-mode #formation-screen .form-lock-lv {
+  font: 700 9px/1 var(--rof-form-fb);
+  letter-spacing: .08em;
+  color: var(--rof-form-text-dim);
+}
+
+body.game-mode #formation-screen .form-party-rarity-stripe {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 5px;
+  background: #8a8278;
+}
+body.game-mode #formation-screen .form-party-portrait.rar-silver  .form-party-rarity-stripe,
+body.game-mode #formation-screen .form-party-portrait.rar-rare    .form-party-rarity-stripe { background: linear-gradient(90deg, #3a6b9e, #7ab4e0, #3a6b9e); }
+body.game-mode #formation-screen .form-party-portrait.rar-gold    .form-party-rarity-stripe,
+body.game-mode #formation-screen .form-party-portrait.rar-epic    .form-party-rarity-stripe { background: linear-gradient(90deg, #7a3bcc, #c89af0, #7a3bcc); }
+body.game-mode #formation-screen .form-party-portrait.rar-legendary .form-party-rarity-stripe { background: linear-gradient(90deg, var(--rof-form-gold-deep), var(--rof-form-gold), var(--rof-form-gold-deep)); }
+body.game-mode #formation-screen .form-party-portrait.rar-divine    .form-party-rarity-stripe,
+body.game-mode #formation-screen .form-party-portrait.rar-mythic    .form-party-rarity-stripe { background: linear-gradient(90deg, #c83838, #ffd8a0, #c83838); }
+
+body.game-mode #formation-screen .form-party-role {
+  font: 700 10px/1 var(--rof-form-fb);
+  letter-spacing: .28em;
+  color: var(--rof-form-text-dim);
+}
+body.game-mode #formation-screen .form-party-role.is-hero-role {
+  color: var(--rof-form-gold);
+}
+
+body.game-mode #formation-screen .form-party-name {
+  font: 900 15px/1.15 var(--rof-form-ft);
+  color: #f6e9c4;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+}
+/* 영구 카드레벨 인라인 (C안) — design-confirmed: 2026-06-08 사유: 갤러리 검수 후 사용자 "적용하자" */
+body.game-mode #formation-screen .form-party-lv {
+  color: var(--rof-form-gold);
+  font: 900 13px/1.15 var(--rof-form-ft);
+  margin-left: 5px;
+}
+
+/* ── MIDDLE (선택 카드 + 능력치) ── */
+body.game-mode #formation-screen .form-middle {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+body.game-mode #formation-screen .form-card-preview-panel {
+  flex: 0 0 260px;
+  padding: 14px;
+  background: var(--rof-form-panel-bg);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+body.game-mode #formation-screen .form-card-preview {
+  position: relative;
+  cursor: zoom-in;
+  width: 240px;
+  height: calc(336px * 0.78 + 8px);
+}
+body.game-mode #formation-screen .form-card-preview > * {
+  transform: scale(0.78);
+  transform-origin: top center;
+  pointer-events: none;
+}
+body.game-mode #formation-screen .form-card-preview-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rof-form-text-dark);
+  font: 700 13px/1.4 var(--rof-form-fb);
+  letter-spacing: .1em;
+  background: var(--rof-form-panel-inset);
+  border: 1px dashed var(--rof-form-border-lt);
+  transform: none;
+  pointer-events: auto;
+}
+
+body.game-mode #formation-screen .form-card-zoom-hint {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  padding: 4px 8px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rof-form-gold-deep);
+  color: var(--rof-form-gold);
+  font: 700 9px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+  pointer-events: none;
+}
+
+body.game-mode #formation-screen .form-stats-panel {
+  flex: 1;
+  padding: 14px;
+  background: var(--rof-form-panel-bg);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+body.game-mode #formation-screen .form-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+body.game-mode #formation-screen .form-stat {
+  padding: 12px 8px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+body.game-mode #formation-screen .form-stat-label {
+  font: 700 9px/1 var(--rof-form-ft);
+  letter-spacing: .3em;
+  color: var(--rof-form-text-mute);
+}
+
+body.game-mode #formation-screen .form-stat-value {
+  font: 900 22px/1 var(--rof-form-fd);
+}
+body.game-mode #formation-screen .form-stat-value.stat-hp   { color: var(--rof-form-stat-hp);   text-shadow: 0 0 6px rgba(255, 208, 208, .2); }
+body.game-mode #formation-screen .form-stat-value.stat-atk  { color: var(--rof-form-stat-atk);  text-shadow: 0 0 6px rgba(223, 240, 255, .2); }
+body.game-mode #formation-screen .form-stat-value.stat-soul { color: var(--rof-form-stat-soul); text-shadow: 0 0 6px rgba(224, 200, 255, .2); }
+body.game-mode #formation-screen .form-stat-value.stat-lv   { color: var(--rof-form-gold);      text-shadow: 0 0 6px rgba(243, 214, 118, .2); }
+
+/* ── EXP BAR ── */
+body.game-mode #formation-screen .form-exp-bar {
+  padding: 10px 12px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border);
+}
+body.game-mode #formation-screen .form-exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+body.game-mode #formation-screen .form-exp-label {
+  font: 700 9px/1 var(--rof-form-ft);
+  letter-spacing: .3em;
+  color: var(--rof-form-text-mute);
+}
+body.game-mode #formation-screen .form-exp-value {
+  font: 900 12px/1 var(--rof-form-fd);
+  color: var(--rof-form-gold);
+  text-shadow: 0 0 6px rgba(243, 214, 118, .3);
+}
+body.game-mode #formation-screen .form-exp-value .dim { color: var(--rof-form-text-mute); }
+body.game-mode #formation-screen .form-exp-track {
+  position: relative;
+  height: 10px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rof-form-border);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .7);
+}
+body.game-mode #formation-screen .form-exp-fill {
+  position: absolute;
+  top: 1px; left: 1px; bottom: 1px;
+  background: linear-gradient(180deg, var(--rof-form-gold), var(--rof-form-gold-deep));
+  box-shadow: 0 0 8px rgba(243, 214, 118, .5), inset 0 1px 0 rgba(255, 255, 255, .35);
+  transition: width .3s;
+}
+body.game-mode #formation-screen .form-exp-fill.is-maxed {
+  background: linear-gradient(180deg, #ffd8a0, var(--rof-form-gold-deep));
+}
+body.game-mode #formation-screen .form-exp-tick {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(0, 0, 0, .45);
+}
+
+/* ── 원소/역할/등급 태그 ── */
+body.game-mode #formation-screen .form-tags-row {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+body.game-mode #formation-screen .form-tag-cell {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border);
+}
+body.game-mode #formation-screen .form-tag-label {
+  font: 700 8px/1 var(--rof-form-ft);
+  letter-spacing: .25em;
+  color: var(--rof-form-text-mute);
+  margin-bottom: 4px;
+}
+body.game-mode #formation-screen .form-tag-value {
+  font: 700 12px/1 var(--rof-form-ft);
+  color: var(--rof-form-gold);
+}
+
+/* 동료 교체 버튼 (Hero 슬롯 일 때 숨김 처리는 JS) */
+body.game-mode #formation-screen .form-replace-btn {
+  align-self: flex-start;
+  padding: 8px 14px;
+  cursor: pointer;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border-lt);
+  color: var(--rof-form-text-dim);
+  font: 700 10px/1 var(--rof-form-ft);
+  letter-spacing: .25em;
+  flex: 0 0 auto;
+}
+
+/* ── SPELL POOL (10 슬롯 4×3 grid) ── */
+body.game-mode #formation-screen .form-spell-pool-section {
+  padding: 16px 18px;
+  background: var(--rof-form-panel-bg);
+  border: 1px solid var(--rof-form-border);
+}
+
+body.game-mode #formation-screen .form-spell-pool-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+body.game-mode #formation-screen .form-active-count {
+  font: 900 18px/1.2 var(--rof-form-fd);
+  color: var(--rof-form-gold);
+  margin-top: 5px;
+}
+
+body.game-mode #formation-screen .form-spell-pool-hint {
+  font: 400 10px/1.5 var(--rof-form-fb);
+  color: var(--rof-form-text-dim);
+  text-align: right;
+}
+
+body.game-mode #formation-screen .form-spell-pool-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+body.game-mode #formation-screen .form-spell-slot {
+  position: relative;
+  padding: 10px 6px 8px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all .2s;
+  min-height: 240px;
+}
+
+body.game-mode #formation-screen .form-spell-slot.is-active {
+  background: rgba(40, 28, 12, .85);
+  border: 1.5px solid var(--rof-form-gold);
+  box-shadow: 0 0 12px rgba(243, 214, 118, .4);
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx:747~753 덱 규칙 footer (storyboard-inspector 블로커 #3) */
+body.game-mode #formation-screen .form-spell-pool-rules {
+  margin-top: 14px;
+  padding: 8px 12px;
+  background: rgba(20, 12, 6, .5);
+  border: 1px solid var(--rof-form-border);
+  font: 400 10px/1.5 var(--rof-form-fb);
+  color: #a89478;
+}
+body.game-mode #formation-screen .form-spell-pool-rules-label {
+  color: var(--rof-form-gold);
+  font-weight: 900;
+  letter-spacing: .2em;
+  margin-right: 8px;
+}
+body.game-mode #formation-screen .form-spell-pool-rules-em {
+  color: var(--rof-form-gold);
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx SpellPool 활성/비활성 grayscale filter (cluster D) */
+body.game-mode #formation-screen .form-spell-slot.is-inactive .form-spell-card {
+  filter: grayscale(.3) brightness(.85);
+  transition: filter .2s;
+}
+body.game-mode #formation-screen .form-spell-slot.is-inactive.is-blocked .form-spell-card {
+  filter: grayscale(.7) brightness(.55);
+}
+
+body.game-mode #formation-screen .form-spell-slot.is-empty {
+  opacity: .55;
+  background: rgba(8, 4, 2, .4);
+  border: 1.5px dashed var(--rof-form-border-lt);
+  align-items: center;
+  justify-content: center;
+}
+
+body.game-mode #formation-screen .form-spell-empty {
+  font-size: 44px;
+  color: var(--rof-form-text-dark);
+  opacity: .5;
+}
+body.game-mode #formation-screen .form-spell-empty-label {
+  font: 700 10px/1 var(--rof-form-fb);
+  letter-spacing: .22em;
+  color: var(--rof-form-text-dark);
+}
+
+body.game-mode #formation-screen .form-spell-btn {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(8, 4, 2, .92);
+  border: 1.5px solid var(--rof-form-gold-deep);
+  color: var(--rof-form-gold);
+  font: 700 13px/1 var(--rof-form-ft);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .7);
+  z-index: 5;
+}
+body.game-mode #formation-screen .form-spell-zoom { top: 6px; left: 6px; }
+body.game-mode #formation-screen .form-spell-swap { top: 6px; right: 6px; }
+
+body.game-mode #formation-screen .form-spell-card {
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  transform: scale(0.78);
+  transform-origin: top center;
+  width: 240px;
+  height: calc(336px * 0.78);
+}
+
+body.game-mode #formation-screen .form-spell-toggle {
+  width: 88%;
+  padding: 6px 0;
+  text-align: center;
+  font: 700 10px/1 var(--rof-form-ft);
+  letter-spacing: .22em;
+  background: var(--rof-form-panel-inset);
+  color: var(--rof-form-text-mute);
+  border: 1px solid var(--rof-form-border);
+  margin-top: auto;
+}
+body.game-mode #formation-screen .form-spell-toggle.is-active {
+  background: linear-gradient(180deg, var(--rof-form-gold-deep), var(--rof-form-gold-dark));
+  color: #1a0e04;
+  border-color: var(--rof-form-gold);
+}
+
+/* ── 스킬 progressive unlock 잠금 슬롯 (2026-06-08, mockup/skill_slot_unlock/v1 정합) ── */
+/* design-confirmed: 2026-06-08 사유: mockup/skill_slot_unlock/v1 갤러리 사용자 컨펌 ("ㅇㅋ게임적용"). 잠금 회색조 grayscale 은 자작 효과 아닌 표준 UI 패턴 */
+body.game-mode #formation-screen .form-spell-slot.is-locked { cursor: pointer; border: 1.5px solid var(--rof-form-border-lt); }
+body.game-mode #formation-screen .form-spell-slot.is-locked .form-spell-card { filter: grayscale(.92) brightness(.42); }
+body.game-mode #formation-screen .form-spell-slot.is-locked:hover .lock-label { background: rgba(20,12,6,.95); border-color: var(--rof-form-gold); }
+body.game-mode #formation-screen .form-spell-lock {
+  position: absolute; top: 10px; left: 6px; right: 6px; height: calc(336px * 0.78);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(8,4,2,.5); pointer-events: none;
+}
+body.game-mode #formation-screen .form-spell-lock .lock-icon { font-size: 44px; filter: drop-shadow(0 2px 5px #000); }
+body.game-mode #formation-screen .form-spell-lock .lock-label { font: 800 12px/1 var(--rof-form-ft); letter-spacing: .14em; color: var(--rof-form-gold); background: rgba(8,4,2,.85); padding: 5px 11px; border: 1px solid var(--rof-form-gold-deep); }
+body.game-mode #formation-screen .form-spell-lock .lock-hint { font: 400 9px/1 var(--rof-form-fb); letter-spacing: .12em; color: var(--rof-form-text-mute); margin-top: 2px; }
+body.game-mode #formation-screen .form-spell-toggle.is-locked-tog { background: rgba(8,4,2,.72); color: var(--rof-form-text-mute); border-color: var(--rof-form-border-lt); }
+body.game-mode #formation-screen .form-spell-lock-detail {
+  position: absolute; top: 10px; left: 6px; right: 6px; min-height: calc(336px * 0.78);
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  padding: 11px 10px; text-align: center;
+  background: linear-gradient(180deg, rgba(22,14,7,.98), rgba(8,4,2,.98));
+  border: 1px solid var(--rof-form-gold-deep); box-shadow: inset 0 0 0 1px rgba(243,214,118,.12);
+  pointer-events: none; z-index: 6;
+}
+body.game-mode #formation-screen .form-spell-slot.show-detail .form-spell-lock { display: none; }
+body.game-mode #formation-screen .form-spell-slot.show-detail .form-spell-lock-detail { display: flex; }
+body.game-mode #formation-screen .ld-title { font: 800 10px/1 var(--rof-form-ft); letter-spacing: .18em; color: var(--rof-form-gold); }
+body.game-mode #formation-screen .ld-skill { font: 900 13px/1.2 var(--rof-form-fb); color: var(--rof-form-text); }
+body.game-mode #formation-screen .ld-stats { display: flex; gap: 9px; align-items: center; font: 800 12px/1 var(--rof-form-fb); color: var(--rof-form-text); }
+body.game-mode #formation-screen .ld-stats .dt { font: 400 10px/1 var(--rof-form-fb); color: var(--rof-form-text-dim); }
+body.game-mode #formation-screen .ld-ability { font: 400 10px/1.5 var(--rof-form-fb); color: var(--rof-form-text-dim); }
+body.game-mode #formation-screen .ld-div { width: 58%; height: 1px; background: var(--rof-form-border-lt); margin: 2px 0; }
+body.game-mode #formation-screen .ld-cond { font: 400 10.5px/1.55 var(--rof-form-fb); color: var(--rof-form-text-dim); }
+body.game-mode #formation-screen .ld-cond b { color: var(--rof-form-gold); }
+body.game-mode #formation-screen .ld-prog { font: 700 11px/1.3 var(--rof-form-fb); color: var(--rof-form-gold); background: rgba(8,4,2,.7); padding: 3px 9px; border: 1px solid var(--rof-form-border-lt); }
+body.game-mode #formation-screen .ld-hint { font: 400 9.5px/1.5 var(--rof-form-fb); color: var(--rof-form-text-mute); margin-top: 1px; }
+body.game-mode #formation-screen .ld-close { font: 700 8px/1 var(--rof-form-fb); letter-spacing: .22em; color: var(--rof-form-text-dark); margin-top: 4px; }
+
+/* ── 옛 모달 (Step 2 에서 시안 PickerModal 로 교체 예정) — 호환 유지 ── */
+body.game-mode #formation-screen .form-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .86);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+body.game-mode #formation-screen .form-modal[style*="display: flex"],
+body.game-mode #formation-screen .form-modal[style*="display:flex"] { display: flex !important; }
+
+body.game-mode #formation-screen .form-modal-box {
+  width: 1180px;
+  max-width: 100%;
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 22px 26px 26px;
+  background: linear-gradient(180deg, #1a1208 0%, #0a0604 100%);
+  border: 2px solid var(--rof-form-gold-deep);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(243, 214, 118, .15);
+  color: var(--rof-form-text);
+}
+
+body.game-mode #formation-screen .form-modal-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--rof-form-border);
+  font: 900 22px/1 var(--rof-form-fd);
+  color: var(--rof-form-gold);
+  letter-spacing: .06em;
+  text-shadow: 0 0 10px rgba(243, 214, 118, .5);
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx PickerModal 헤더 3-row 정합 (cluster A) */
+/* Step 2-2 cluster A — 시안 헤더: eyebrow + 큰 제목 + 부제목 */
+body.game-mode #formation-screen .form-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--rof-form-border);
+  gap: 14px;
+}
+body.game-mode #formation-screen .form-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+body.game-mode #formation-screen .form-modal-eyebrow {
+  font: 400 8px/1 var(--rof-form-fb);
+  letter-spacing: .5em;
+  color: #7a6c52;
+}
+body.game-mode #formation-screen .form-modal-title-big {
+  font: 900 22px/1 var(--rof-form-fd);
+  color: var(--rof-form-gold);
+  letter-spacing: .06em;
+  text-shadow: 0 0 10px rgba(243, 214, 118, .5);
+}
+body.game-mode #formation-screen .form-modal-subtitle {
+  font: 400 11px/1.4 var(--rof-form-fb);
+  color: #a89478;
+  margin-top: 2px;
+}
+
+body.game-mode #formation-screen .form-modal-close {
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--rof-form-border-lt);
+  color: var(--rof-form-text-dim);
+  cursor: pointer;
+  font: 700 11px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 PickerModal 필터 row 2-row layout (storyboard-inspector 후속 — flex column 강제) */
+body.game-mode #formation-screen .form-filter-row {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: rgba(8, 4, 2, .6);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+body.game-mode #formation-screen .form-filter-btn {
+  padding: 6px 12px;
+  cursor: pointer;
+  background: rgba(20, 12, 6, .6);
+  border: 1px solid var(--rof-form-border-lt);
+  color: var(--rof-form-text-dim);
+  font: 700 10px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+}
+body.game-mode #formation-screen .form-filter-btn.is-active {
+  background: linear-gradient(180deg, var(--rof-form-gold-deep), var(--rof-form-gold-dark));
+  border-color: var(--rof-form-gold);
+  color: #1a0e04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+  box-shadow: 0 0 10px rgba(243, 214, 118, .35), inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+
+body.game-mode #formation-screen .form-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+body.game-mode #formation-screen .form-modal-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx PickerModal 외곽 그대로 옮김 (신규 디자인 X, 사용자 응급 우회 컨펌) */
+/* ─── Step 2-2 (2026-05-18) PickerModal 시안 정합 추가 element ─── */
+/* 라벨 + chip row (시안 이미지 정합: '원소' 라벨 + chip 들 가로) */
+body.game-mode #formation-screen .form-filter-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+body.game-mode #formation-screen .form-filter-row-inline:last-child {
+  margin-bottom: 0;
+}
+body.game-mode #formation-screen .form-filter-label {
+  flex-shrink: 0;
+  min-width: 40px;
+  font: 700 11px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+  color: var(--rof-form-text-dim);
+}
+body.game-mode #formation-screen .form-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx:301~303 매칭 건수 라벨 (storyboard-inspector 블로커 #2) */
+body.game-mode #formation-screen .form-filter-count {
+  font: 400 10px/1 var(--rof-form-fb);
+  letter-spacing: .1em;
+  color: #7a6c52;
+  text-align: right;
+  margin-top: 2px;
+}
+
+body.game-mode #formation-screen .form-picker-cell {
+  position: relative;
+  padding: 10px 4px 8px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border-lt);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+body.game-mode #formation-screen .form-picker-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .7), 0 0 0 1px var(--rof-form-gold);
+}
+body.game-mode #formation-screen .form-picker-card-box {
+  pointer-events: none;
+  width: calc(240px * 0.96);
+  height: calc(336px * 0.96);
+  display: flex;
+  justify-content: center;
+  transform: scale(0.96);
+  transform-origin: top center;
+}
+
+body.game-mode #formation-screen .form-picker-zoom {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 5;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(8, 4, 2, .92);
+  border: 1.5px solid var(--rof-form-gold-deep);
+  color: var(--rof-form-gold);
+  font: 700 12px/1 var(--rof-form-ft);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .7);
+}
+body.game-mode #formation-screen .form-picker-zoom:hover {
+  background: rgba(28, 18, 8, .98);
+  border-color: var(--rof-form-gold);
+}
+
+body.game-mode #formation-screen .form-picker-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 10px 0 4px;
+}
+body.game-mode #formation-screen .form-picker-page-btn {
+  padding: 8px 16px;
+  cursor: pointer;
+  background: rgba(20, 12, 6, .8);
+  border: 1px solid var(--rof-form-gold-deep);
+  color: var(--rof-form-gold);
+  font: 700 11px/1 var(--rof-form-ft);
+  letter-spacing: .18em;
+}
+body.game-mode #formation-screen .form-picker-page-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--rof-form-gold-deep), var(--rof-form-gold-dark));
+  color: #1a0e04;
+}
+body.game-mode #formation-screen .form-picker-page-btn:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+body.game-mode #formation-screen .form-picker-page-info {
+  font: 700 11px/1 var(--rof-form-ft);
+  letter-spacing: .18em;
+  color: var(--rof-form-text-dim);
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 formation_v2.jsx CardZoomModal 외곽 그대로 옮김 (Step 2-3, 사용자 응급 우회 컨펌) */
+/* ─── Step 2-3 (2026-05-18) CardZoomModal — 시안 formation_v2.jsx:155 정합 ─── */
+body.game-mode .form-card-zoom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .93);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  z-index: 200;
+  padding: 20px;
+  overflow: auto;
+  animation: cz-fadein .18s ease;
+}
+body.game-mode .form-card-zoom[style*="display: flex"],
+body.game-mode .form-card-zoom[style*="display:flex"] { display: flex !important; }
+
+@keyframes cz-fadein { from { opacity: 0 } to { opacity: 1 } }
+
+body.game-mode .form-card-zoom-close {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rof-form-gold-deep);
+  color: var(--rof-form-gold);
+  font: 700 11px/1 var(--rof-form-ft);
+  letter-spacing: .25em;
+  z-index: 201;
+}
+body.game-mode .form-card-zoom-close:hover {
+  background: rgba(28, 18, 8, .98);
+  border-color: var(--rof-form-gold);
+}
+
+body.game-mode .form-card-zoom-card {
+  width: 400px;
+  height: 600px;
+  position: relative;
+  filter: drop-shadow(0 0 50px rgba(243, 214, 118, .35)) drop-shadow(0 20px 40px rgba(0, 0, 0, .9));
+  flex-shrink: 0;
+}
+
+/* design-confirmed: 2026-05-18 사유: 사용자 컨펌 (mockup/illustration_frame/v3 normal inset).
+   확대 전용 일러스트 = 황금 frame 으로 일러스트만 둘러쌈. 메타데이터(cost/이름/스탯) 는 info panel.
+   custom: 자체 frame 자산 (사용자 공급 img/ui/frames/zoom_frame_simple.png) — 외부 차용 없음. */
+body.game-mode .form-zoom-framed-art {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  box-shadow: 0 0 24px rgba(243, 214, 118, .22), 0 8px 24px rgba(0, 0, 0, .7);
+}
+body.game-mode .form-zoom-art {
+  position: absolute;
+  inset: 24px;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+}
+body.game-mode .form-zoom-frame {
+  position: absolute;
+  inset: 0;
+  background: url('../img/ui/frames/zoom_frame_simple.png') center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* 시그니처 스킬 grid zoom (toggleSkillZoom) — 옛 .card-v4 zoom 호버 무력화 룰 유지 */
+body.game-mode #form-sig-grid .is-zoomed .card-v4:hover {
+  transform: none !important;
+  z-index: auto !important;
+}
+body.game-mode #form-sig-grid .is-zoomed .card-v4 {
+  transition: none;
+}
+
+body.game-mode .form-card-zoom-info {
+  width: 300px;
+  padding: 24px 22px;
+  background: rgba(12, 8, 4, .95);
+  border: 1.5px solid var(--rof-form-gold-deep);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(243, 214, 118, .18);
+  flex-shrink: 0;
+}
+body.game-mode .form-zoom-eyebrow {
+  font: 400 8px/1 var(--rof-form-fb);
+  letter-spacing: .5em;
+  color: #7a6c52;
+  margin-bottom: 6px;
+}
+body.game-mode .form-zoom-name {
+  font: 900 26px/1.1 var(--rof-form-fd);
+  color: var(--rof-form-gold);
+  letter-spacing: .04em;
+  text-shadow: 0 0 10px rgba(243, 214, 118, .5);
+  margin-bottom: 12px;
+}
+body.game-mode .form-zoom-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+body.game-mode .form-zoom-chip {
+  padding: 4px 10px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border-lt);
+  color: var(--rof-form-gold);
+  font: 700 9px/1 var(--rof-form-ft);
+  letter-spacing: .2em;
+}
+body.game-mode .form-zoom-chip.is-rarity {
+  background: linear-gradient(180deg, var(--rof-form-gold-deep), var(--rof-form-gold-dark));
+  border-color: var(--rof-form-gold);
+  color: #1a0e04;
+}
+body.game-mode .form-zoom-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+body.game-mode .form-zoom-stat {
+  padding: 10px 8px;
+  background: var(--rof-form-panel-inset);
+  border: 1px solid var(--rof-form-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+body.game-mode .form-zoom-stat-label {
+  font: 700 8px/1 var(--rof-form-ft);
+  letter-spacing: .3em;
+  color: #7a6c52;
+}
+body.game-mode .form-zoom-stat-value {
+  font: 900 22px/1 var(--rof-form-fd);
+  text-align: center;
+}
+body.game-mode .form-zoom-stat.is-small .form-zoom-stat-value {
+  font-size: 14px;
+}
+body.game-mode .form-zoom-desc {
+  padding: 12px 14px;
+  background: rgba(8, 4, 2, .8);
+  border: 1px solid var(--rof-form-border);
+  font: 400 12px/1.6 var(--rof-form-fb);
+  color: #d8c9a0;
+  margin-bottom: 8px;
+}
+body.game-mode .form-zoom-desc:last-child {
+  margin-bottom: 0;
+}
+
+/* 옛 form-skill 모달 안 카드 placeholder (mkCardElV4 미사용 — 텍스트 박스) */
+body.game-mode #formation-screen .form-skill-card {
+  position: relative;
+  width: 120px;
+  aspect-ratio: 3 / 4;
+  padding: 8px;
+  background: var(--rof-form-panel-inset);
+  border: 1.5px solid var(--rof-form-border-lt);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--rof-form-text);
+}
+body.game-mode #formation-screen .form-skill-cost {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(243, 214, 118, .9);
+  color: #1a0e04;
+  font: 900 11px/22px var(--rof-form-fd);
+  text-align: center;
+}
+body.game-mode #formation-screen .form-skill-icon { font-size: 1.6rem; }
+body.game-mode #formation-screen .form-skill-name {
+  font: 700 11px/1.2 var(--rof-form-fb);
+  text-align: center;
+}

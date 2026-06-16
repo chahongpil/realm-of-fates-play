@@ -1,0 +1,97 @@
+/* ===================================================================
+   Realm of Fates — 커스텀 마우스 커서 (2026-05-13 사용자 컨펌)
+   ===================================================================
+   자체 자산 5종 (img/cursor_*.png 64×64) — 외부 차용 X.
+   design-confirmed: mockup/cursor/v1.html 사용자 시안 검수 통과.
+
+   매핑:
+     default      — 보라 화살표 (페이지 빈 영역)
+     pointer      — 가리키는 손 (버튼/링크/클릭 element)
+     grab         — 펼친 손 (드래그 가능)
+     grabbing     — 주먹 (드래그 중)
+     not-allowed  — 금지 마크 (비활성)
+   =================================================================== */
+
+/* 전역 default — html/body 모든 자식에 상속 */
+html, body {
+  cursor: url('../img/ui/cursors/cursor_default.png') 0 0, default !important;
+}
+/* 자식 element 도 명시적으로 상속하지 않으면 시스템 default 가 떠서 강제. */
+body *, body *::before, body *::after {
+  cursor: inherit;
+}
+
+/* 클릭 가능 — pointer (!important 로 다른 css 의 cursor:pointer 덮어씌움) */
+a,
+button,
+[data-action],
+[data-dismiss],
+[data-action-input],
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+label,
+summary,
+/* 광역 클래스명 매칭 — 모든 클릭 element */
+[class*="btn"],
+[class*="-button"],
+[class*="building"],
+[class*="option"],
+[class*="-box"],
+[class*="card"],
+[class*="-tab"],
+[class*="-mini"],
+[class*="loot"],
+[class*="auth-"],
+[class*="choice"],
+[class*="modal-"],
+[class*="profile-card"],
+[class*="dot-"],
+[class*="pcm-"],
+[class*="rew-"],
+.card,
+.card-v2,
+.deck-mini,
+.btn,
+.auth-back,
+.town-building,
+.char-option,
+.char-option-v2,
+.choice-box,
+.loot-box,
+.gt-btn,
+.sp-btn {
+  cursor: url('../img/ui/cursors/cursor_pointer.png') 0 0, pointer !important;
+}
+
+/* 드래그 가능 — grab */
+[draggable="true"],
+.draggable,
+body.game-mode #tcg-screen .tcg-hand-card,
+body.game-mode #tcg-screen .match-card.mode-hand {
+  cursor: url('../img/ui/cursors/cursor_grab.png') 16 16, grab !important;
+}
+
+/* 드래그 중 — grabbing */
+[draggable="true"]:active,
+.is-dragging,
+.is-grabbing,
+body.game-mode #tcg-screen .tcg-hand-card.is-dragging,
+body.game-mode #tcg-screen .tcg-hand-card:active {
+  cursor: url('../img/ui/cursors/cursor_grabbing.png') 16 16, grabbing !important;
+}
+
+/* 비활성 — not-allowed */
+button[disabled],
+input[disabled],
+.is-disabled,
+.is-locked,
+[aria-disabled="true"],
+body.game-mode #tcg-screen .tcg-hand-card.is-disabled,
+body.game-mode .modal-overlay .profile-card-mini.is-locked {
+  cursor: url('../img/ui/cursors/cursor_disabled.png') 16 16, not-allowed !important;
+}

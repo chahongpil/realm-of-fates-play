@@ -1,0 +1,763 @@
+/* design-confirmed: 2026-05-18 사유: 시안 book_of_life.jsx vanilla 마이그레이션 — Step 6 (사용자 응급 우회 컨펌). custom: 시안 토큰 그대로 / BC X / IP 고유 X. */
+/* ───────────────────────────────────────────────────────────────────
+   Book of Life (생명의 서) — 시안 book_of_life.jsx 정합 (2026-05-18)
+   1280×720 고정. 펼친 책 layout (좌 인덱스 + spine + 우 마스터).
+   카드 일러스트: img/{id}.png (시안 BC X). 상태: active/wounded/buried.
+   ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  --bol-gold:       #f3d676;
+  --bol-gold-deep:  #c89030;
+  --bol-gold-dark:  #5a3a18;
+  --bol-border:     #3a2410;
+  --bol-border-lt:  #5a4020;
+  --bol-panel-bg:   rgba(20, 12, 6, .62);
+  --bol-panel-ins:  rgba(8, 4, 2, .78);
+  --bol-parch-top:  rgba(48, 34, 18, .85);
+  --bol-parch-bot:  rgba(28, 18, 8, .92);
+  --bol-ink:        #e8d5a3;
+  --bol-text-dim:   #a89478;
+  --bol-text-dark:  #7a6c52;
+  --bol-active:     #9ae07a;
+  --bol-active-bd:  #3a5a2a;
+  --bol-active-tx:  #bce8a0;
+  --bol-wounded:    #f0a060;
+  --bol-wounded-bd: #7a3a20;
+  --bol-wounded-tx: #f0c8a8;
+  --bol-buried:     #7a7a7a;
+  --bol-buried-bd:  #3a3a3a;
+  --bol-buried-tx:  #a8a8a8;
+  --bol-ft:         'Cinzel', 'Noto Serif KR', serif;
+  --bol-fd:         'Cinzel Decorative', serif;
+  --bol-fb:         'Noto Sans KR', sans-serif;
+  --bol-fs:         'Noto Serif KR', serif;
+}
+
+body.game-mode #book-of-life-screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: none;
+  overflow: hidden;
+}
+body.game-mode #book-of-life-screen.active {
+  display: block;
+  background: radial-gradient(ellipse at 50% 0%, #1a1208 0%, transparent 50%),
+              linear-gradient(180deg, #0a0604 0%, #050302 100%);
+}
+
+body.game-mode #book-of-life-screen .bol-stage {
+  width: 100%;
+  height: 100%;
+  color: var(--bol-ink);
+  font: 400 12px/1.4 var(--bol-fb);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+body.game-mode #book-of-life-screen .bol-topbar {
+  height: 50px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(12, 8, 4, .95);
+  border-bottom: 1px solid var(--bol-gold-deep);
+  box-shadow: 0 2px 14px rgba(243, 214, 118, .18);
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+}
+body.game-mode #book-of-life-screen .bol-topbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+body.game-mode #book-of-life-screen .bol-topbar-eyebrow {
+  font: 400 8px/1 var(--bol-fb);
+  letter-spacing: .5em;
+  color: var(--bol-text-dark);
+}
+body.game-mode #book-of-life-screen .bol-topbar-title {
+  font: 900 22px/1 var(--bol-fd);
+  color: var(--bol-gold);
+  letter-spacing: .06em;
+  text-shadow: 0 0 14px rgba(243, 214, 118, .53);
+}
+body.game-mode #book-of-life-screen .bol-topbar-subtitle {
+  font: 400 11px/1.2 var(--bol-fb);
+  color: var(--bol-text-dark);
+  font-style: italic;
+  margin-left: 6px;
+}
+body.game-mode #book-of-life-screen .bol-topbar-sep {
+  width: 1px;
+  height: 26px;
+  background: var(--bol-border-lt);
+}
+body.game-mode #book-of-life-screen .bol-topbar-tagline {
+  font: 400 11px/1.2 var(--bol-fb);
+  color: var(--bol-text-dim);
+}
+body.game-mode #book-of-life-screen .bol-topbar-spacer { flex: 1; }
+body.game-mode #book-of-life-screen .bol-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  font: 700 9.5px/1 var(--bol-ft);
+  letter-spacing: .22em;
+}
+body.game-mode #book-of-life-screen .bol-chip-active {
+  background: rgba(20, 40, 20, .7);
+  border: 1px solid var(--bol-active-bd);
+  color: var(--bol-active-tx);
+}
+body.game-mode #book-of-life-screen .bol-chip-active .bol-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bol-active);
+  box-shadow: 0 0 6px var(--bol-active);
+}
+body.game-mode #book-of-life-screen .bol-chip-wounded {
+  background: rgba(40, 24, 12, .7);
+  border: 1px solid var(--bol-wounded-bd);
+  color: var(--bol-wounded-tx);
+}
+body.game-mode #book-of-life-screen .bol-chip-wounded .bol-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bol-wounded);
+  box-shadow: 0 0 6px var(--bol-wounded);
+}
+body.game-mode #book-of-life-screen .bol-chip-buried {
+  background: rgba(20, 20, 20, .7);
+  border: 1px solid var(--bol-buried-bd);
+  color: var(--bol-buried-tx);
+}
+body.game-mode #book-of-life-screen .bol-chip-buried .bol-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bol-buried);
+}
+body.game-mode #book-of-life-screen .bol-topbar-close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--bol-border-lt);
+  color: var(--bol-text-dim);
+  font: 400 14px/1 var(--bol-ft);
+}
+body.game-mode #book-of-life-screen .bol-topbar-close:hover {
+  background: rgba(40, 12, 12, .5);
+  border-color: #7a3a2a;
+  color: #e89888;
+}
+
+/* ── BODY (펼친 책) ── */
+body.game-mode #book-of-life-screen .bol-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  position: relative;
+}
+
+/* ── LEFT PAGE: Index ── */
+body.game-mode #book-of-life-screen .bol-left-page {
+  flex: 0 0 420px;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(180deg, var(--bol-parch-top), var(--bol-parch-bot));
+  border-right: 1px solid var(--bol-border);
+  padding: 18px 18px 14px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+body.game-mode #book-of-life-screen .bol-left-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body.game-mode #book-of-life-screen .bol-section-label {
+  font: 700 8px/1 var(--bol-ft);
+  letter-spacing: .34em;
+  color: var(--bol-text-dark);
+  margin-bottom: 6px;
+}
+body.game-mode #book-of-life-screen .bol-left-total {
+  font: 900 16px/1.1 var(--bol-fd);
+  color: var(--bol-gold);
+  letter-spacing: .04em;
+  text-shadow: 0 0 8px rgba(243, 214, 118, .4);
+}
+
+/* Filter chips */
+body.game-mode #book-of-life-screen .bol-filter-row {
+  display: flex;
+  gap: 5px;
+}
+body.game-mode #book-of-life-screen .bol-filter {
+  flex: 1;
+  padding: 7px 0;
+  cursor: pointer;
+  background: rgba(8, 4, 2, .6);
+  border: 1px solid var(--bol-border-lt);
+  color: var(--bol-text-dark);
+  font: 700 10px/1.1 var(--bol-ft);
+  letter-spacing: .18em;
+  text-align: center;
+}
+body.game-mode #book-of-life-screen .bol-filter-n {
+  font: 900 11px/1 var(--bol-fd);
+}
+body.game-mode #book-of-life-screen .bol-filter.is-active {
+  background: rgba(40, 28, 12, .6);
+  border-color: var(--bol-gold);
+  color: var(--bol-gold);
+  box-shadow: inset 0 0 8px rgba(243, 214, 118, .2);
+}
+body.game-mode #book-of-life-screen .bol-filter-active.is-active {
+  background: rgba(20, 40, 20, .6);
+  border-color: var(--bol-active-tx);
+  color: var(--bol-active-tx);
+  box-shadow: inset 0 0 8px rgba(154, 224, 122, .2);
+}
+body.game-mode #book-of-life-screen .bol-filter-wounded.is-active {
+  background: rgba(40, 24, 12, .6);
+  border-color: var(--bol-wounded-tx);
+  color: var(--bol-wounded-tx);
+  box-shadow: inset 0 0 8px rgba(240, 200, 168, .2);
+}
+body.game-mode #book-of-life-screen .bol-filter-buried.is-active {
+  background: rgba(20, 20, 20, .6);
+  border-color: var(--bol-buried-tx);
+  color: var(--bol-buried-tx);
+  box-shadow: inset 0 0 8px rgba(168, 168, 168, .2);
+}
+
+/* Search */
+body.game-mode #book-of-life-screen .bol-search {
+  position: relative;
+}
+body.game-mode #book-of-life-screen .bol-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--bol-text-dark);
+  font: 700 12px/1 var(--bol-ft);
+}
+body.game-mode #book-of-life-screen .bol-search input {
+  width: 100%;
+  padding: 9px 12px 9px 30px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--bol-border-lt);
+  color: var(--bol-ink);
+  font: 500 11px/1 var(--bol-fb);
+  letter-spacing: .04em;
+  outline: none;
+}
+body.game-mode #book-of-life-screen .bol-search input:focus {
+  border-color: var(--bol-gold-deep);
+}
+
+/* Unit list */
+body.game-mode #book-of-life-screen .bol-unit-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 4px;
+  min-height: 0;
+}
+body.game-mode #book-of-life-screen .bol-unit-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  cursor: pointer;
+  background: rgba(8, 4, 2, .55);
+  border: 1px solid var(--bol-border);
+  transition: all .15s;
+}
+body.game-mode #book-of-life-screen .bol-unit-row.is-selected {
+  background: rgba(40, 28, 12, .95);
+  border-color: var(--bol-gold);
+  box-shadow: 0 0 10px rgba(243, 214, 118, .25), inset 0 1px 0 rgba(243, 214, 118, .12);
+}
+body.game-mode #book-of-life-screen .bol-unit-portrait {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background-position: center 12%;
+  background-size: cover;
+  background-color: #1a0e04;
+  border: 1.5px solid var(--bol-border-lt);
+}
+body.game-mode #book-of-life-screen .bol-unit-row.is-buried .bol-unit-portrait {
+  filter: grayscale(.85) brightness(.55);
+}
+body.game-mode #book-of-life-screen .bol-unit-hero-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  padding: 1px 4px;
+  background: linear-gradient(180deg, var(--bol-gold-deep), var(--bol-gold-dark));
+  border: 1px solid var(--bol-gold);
+  color: #1a0e04;
+  font: 900 7px/1 var(--bol-ft);
+  letter-spacing: .18em;
+}
+body.game-mode #book-of-life-screen .bol-unit-stripe {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+}
+body.game-mode #book-of-life-screen .bol-unit-body {
+  flex: 1;
+  min-width: 0;
+}
+body.game-mode #book-of-life-screen .bol-unit-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+body.game-mode #book-of-life-screen .bol-unit-name {
+  font: 900 12.5px/1.15 var(--bol-ft);
+  color: #f6e9c4;
+  text-shadow: 0 1px 2px #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.game-mode #book-of-life-screen .bol-unit-row.is-buried .bol-unit-name {
+  color: var(--bol-text-dark);
+}
+body.game-mode #book-of-life-screen .bol-unit-lv {
+  font: 700 9px/1 var(--bol-ft);
+  color: var(--bol-text-dark);
+  letter-spacing: .14em;
+  flex-shrink: 0;
+}
+body.game-mode #book-of-life-screen .bol-unit-title {
+  font: 400 9.5px/1.2 var(--bol-fb);
+  color: var(--bol-text-dim);
+  font-style: italic;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.game-mode #book-of-life-screen .bol-unit-row.is-buried .bol-unit-title {
+  color: #5a4020;
+}
+body.game-mode #book-of-life-screen .bol-unit-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+body.game-mode #book-of-life-screen .bol-unit-status-dot.is-active {
+  background: var(--bol-active);
+  box-shadow: 0 0 5px var(--bol-active);
+}
+body.game-mode #book-of-life-screen .bol-unit-status-dot.is-wounded {
+  background: var(--bol-wounded);
+  box-shadow: 0 0 5px var(--bol-wounded);
+}
+body.game-mode #book-of-life-screen .bol-unit-status-dot.is-buried {
+  background: var(--bol-buried);
+}
+
+/* ── BOOK SPINE ── */
+body.game-mode #book-of-life-screen .bol-spine {
+  flex: 0 0 14px;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(180deg, #1a0e04, #050302);
+  border-left: 1px solid var(--bol-border);
+  border-right: 1px solid var(--bol-border);
+}
+body.game-mode #book-of-life-screen .bol-spine-line {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--bol-gold-deep) 30%, var(--bol-gold-deep) 70%, transparent);
+  opacity: .5;
+}
+body.game-mode #book-of-life-screen .bol-spine-ribbon {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 80px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #c83838, #7a2020);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .8);
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 50% 100%, 0 88%);
+}
+
+/* ── RIGHT PAGE: Master detail ── */
+body.game-mode #book-of-life-screen .bol-right-page {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(180deg, var(--bol-parch-top), var(--bol-parch-bot));
+  padding: 18px 30px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.game-mode #book-of-life-screen .bol-right-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5a4020;
+  font: 400 13px/1.6 var(--bol-fb);
+  letter-spacing: .05em;
+}
+
+body.game-mode #book-of-life-screen .bol-master {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  overflow-y: auto;
+}
+body.game-mode #book-of-life-screen .bol-master-left {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+body.game-mode #book-of-life-screen .bol-master-portrait {
+  width: 200px;
+  height: 280px;
+  background-position: center 8%;
+  background-size: cover;
+  background-color: #1a0e04;
+  border: 3px solid var(--bol-gold-deep);
+  position: relative;
+  cursor: zoom-in;
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, .55), 0 4px 14px rgba(0, 0, 0, .7);
+}
+body.game-mode #book-of-life-screen .bol-master.is-buried .bol-master-portrait {
+  filter: grayscale(.9) brightness(.45);
+}
+body.game-mode #book-of-life-screen .bol-master-portrait::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--bol-gold-deep), var(--bol-gold), var(--bol-gold-deep));
+}
+body.game-mode #book-of-life-screen .bol-master-portrait-zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--bol-gold-deep);
+  color: var(--bol-gold);
+  font: 700 9px/1 var(--bol-ft);
+  letter-spacing: .2em;
+  pointer-events: none;
+}
+body.game-mode #book-of-life-screen .bol-master-rip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  padding: 10px 24px;
+  background: rgba(40, 40, 40, .8);
+  border: 3px solid #7a7a7a;
+  font: 900 32px/1 var(--bol-fd);
+  color: #a8a8a8;
+  letter-spacing: .2em;
+  text-shadow: 0 2px 6px #000;
+  pointer-events: none;
+}
+body.game-mode #book-of-life-screen .bol-status-pill {
+  align-self: flex-start;
+  padding: 6px 12px;
+  font: 700 10px/1 var(--bol-ft);
+  letter-spacing: .22em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+body.game-mode #book-of-life-screen .bol-status-pill.is-active {
+  background: rgba(20, 40, 20, .8);
+  border: 1px solid var(--bol-active-bd);
+  color: var(--bol-active-tx);
+}
+body.game-mode #book-of-life-screen .bol-status-pill.is-wounded {
+  background: rgba(40, 24, 12, .8);
+  border: 1px solid var(--bol-wounded-bd);
+  color: var(--bol-wounded-tx);
+}
+body.game-mode #book-of-life-screen .bol-status-pill.is-buried {
+  background: rgba(20, 20, 20, .8);
+  border: 1px solid var(--bol-buried-bd);
+  color: var(--bol-buried-tx);
+}
+body.game-mode #book-of-life-screen .bol-status-pill .bol-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+body.game-mode #book-of-life-screen .bol-master-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+body.game-mode #book-of-life-screen .bol-master-title {
+  font: 400 9.5px/1 var(--bol-fb);
+  letter-spacing: .42em;
+  color: var(--bol-text-dark);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+body.game-mode #book-of-life-screen .bol-master-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+body.game-mode #book-of-life-screen .bol-master-name {
+  font: 900 30px/1.1 var(--bol-fd);
+  color: var(--bol-gold);
+  letter-spacing: .04em;
+  text-shadow: 0 0 12px rgba(243, 214, 118, .4);
+}
+body.game-mode #book-of-life-screen .bol-master.is-buried .bol-master-name {
+  color: var(--bol-text-dim);
+  text-shadow: none;
+}
+body.game-mode #book-of-life-screen .bol-master-lv {
+  font: 900 14px/1 var(--bol-ft);
+  color: var(--bol-text-dim);
+}
+body.game-mode #book-of-life-screen .bol-master-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+body.game-mode #book-of-life-screen .bol-master-chip {
+  padding: 4px 9px;
+  font: 700 9px/1 var(--bol-ft);
+  letter-spacing: .22em;
+  background: var(--bol-panel-ins);
+  border: 1px solid var(--bol-border-lt);
+  color: var(--bol-gold);
+}
+body.game-mode #book-of-life-screen .bol-master-chip.is-rarity {
+  border-color: currentColor;
+  color: #1a0e04;
+}
+
+body.game-mode #book-of-life-screen .bol-master-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+body.game-mode #book-of-life-screen .bol-stat {
+  padding: 10px 6px;
+  background: rgba(8, 4, 2, .7);
+  border: 1px solid var(--bol-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+body.game-mode #book-of-life-screen .bol-stat-label {
+  font: 700 7.5px/1 var(--bol-ft);
+  letter-spacing: .3em;
+  color: var(--bol-text-dark);
+}
+body.game-mode #book-of-life-screen .bol-stat-value {
+  font: 900 18px/1 var(--bol-fd);
+}
+
+body.game-mode #book-of-life-screen .bol-master-record {
+  padding: 10px 12px;
+  background: var(--bol-panel-ins);
+  border: 1px solid var(--bol-border);
+}
+body.game-mode #book-of-life-screen .bol-master-record-label {
+  font: 700 8px/1 var(--bol-ft);
+  letter-spacing: .32em;
+  color: var(--bol-text-dark);
+  margin-bottom: 6px;
+}
+body.game-mode #book-of-life-screen .bol-master-record-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+body.game-mode #book-of-life-screen .bol-rec {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+body.game-mode #book-of-life-screen .bol-rec-label {
+  font: 700 8px/1 var(--bol-ft);
+  letter-spacing: .22em;
+  color: var(--bol-text-dark);
+}
+body.game-mode #book-of-life-screen .bol-rec-value {
+  font: 900 14px/1 var(--bol-fd);
+  color: #f6e9c4;
+}
+
+body.game-mode #book-of-life-screen .bol-master-skills {
+  padding: 10px 12px;
+  background: var(--bol-panel-ins);
+  border: 1px solid var(--bol-border);
+}
+body.game-mode #book-of-life-screen .bol-master-skills-label {
+  font: 700 8px/1 var(--bol-ft);
+  letter-spacing: .32em;
+  color: var(--bol-text-dark);
+  margin-bottom: 6px;
+}
+body.game-mode #book-of-life-screen .bol-master-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+body.game-mode #book-of-life-screen .bol-skill-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px 4px 4px;
+  background: rgba(8, 4, 2, .7);
+  border: 1px solid var(--bol-border-lt);
+  font: 700 10px/1 var(--bol-ft);
+  color: var(--bol-gold);
+  letter-spacing: .04em;
+}
+body.game-mode #book-of-life-screen .bol-skill-icon {
+  width: 22px;
+  height: 22px;
+  background-position: center;
+  background-size: cover;
+  background-color: #1a0e04;
+  border: 1px solid var(--bol-border);
+}
+
+body.game-mode #book-of-life-screen .bol-master-lore {
+  padding: 12px 14px;
+  background: rgba(28, 18, 8, .8);
+  border: 1px solid var(--bol-border);
+  font: 500 11.5px/1.6 var(--bol-fs);
+  color: #d8c0a8;
+  font-style: italic;
+}
+body.game-mode #book-of-life-screen .bol-master.is-buried .bol-master-lore {
+  color: var(--bol-text-dim);
+}
+
+body.game-mode #book-of-life-screen .bol-master-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  flex-wrap: wrap;
+}
+body.game-mode #book-of-life-screen .bol-action-btn {
+  padding: 10px 18px;
+  cursor: pointer;
+  background: var(--bol-panel-ins);
+  border: 1px solid var(--bol-border-lt);
+  color: var(--bol-text-dim);
+  font: 700 10px/1 var(--bol-ft);
+  letter-spacing: .22em;
+}
+body.game-mode #book-of-life-screen .bol-action-btn:hover {
+  border-color: var(--bol-gold-deep);
+  color: var(--bol-gold);
+}
+body.game-mode #book-of-life-screen .bol-action-btn.is-primary {
+  background: linear-gradient(180deg, var(--bol-gold-deep), var(--bol-gold-dark));
+  border-color: var(--bol-gold);
+  color: #1a0e04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .2);
+}
+body.game-mode #book-of-life-screen .bol-action-btn.is-danger {
+  border-color: #7a3a2a;
+  color: #e89888;
+}
+body.game-mode #book-of-life-screen .bol-action-btn.is-danger:hover {
+  background: rgba(40, 12, 12, .5);
+}
+
+/* ── Portrait Zoom Modal ── */
+body.game-mode .bol-portrait-zoom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .93);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 20px;
+}
+body.game-mode .bol-portrait-zoom[style*="display: flex"],
+body.game-mode .bol-portrait-zoom[style*="display:flex"] { display: flex !important; }
+body.game-mode .bol-portrait-close {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--bol-gold-deep);
+  color: var(--bol-gold);
+  font: 700 11px/1 var(--bol-ft);
+  letter-spacing: .25em;
+}
+body.game-mode .bol-portrait-zoom-card {
+  /* design-confirmed: 2026-05-18 사용자 컨펌 (mockup/illustration_frame/v3 normal inset).
+     옛 border + 하단 gold gradient 베이스 폐기, 황금 frame overlay (zoom_frame_simple.png) 채택.
+     custom: 자체 frame 자산 — 외부 차용 없음. */
+  width: 400px;
+  height: 600px;
+  background-color: #1a0e04;
+  background-size: cover;
+  background-position: center top;
+  background-origin: content-box;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+  padding: 24px;
+  box-sizing: border-box;
+  box-shadow: 0 0 24px rgba(243, 214, 118, .22), 0 8px 24px rgba(0, 0, 0, .7);
+  position: relative;
+}
+body.game-mode .bol-portrait-zoom-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('../img/ui/frames/zoom_frame_simple.png') center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+body.game-mode .bol-portrait-zoom-info {
+  width: 300px;
+  padding: 24px 22px;
+  background: rgba(12, 8, 4, .95);
+  border: 1.5px solid var(--bol-gold-deep);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .9);
+  color: var(--bol-ink);
+}

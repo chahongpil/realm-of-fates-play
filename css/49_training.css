@@ -1,0 +1,1497 @@
+/* design-confirmed: 2026-05-25 사유: 훈련소 v1 정본 적용 (시안 통째 ABC)
+   custom: 사용자 공급 시안 0.claulde.design/20260525/훈련소시안_0525/training_hall_bundle/training_hall.html 정합.
+   battle_system_decisions.md §훈련소 v1 표준 룰 / feature_manifest 3.19 신설
+
+   범위: #training-screen 안 모든 element (tr- prefix)
+   옛 룰 (css/42_screens.css:566~700+ 의 #training-screen .training-area / .training-grid / .training-detail / .tg-card 등)
+   은 이 파일이 override (cascade order 늦음, 더 specific selector). */
+
+/* ── 토큰 (시안 그대로 + tr- prefix) ── */
+body.game-mode #training-screen{
+  --tr-bg-0:#0a0805; --tr-bg-1:#1a0f08; --tr-bg-2:#2b1c13; --tr-bg-3:#3a2819;
+  --tr-text-0:#f6e9c4; --tr-text-1:#e8d5a3; --tr-text-2:#a89876; --tr-text-3:#7a6c52; --tr-text-4:#5a4a32;
+  --tr-gilt:#d4a84a; --tr-gilt-deep:#8b6914; --tr-gilt-pale:#f1d890;
+  --tr-border-1:#3a2819; --tr-border-2:#5a4022; --tr-border-3:#7a5a2e;
+  --tr-rubric:#8b1a1a;
+}
+
+/* ── #training-screen reset: 옛 .screen flex 풀고 1280×720 absolute layout ── */
+body.game-mode #training-screen.active{
+  display: block; flex-direction: unset; align-items: unset;
+}
+body.game-mode #training-screen{
+  position: relative; width: 100%; height: 100%; overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 35%, rgba(122,90,46,.18), transparent 65%),
+    linear-gradient(180deg, #14100a 0%, #0a0805 100%);
+  color: var(--tr-text-1);
+  font-family: 'Noto Sans KR', sans-serif;
+}
+body.game-mode #training-screen::before{
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle 180px at 50% 20%, rgba(212,168,74,.12), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(122,90,46,.02) 0 4px, transparent 4px 8px);
+}
+
+/* inner wrapper takes shake (so we don't fight game-root scale) */
+body.game-mode .tr-screen-inner{ position: absolute; inset: 0; }
+
+/* ── TOPBAR (56px) ── */
+body.game-mode .tr-topbar{
+  position: absolute; top: 0; left: 0; right: 0; height: 56px;
+  display: flex; align-items: center; padding: 0 28px; z-index: 5;
+}
+body.game-mode .tr-iconbtn{
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #3a2819, #1a0f08 80%);
+  border: 1px solid var(--tr-border-3); color: var(--tr-gilt); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.15), 0 2px 6px rgba(0,0,0,.6);
+}
+body.game-mode .tr-iconbtn:hover{ border-color: var(--tr-gilt); }
+body.game-mode .tr-crumb{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .4em; color: var(--tr-text-2);
+  text-transform: uppercase; margin-left: 16px;
+}
+body.game-mode .tr-title{
+  font: 800 20px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .16em; margin-left: 12px;
+}
+body.game-mode .tr-gilt-line{
+  flex: 1; height: 1px; margin: 0 20px;
+  background: linear-gradient(90deg, transparent, var(--tr-gilt-deep) 12%, var(--tr-gilt) 50%, var(--tr-gilt-deep) 88%, transparent);
+}
+body.game-mode .tr-meta{ display: flex; gap: 10px; align-items: center; }
+body.game-mode .tr-coin{
+  display: flex; gap: 6px; align-items: center; padding: 6px 12px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-2); border-radius: 9999px;
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .12em; color: var(--tr-text-2);
+}
+body.game-mode .tr-coin b{
+  color: var(--tr-gilt-pale); font-weight: 800; font-variant-numeric: tabular-nums; font-size: 12px;
+}
+
+/* ── LAYOUT (2-column grid 260 + main) ── */
+body.game-mode .tr-layout{
+  position: absolute; top: 68px; left: 24px; right: 24px; bottom: 24px;
+  display: grid; grid-template-columns: 260px 1fr; gap: 18px;
+}
+
+/* ── LEFT — PARTY rail ── */
+body.game-mode .tr-rail{
+  background: linear-gradient(180deg, rgba(20,16,10,.85), rgba(10,8,5,.95));
+  border: 1px solid var(--tr-border-2);
+  padding: 14px 12px; display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden; min-height: 0;
+}
+body.game-mode .tr-rail-head{
+  display: flex; flex-direction: column; gap: 8px; padding: 4px 2px 12px;
+  border-bottom: 1px solid var(--tr-border-1); margin-bottom: 6px; flex: 0 0 auto;
+}
+body.game-mode .tr-pm-list{
+  flex: 1 1 auto; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+  padding-right: 4px; min-height: 0;
+}
+body.game-mode .tr-pm-list::-webkit-scrollbar{ width: 8px; }
+body.game-mode .tr-pm-list::-webkit-scrollbar-track{
+  background: linear-gradient(180deg, rgba(10,6,4,.85), rgba(20,12,6,.85));
+  border-left: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-pm-list::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, var(--tr-gilt), var(--tr-gilt-deep));
+  border: 1px solid var(--tr-gilt-deep);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.3);
+}
+body.game-mode .tr-pm-list::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg, var(--tr-gilt-pale), var(--tr-gilt));
+}
+body.game-mode .tr-rail-head .tr-sub{
+  font: 400 9px/1 'Noto Sans KR'; letter-spacing: .16em; color: var(--tr-text-3); align-self: flex-end;
+}
+
+/* source toggle (formation / all units) */
+body.game-mode .tr-src-toggle{
+  display: inline-flex; width: 100%;
+  background: linear-gradient(180deg, #0e0805, #040201);
+  border: 1px solid var(--tr-gilt-deep);
+  padding: 3px; border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
+}
+body.game-mode .tr-src-btn{
+  flex: 1; padding: 8px 10px;
+  background: transparent; border: 0; border-radius: 2px;
+  color: var(--tr-text-3); cursor: pointer;
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .18em;
+  transition: all 150ms ease-out;
+}
+body.game-mode .tr-src-btn:hover{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-src-btn.is-active{
+  background: linear-gradient(180deg, var(--tr-gilt-deep) 0%, #5a4022 100%);
+  color: var(--tr-gilt-pale);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.2), 0 1px 3px rgba(0,0,0,.5);
+}
+
+/* element / rarity filter chips */
+body.game-mode .tr-el-filter{
+  display: none; gap: 4px; flex-wrap: wrap; padding: 6px 0 0;
+}
+body.game-mode .tr-rail.show-all .tr-el-filter{ display: flex; }
+body.game-mode .tr-el-chip{
+  flex: 1 1 calc(33% - 4px); min-width: 0;
+  padding: 5px 2px; text-align: center; cursor: pointer;
+  background: linear-gradient(180deg, #0e0805, #040201);
+  border: 1px solid var(--tr-border-1);
+  color: var(--tr-text-3);
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .1em;
+}
+body.game-mode .tr-el-chip .tr-ic{ font-size: 11px; margin-right: 3px; }
+body.game-mode .tr-el-chip:hover{ border-color: var(--tr-gilt-deep); color: var(--tr-gilt-pale); }
+body.game-mode .tr-el-chip.is-active{
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border-color: var(--tr-gilt); color: var(--tr-gilt-pale);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.15);
+}
+body.game-mode .tr-el-chip.rc-common.is-active{ background: linear-gradient(180deg, #3a3a3a, #1a1a1a); border-color: #b8b8c0; color: #e0e0e0; }
+body.game-mode .tr-el-chip.rc-rare.is-active{ background: linear-gradient(180deg, #1a3050, #0a1424); border-color: #7ab0ff; color: #7ab0ff; }
+body.game-mode .tr-el-chip.rc-noble.is-active{ background: linear-gradient(180deg, #3a1a4a, #1a0a2a); border-color: #c786d6; color: #c786d6; }
+body.game-mode .tr-el-chip.rc-legendary.is-active{ background: linear-gradient(180deg, #3a2819, #1a0f08); border-color: #f3d676; color: #f3d676; }
+body.game-mode .tr-el-chip.rc-divine.is-active{ background: linear-gradient(180deg, #3a3215, #1f1a08); border-color: #fff8d8; color: #fff8d8; box-shadow: inset 0 1px 0 rgba(241,228,195,.2), 0 0 12px rgba(232,189,74,.35); }
+
+/* PM (party member rail row) */
+body.game-mode .tr-pm{
+  position: relative; display: flex; gap: 10px; align-items: center;
+  padding: 8px 8px; border: 1px solid var(--tr-border-2); background: rgba(43,28,19,.7);
+  cursor: pointer;
+}
+body.game-mode .tr-pm.is-sel{
+  border-color: var(--tr-gilt);
+  box-shadow: inset 0 0 0 1px var(--tr-gilt-deep), 0 0 14px rgba(232,189,74,.2);
+  background: linear-gradient(180deg, rgba(60,40,22,.85), rgba(30,18,8,.85));
+}
+body.game-mode .tr-pm.is-hero .tr-pm-portrait{ border-color: var(--tr-gilt); }
+body.game-mode .tr-pm-portrait{
+  width: 48px; height: 48px; border: 1.5px solid var(--tr-border-3);
+  background: #000; overflow: hidden; flex: 0 0 48px; position: relative;
+}
+body.game-mode .tr-pm-portrait img{ width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+body.game-mode .tr-pm-info{ flex: 1; min-width: 0; }
+body.game-mode .tr-pm-name{
+  font: 800 12px/1.1 'Cinzel','Noto Serif KR'; color: var(--tr-text-0);
+  letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.game-mode .tr-pm-meta{
+  display: flex; gap: 6px; margin-top: 4px;
+  font: 700 9px/1 'Noto Sans KR'; font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-pm-lv{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-pm-rar{ color: var(--tr-text-3); }
+body.game-mode .tr-pm-rar.r-rare{ color: #7ab0ff; }
+body.game-mode .tr-pm-rar.r-noble{ color: #c786d6; }
+body.game-mode .tr-pm-rar.r-legendary{ color: #f3d676; }
+body.game-mode .tr-pm-rar.r-divine{ color: #fff8d8; }
+body.game-mode .tr-pm-exp{
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(0,0,0,.55);
+}
+body.game-mode .tr-pm-exp i{
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--tr-gilt-deep), var(--tr-gilt-pale));
+}
+
+/* ── RIGHT — main panel ── */
+body.game-mode .tr-main{
+  background: linear-gradient(180deg, rgba(20,16,10,.78), rgba(10,8,5,.85));
+  border: 1px solid var(--tr-border-2);
+  padding: 0; display: flex; flex-direction: column; overflow: hidden; position: relative;
+}
+body.game-mode .tr-main::before, body.game-mode .tr-main::after{
+  content: ""; position: absolute; width: 12px; height: 12px; border: 1px solid var(--tr-gilt);
+}
+body.game-mode .tr-main::before{ top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tr-main::after{ top: -1px; right: -1px; border-left: 0; border-bottom: 0; }
+
+/* TAB BAR (5 tabs) */
+body.game-mode .tr-tabs{
+  display: flex; gap: 0; padding: 10px 14px 0; border-bottom: 1px solid var(--tr-border-2);
+  background: linear-gradient(180deg, rgba(43,28,19,.7), rgba(20,12,6,.7));
+}
+body.game-mode .tr-tab{
+  flex: 1; padding: 14px 6px 12px; text-align: center; cursor: pointer;
+  border: 1px solid transparent; border-bottom: 0;
+  font: 700 10px/1.3 'Cinzel','Noto Serif KR'; letter-spacing: .2em;
+  color: var(--tr-text-3); text-transform: uppercase; position: relative;
+}
+body.game-mode .tr-tab .tr-ko{
+  display: block; font: 800 12px/1 'Cinzel','Noto Serif KR'; color: var(--tr-text-2);
+  letter-spacing: .16em; margin-bottom: 5px;
+}
+body.game-mode .tr-tab:hover{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-tab:hover .tr-ko{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-tab.is-active{
+  border-color: var(--tr-border-3); border-bottom-color: #1a120a;
+  background: #1a120a; color: var(--tr-gilt); margin-bottom: -1px;
+}
+body.game-mode .tr-tab.is-active .tr-ko{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-tab.is-active::before{
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--tr-gilt), transparent);
+}
+
+/* TAB CONTENT */
+body.game-mode .tr-tab-content{
+  flex: 1; padding: 18px 22px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin; scrollbar-color: var(--tr-gilt-deep) rgba(10,6,4,.7);
+}
+body.game-mode .tr-tab-content::-webkit-scrollbar{ width: 10px; }
+body.game-mode .tr-tab-content::-webkit-scrollbar-track{
+  background: linear-gradient(180deg, rgba(10,6,4,.85), rgba(20,12,6,.85));
+  border-left: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-tab-content::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, var(--tr-gilt), var(--tr-gilt-deep));
+  border: 1px solid var(--tr-gilt-deep);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.3);
+}
+body.game-mode .tr-tab-content::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg, var(--tr-gilt-pale), var(--tr-gilt));
+}
+body.game-mode .tr-panel{ display: none; }
+body.game-mode .tr-panel.is-active{ display: block; animation: tr-panel-in .25s ease-out; }
+@keyframes tr-panel-in{ 0%{ opacity: 0; transform: translateY(6px); } 100%{ opacity: 1; transform: translateY(0); } }
+
+/* ── DETAIL layout (mastery / awakening) ── */
+body.game-mode .tr-detail{
+  display: grid; grid-template-columns: 240px 1fr; gap: 36px; align-items: flex-start;
+}
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "수련/각성 일러스트 꽉 채워 (너무작다) + 학습/각인/강화 200×200 프로필 사진 자리" */
+body.game-mode .tr-detail-card{
+  position: relative; width: 260px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.08), 0 4px 12px rgba(0,0,0,.6);
+  padding: 10px 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+/* 수련/각성 좌측 프로필 (시안 220×300 → 사용자 명시 "꽉 채워" → 240×340) */
+body.game-mode .tr-dc-art{
+  width: 240px; height: 340px; background: #000;
+  border: 1px solid var(--tr-border-2); overflow: hidden; cursor: zoom-in;
+}
+body.game-mode .tr-dc-art img{ width: 100%; height: 100%; object-fit: cover; object-position: center 16%; }
+/* V4 mount 폐기 — dc-art 는 단순 프로필 자리 (나중에 사용자 공급 프로필 사진 교체 예정) */
+body.game-mode .tr-dc-name-btn{
+  width: 100%; padding: 9px 10px;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-gilt-deep); color: var(--tr-gilt-pale);
+  font: 800 13px/1 'Cinzel','Noto Serif KR'; letter-spacing: .12em;
+  text-align: center; cursor: pointer; position: relative;
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.1);
+}
+body.game-mode .tr-dc-name-btn::before, body.game-mode .tr-dc-name-btn::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 6px; height: 6px; border: 1px solid var(--tr-gilt-pale);
+}
+body.game-mode .tr-dc-name-btn::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tr-dc-name-btn::after{ right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tr-dc-name-btn:hover{ border-color: var(--tr-gilt); color: #fff; }
+body.game-mode .tr-dc-tags-row{ display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; width: 100%; }
+body.game-mode .tr-dc-tag{
+  padding: 2px 6px; background: rgba(10,6,4,.6); border: 1px solid var(--tr-border-3);
+  font: 700 8px/1 'Noto Sans KR'; letter-spacing: .16em;
+  color: var(--tr-gilt-pale); text-transform: uppercase;
+}
+body.game-mode .tr-detail-side{ display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+body.game-mode .tr-ds-row{ display: flex; justify-content: space-between; align-items: baseline; }
+body.game-mode .tr-ds-row .k{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .3em;
+  color: var(--tr-text-3); text-transform: uppercase;
+}
+body.game-mode .tr-ds-row .v{
+  font: 800 16px/1 'Cinzel','Noto Serif KR'; color: var(--tr-text-0);
+  font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-ds-row .v.diff{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-ds-row .v.up::after{ content: " ▲"; color: #5fd89a; font-size: 11px; letter-spacing: 0; }
+body.game-mode .tr-ds-row .v.down::after{ content: " ▼"; color: #d85f5f; font-size: 11px; letter-spacing: 0; }
+body.game-mode .tr-ds-head{ display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+body.game-mode .tr-ds-head .lbl{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .4em;
+  color: var(--tr-gilt-pale); text-transform: uppercase;
+}
+body.game-mode .tr-ds-head .line{
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--tr-gilt-deep), transparent); opacity: .6;
+}
+
+/* MASTERY — lv strip */
+body.game-mode .tr-lv-strip{
+  display: flex; align-items: center; gap: 8px; padding: 14px;
+  background: rgba(43,28,19,.55); border: 1px solid var(--tr-border-1);
+}
+body.game-mode .tr-lv-now{
+  width: 64px; height: 64px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--tr-gilt-pale), var(--tr-gilt) 55%, var(--tr-gilt-deep));
+  border: 2px solid var(--tr-gilt-deep);
+  display: flex; align-items: center; justify-content: center;
+  font: 900 26px/1 'Cinzel','Noto Serif KR'; color: #3a1f00;
+  box-shadow: 0 4px 10px rgba(0,0,0,.5);
+}
+body.game-mode .tr-lv-arrow{ font: 700 22px/1 'Cinzel'; color: var(--tr-gilt-pale); margin: 0 4px; }
+body.game-mode .tr-lv-next{
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 2px dashed var(--tr-gilt-deep);
+  display: flex; align-items: center; justify-content: center;
+  font: 900 26px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+}
+body.game-mode .tr-lv-meta{ flex: 1; margin-left: 10px; }
+body.game-mode .tr-lv-bar{
+  position: relative; height: 8px; background: rgba(0,0,0,.6);
+  border: 1px solid rgba(0,0,0,.95); margin-top: 8px;
+}
+body.game-mode .tr-lv-bar i{
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--tr-gilt-deep), var(--tr-gilt-pale));
+}
+body.game-mode .tr-lv-bar .pct{
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 9px/1 ui-monospace; color: #fff; text-shadow: 0 1px 1px #000; letter-spacing: .04em;
+}
+
+/* COST + ACT strip */
+body.game-mode .tr-act{
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(40,26,12,.6), rgba(20,12,6,.6));
+  border: 1px solid var(--tr-border-2); margin-top: 10px;
+}
+body.game-mode .tr-cost-tag{
+  display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+  background: rgba(10,6,4,.55); border: 1px solid var(--tr-gilt-deep);
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .16em; color: var(--tr-text-2);
+}
+body.game-mode .tr-cost-tag .tr-coin-sm{
+  width: 18px; height: 18px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--tr-gilt-pale), var(--tr-gilt) 55%, var(--tr-gilt-deep));
+  border: 1px solid var(--tr-gilt-deep);
+  display: flex; align-items: center; justify-content: center;
+  font: 900 10px/1 'Cinzel'; color: #3a1f00;
+}
+body.game-mode .tr-cost-tag b{
+  color: var(--tr-gilt-pale); font-weight: 800;
+  font-variant-numeric: tabular-nums; font-size: 13px;
+}
+body.game-mode .tr-btn{
+  min-width: 148px; padding: 10px 20px;
+  background: linear-gradient(180deg, #a02828, #5a0e0e);
+  border: 1px solid var(--tr-gilt); color: var(--tr-text-0);
+  font: 800 11px/1 'Cinzel','Noto Serif KR'; letter-spacing: .4em;
+  text-transform: uppercase; cursor: pointer; position: relative;
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.3), 0 3px 10px rgba(110,20,20,.5), 0 0 16px rgba(232,189,74,.16);
+}
+body.game-mode .tr-btn::before, body.game-mode .tr-btn::after{
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 7px; height: 7px; border: 1px solid var(--tr-gilt-pale);
+}
+body.game-mode .tr-btn::before{ left: -1px; border-right: 0; border-bottom: 0; }
+body.game-mode .tr-btn::after{ right: -1px; border-left: 0; border-top: 0; }
+body.game-mode .tr-btn:hover{
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.4), 0 4px 14px rgba(110,20,20,.7), 0 0 22px rgba(232,189,74,.28);
+}
+body.game-mode .tr-btn.secondary{
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border-color: var(--tr-gilt); color: var(--tr-gilt-pale);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.15), 0 3px 10px rgba(0,0,0,.5);
+}
+body.game-mode .tr-btn.secondary:hover{
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.22), 0 4px 14px rgba(0,0,0,.7), 0 0 18px rgba(232,189,74,.2);
+}
+body.game-mode .tr-btn.danger{
+  background: linear-gradient(180deg, #2a1418, #1a0a0c);
+  border-color: #7a3a3a; color: #e8a8a8;
+  box-shadow: inset 0 1px 0 rgba(232,168,168,.12), 0 3px 10px rgba(0,0,0,.5);
+}
+body.game-mode .tr-btn.danger:hover{
+  box-shadow: inset 0 1px 0 rgba(232,168,168,.2), 0 4px 14px rgba(40,10,14,.7), 0 0 16px rgba(180,80,80,.25);
+}
+body.game-mode .tr-act-hint{
+  font: 400 9px/1 'Noto Sans KR'; letter-spacing: .32em;
+  color: var(--tr-text-3); text-transform: uppercase;
+  margin-right: auto; padding-left: 6px;
+}
+body.game-mode .tr-info-line{
+  font: 400 11px/1.55 'Noto Serif KR', serif; color: var(--tr-text-2); font-style: italic;
+  padding: 8px 12px; border-left: 2px solid var(--tr-gilt-deep);
+  background: rgba(20,12,6,.4); margin-top: 6px;
+}
+
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "2:3 비율 꽉차게 + 시안 글 무시 (이름/설명 라벨 제거)" */
+/* ── ENGRAVING / UPGRADE / LEARNING grid (eg-card) — 2:3 비율 일러스트만 ── */
+body.game-mode .tr-eg-row{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 130px));
+  gap: 16px; justify-content: flex-start;
+}
+body.game-mode .tr-eg-card{
+  position: relative; width: 100%; aspect-ratio: 2/3; padding: 0;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  box-shadow: 0 4px 10px rgba(0,0,0,.5), inset 0 1px 0 rgba(241,228,195,.08);
+  cursor: pointer; display: flex; flex-direction: column; overflow: hidden;
+  transition: all 180ms ease-out;
+}
+body.game-mode .tr-eg-card::before{
+  content: ""; position: absolute; inset: 3px; border: 1px solid rgba(212,168,74,.2); pointer-events: none; z-index: 3;
+}
+body.game-mode .tr-eg-card:hover{ border-color: var(--tr-gilt); transform: translateY(-2px); }
+body.game-mode .tr-eg-card.is-sel{
+  border-color: var(--tr-gilt);
+  box-shadow: 0 0 0 1px var(--tr-gilt-deep), 0 0 18px rgba(232,189,74,.45), 0 4px 14px rgba(0,0,0,.6);
+  transform: translateY(-3px);
+}
+body.game-mode .tr-eg-card.is-engraved{
+  opacity: .55; cursor: not-allowed;
+  background: repeating-linear-gradient(45deg, #1a0f08 0 5px, #221610 5px 10px);
+  border-style: dashed;
+}
+/* 일러스트 = 카드 영역 100% 꽉 채움 (시안 58% → 사용자 명시 "꽉차게") */
+body.game-mode .tr-eg-art{
+  flex: 1; width: 100%; height: 100%;
+  background-size: cover; background-position: center; position: relative;
+}
+body.game-mode .tr-eg-art::after{
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,.78));
+}
+body.game-mode .tr-eg-lv{
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  padding: 2px 7px;
+  background: radial-gradient(circle at 30% 30%, var(--tr-gilt-pale), var(--tr-gilt) 55%, var(--tr-gilt-deep));
+  border: 1px solid var(--tr-gilt-deep);
+  font: 900 9px/1 'Cinzel','Noto Serif KR'; color: #3a1f00; letter-spacing: .04em;
+}
+/* 텍스트 라벨 (.tr-eg-name / .tr-eg-desc) 숨김 — 사용자 명시 "시안 글같은건 무시" */
+body.game-mode .tr-eg-name{ display: none; }
+body.game-mode .tr-eg-desc{ display: none; }
+body.game-mode .tr-eg-mark{
+  position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%);
+  text-align: center;
+  font: 800 10px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .32em; background: rgba(10,6,4,.78);
+  padding: 6px 0; border-top: 1px solid var(--tr-gilt-deep); border-bottom: 1px solid var(--tr-gilt-deep);
+  text-transform: uppercase;
+}
+body.game-mode .tr-eg-locked{
+  opacity: .45; cursor: not-allowed; filter: grayscale(.7);
+}
+
+/* ── 스킬 progressive unlock 잠금 슬롯 (2026-06-08, mockup/skill_slot_unlock/v1 정합) ── */
+/* design-confirmed: 2026-06-08 사유: v1 갤러리 사용자 컨펌 ("ㅇㅋ게임적용"). 잠금 회색조는 자작 효과 아닌 표준 UI 패턴 */
+body.game-mode .tr-ln-slot.is-locked{ cursor: pointer; }
+body.game-mode .tr-ln-slot.is-locked .tr-eg-art{ filter: grayscale(.92) brightness(.42); }
+body.game-mode .tr-ln-slot.is-locked:hover .tr-ln-lock-lv{ background: rgba(20,12,6,.95); border-color: var(--tr-gilt); }
+body.game-mode .tr-ln-lock{
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(8,4,2,.5); pointer-events: none;
+}
+body.game-mode .tr-ln-lock-icon{ font-size: 34px; filter: drop-shadow(0 2px 5px #000); }
+body.game-mode .tr-ln-lock-lv{ font: 800 10px/1 'Cinzel','Noto Serif KR'; letter-spacing: .1em; color: var(--tr-gilt-pale); background: rgba(8,4,2,.85); padding: 4px 8px; border: 1px solid var(--tr-gilt-deep); }
+body.game-mode .tr-ln-lock-hint{ font: 400 8px/1 'Noto Sans KR'; letter-spacing: .1em; color: var(--tr-text-3); }
+body.game-mode .tr-ln-lock-detail{
+  position: absolute; inset: 0; z-index: 4;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  padding: 9px 8px; text-align: center;
+  background: linear-gradient(180deg, rgba(22,14,7,.98), rgba(8,4,2,.98));
+  border: 1px solid var(--tr-gilt-deep); pointer-events: none;
+}
+body.game-mode .tr-ln-slot.show-detail .tr-ln-lock{ display: none; }
+body.game-mode .tr-ln-slot.show-detail .tr-ln-lock-detail{ display: flex; }
+body.game-mode .tr-ln-lock-detail .ld-title{ font: 800 8px/1 'Cinzel','Noto Serif KR'; letter-spacing: .14em; color: var(--tr-gilt-pale); }
+body.game-mode .tr-ln-lock-detail .ld-skill{ font: 900 11px/1.15 'Noto Sans KR'; color: var(--tr-text); }
+body.game-mode .tr-ln-lock-detail .ld-stats{ display: flex; gap: 6px; align-items: center; font: 800 10px/1 'Noto Sans KR'; color: var(--tr-text); }
+body.game-mode .tr-ln-lock-detail .ld-stats .dt{ font: 400 8px/1 'Noto Sans KR'; color: var(--tr-text-2); }
+body.game-mode .tr-ln-lock-detail .ld-ability{ font: 400 8.5px/1.4 'Noto Sans KR'; color: var(--tr-text-2); }
+body.game-mode .tr-ln-lock-detail .ld-div{ width: 55%; height: 1px; background: var(--tr-border-2); margin: 2px 0; }
+body.game-mode .tr-ln-lock-detail .ld-cond{ font: 400 8.5px/1.45 'Noto Sans KR'; color: var(--tr-text-2); }
+body.game-mode .tr-ln-lock-detail .ld-cond b{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-ln-lock-detail .ld-prog{ font: 700 9px/1.2 'Noto Sans KR'; color: var(--tr-gilt-pale); background: rgba(8,4,2,.7); padding: 2px 7px; border: 1px solid var(--tr-border-2); }
+body.game-mode .tr-ln-lock-detail .ld-hint{ font: 400 8px/1.4 'Noto Sans KR'; color: var(--tr-text-3); }
+
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "200x200 정사각 프로필 사진 자리 (나중에 교체)" */
+/* SKILL TAB profile panel (left side of engraving/upgrade/learning) */
+body.game-mode .tr-skill-layout{
+  display: grid; grid-template-columns: 220px 1fr; gap: 36px; align-items: flex-start;
+}
+body.game-mode .tr-skill-prof{
+  width: 220px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.08), 0 4px 12px rgba(0,0,0,.6);
+  padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative;
+}
+body.game-mode .tr-skill-prof::before{
+  content: ""; position: absolute; inset: 4px;
+  border: 1px solid rgba(212,168,74,.2); pointer-events: none;
+}
+/* 학습/각인/강화 좌측 프로필 — 200×200 정사각형 (사용자 명시 2026-05-25 "프로필 사진으로 교체 예정") */
+body.game-mode .tr-sp-art{
+  width: 200px; height: 200px; margin: 0 auto;
+  background: #000; border: 1px solid var(--tr-border-2);
+  overflow: hidden; cursor: zoom-in; position: relative; display: block;
+}
+body.game-mode .tr-sp-art img{
+  width: 100%; height: 100%; object-fit: cover; object-position: center 16%;
+  filter: saturate(.95) contrast(1.05);
+}
+body.game-mode .tr-sp-art::after{
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 65%, rgba(10,6,4,.7));
+}
+/* V4 mount 폐기 — sp-art 는 단순 프로필 자리 (나중에 사용자 공급 프로필 사진 교체 예정) */
+body.game-mode .tr-sp-rar{
+  position: absolute; top: 7px; right: 7px; z-index: 2;
+  padding: 3px 8px;
+  font: 700 9px/1 'Cinzel','Noto Serif KR'; letter-spacing: .14em;
+  background: rgba(10,6,4,.85); border: 1px solid var(--tr-gilt-deep); color: var(--tr-gilt-pale);
+}
+body.game-mode .tr-sp-name-btn{
+  width: 100%; padding: 8px 10px; text-align: center;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-gilt-deep); color: var(--tr-gilt-pale);
+  font: 800 12px/1.1 'Cinzel','Noto Serif KR'; letter-spacing: .1em;
+  cursor: pointer; position: relative;
+}
+body.game-mode .tr-sp-name-btn .lv{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .2em;
+  color: var(--tr-text-3); margin-top: 4px; display: block;
+}
+
+/* LEARNING — empty slot states */
+body.game-mode .tr-ln-slot.is-empty{
+  background: repeating-linear-gradient(45deg, #1a0f08 0 4px, #221610 4px 8px);
+  border-style: dashed;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+}
+body.game-mode .tr-ln-slot.is-empty::before{ border-color: rgba(212,168,74,.15); }
+body.game-mode .tr-ln-slot.is-empty:hover{ border-color: var(--tr-gilt); }
+body.game-mode .tr-ln-plus{ font: 300 36px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-deep); }
+body.game-mode .tr-ln-slot.is-empty:hover .tr-ln-plus{ color: var(--tr-gilt); }
+body.game-mode .tr-ln-empty-msg{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .3em; color: var(--tr-text-3); text-transform: uppercase;
+}
+
+/* AWAKENING — rarity ladder */
+body.game-mode .tr-rar-ladder{ display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+body.game-mode .tr-rl{
+  flex: 1; padding: 8px 4px; text-align: center;
+  background: linear-gradient(180deg, rgba(20,12,6,.6), rgba(10,6,4,.6));
+  border: 1px solid var(--tr-border-2);
+  font: 700 9px/1.2 'Noto Sans KR'; letter-spacing: .1em; color: var(--tr-text-3); text-transform: uppercase;
+}
+body.game-mode .tr-rl .tr-rl-mark{
+  font: 900 14px/1 'Cinzel'; margin-bottom: 4px; display: block;
+}
+body.game-mode .tr-rl.is-now{
+  border-color: var(--tr-gilt); color: var(--tr-gilt-pale);
+  background: linear-gradient(180deg, rgba(60,40,22,.85), rgba(30,18,8,.85));
+  box-shadow: inset 0 0 0 1px var(--tr-gilt-deep);
+}
+body.game-mode .tr-rl.is-now .tr-rl-mark{
+  color: var(--tr-gilt-pale); text-shadow: 0 0 10px rgba(232,189,74,.4);
+}
+body.game-mode .tr-rl.is-target{
+  border-color: #7ab0ff; color: #7ab0ff; border-style: dashed;
+}
+body.game-mode .tr-rl.is-target .tr-rl-mark{ color: #7ab0ff; }
+
+/* ── POPUPS (all overlays) ── */
+@keyframes tr-tz-fade{ 0%{opacity:0;} 100%{opacity:1;} }
+@keyframes tr-pop-in{ 0%{opacity:0;transform:scale(.6);} 60%{opacity:1;transform:scale(1.04);} 100%{opacity:1;transform:scale(1);} }
+
+/* ENGRAVE SUCCESS popup */
+body.game-mode .tr-eg-pop{
+  position: absolute; inset: 0; z-index: 10001;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.78); cursor: pointer;
+}
+body.game-mode .tr-eg-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-eg-box{
+  width: 420px; padding: 30px 32px; text-align: center; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 12px 40px rgba(0,0,0,.85), 0 0 36px rgba(232,189,74,.4), inset 0 1px 0 rgba(241,228,195,.2);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-cb{ position: absolute; width: 14px; height: 14px; border: 2px solid var(--tr-gilt-pale); }
+body.game-mode .tr-cb.tl{ top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+body.game-mode .tr-cb.tr{ top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
+body.game-mode .tr-cb.bl{ bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
+body.game-mode .tr-cb.br{ bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+body.game-mode .tr-eg-box .glyph{
+  font: 900 56px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  text-shadow: 0 0 22px rgba(255,215,90,.6); margin-bottom: 12px;
+}
+body.game-mode .tr-eg-box .title{
+  font: 900 22px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .18em; text-shadow: 0 2px 6px #000; margin-bottom: 8px;
+}
+body.game-mode .tr-eg-box .sub{
+  font: 400 12px/1.6 'Noto Serif KR'; color: var(--tr-text-2);
+  font-style: italic; margin-bottom: 10px;
+}
+body.game-mode .tr-eg-box .sub b{ color: var(--tr-gilt-pale); font-weight: 700; }
+body.game-mode .tr-eg-box .hint{
+  font: 400 9px/1 'Noto Sans KR'; letter-spacing: .5em;
+  color: var(--tr-text-3); text-transform: uppercase; margin-top: 10px;
+}
+
+/* CONFIRM-style popups (lc-pop / seal-pop / revert-pop) */
+body.game-mode .tr-confirm-pop{
+  position: absolute; inset: 0; z-index: 10008;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.85); cursor: pointer;
+}
+body.game-mode .tr-confirm-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-confirm-box{
+  width: 440px; padding: 28px 30px; cursor: default; text-align: center;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 32px rgba(232,189,74,.35);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-confirm-title{
+  font: 900 18px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .18em; margin-bottom: 10px;
+}
+body.game-mode .tr-confirm-body{
+  font: 400 13px/1.7 'Noto Serif KR'; color: var(--tr-text-1); margin-bottom: 16px;
+}
+body.game-mode .tr-confirm-body b{ color: var(--tr-gilt-pale); }
+body.game-mode .tr-confirm-warn{
+  font: 400 11px/1.5 'Noto Sans KR'; color: #e8a8a8; font-style: italic;
+  margin-top: 8px; display: none;
+}
+body.game-mode .tr-confirm-warn.is-show{ display: block; }
+body.game-mode .tr-confirm-actions{ display: flex; gap: 10px; justify-content: center; }
+body.game-mode .tr-confirm-actions button{
+  padding: 11px 26px;
+  font: 800 11px/1 'Cinzel','Noto Serif KR'; letter-spacing: .3em; cursor: pointer;
+}
+body.game-mode .tr-confirm-actions .yes{
+  background: linear-gradient(180deg, #a02828, #5a0e0e);
+  border: 1px solid var(--tr-gilt); color: var(--tr-text-0);
+}
+body.game-mode .tr-confirm-actions .no{
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3); color: var(--tr-text-2);
+}
+
+/* HELP popup */
+body.game-mode .tr-help-btn{
+  position: absolute; top: 14px; right: 18px; z-index: 6;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1.5px solid var(--tr-gilt-deep); color: var(--tr-gilt-pale);
+  font: 900 15px/24px 'Cinzel','Noto Serif KR'; text-align: center; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(241,228,195,.1);
+  transition: all 150ms ease-out;
+}
+body.game-mode .tr-help-btn:hover{
+  border-color: var(--tr-gilt); color: #fff;
+  box-shadow: 0 0 14px rgba(232,189,74,.4), inset 0 1px 0 rgba(241,228,195,.2);
+}
+body.game-mode .tr-help-pop{
+  position: absolute; inset: 0; z-index: 10009;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.82); cursor: pointer;
+}
+body.game-mode .tr-help-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-help-box{
+  width: 520px; padding: 30px 34px; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 32px rgba(232,189,74,.35), inset 0 1px 0 rgba(241,228,195,.18);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-help-tag{
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .55em;
+  color: var(--tr-gilt-pale); text-transform: uppercase; text-align: center; margin-bottom: 8px;
+}
+body.game-mode .tr-help-title{
+  font: 900 22px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .16em; text-align: center;
+  text-shadow: 0 2px 6px #000; margin-bottom: 18px;
+}
+body.game-mode .tr-help-body{ font: 400 13px/1.8 'Noto Serif KR'; color: var(--tr-text-1); }
+body.game-mode .tr-help-body p{ margin: 0 0 10px; }
+body.game-mode .tr-help-body p:last-child{ margin-bottom: 0; }
+body.game-mode .tr-help-body b{ color: var(--tr-gilt-pale); font-weight: 700; font-style: normal; }
+body.game-mode .tr-help-hint{
+  font: 400 9px/1 'Noto Sans KR'; letter-spacing: .5em;
+  color: var(--tr-text-3); text-transform: uppercase; text-align: center; margin-top: 16px;
+}
+
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "시안대로" — tz-overlay (380x540 + 480 info) / sk-zoom (340x510 V4 mount) */
+/* ── CODEX-STYLE ZOOM (캐릭터 프로필 zoom — 좌측 사이드 클릭 시) ── */
+body.game-mode .tr-tz-overlay{
+  position: absolute; inset: 0; z-index: 10010;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.85); cursor: pointer;
+}
+body.game-mode .tr-tz-overlay.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-tz-layout{
+  display: flex; align-items: center; justify-content: center; gap: 48px;
+  cursor: default; animation: tr-tz-pop 360ms cubic-bezier(.2,.8,.2,1.05);
+}
+@keyframes tr-tz-pop{
+  0%{ transform: scale(.7); opacity: 0; }
+  60%{ transform: scale(1.04); opacity: 1; }
+  100%{ transform: scale(1); }
+}
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "전력열람(formation)에서 확대한 일러스트처럼 바깥 문양 적용 — 프레임 문양만 다르다 통일" — formation 의 img/ui/frames/zoom_frame_simple.png 동일 적용 (css/41_formation.css:944~949 패턴) */
+body.game-mode .tr-tz-illust-frame{
+  position: relative; width: 380px; height: 540px;
+  filter: drop-shadow(0 0 50px rgba(243,214,118,.35)) drop-shadow(0 20px 40px rgba(0,0,0,.9));
+}
+body.game-mode .tr-tz-illust-inner{
+  position: absolute; inset: 24px;
+  overflow: hidden; background: #000;
+  border-radius: 4px;
+}
+body.game-mode .tr-tz-illust-inner img{
+  width: 100%; height: 100%; object-fit: cover; object-position: center 14%;
+  filter: saturate(1) contrast(1.05);
+}
+/* formation 과 동일한 외곽 황금 frame (사용자 공급 자산) */
+body.game-mode .tr-tz-illust-frame::after{
+  content: ""; position: absolute; inset: 0;
+  background: url('../img/ui/frames/zoom_frame_simple.png') center / 100% 100% no-repeat;
+  pointer-events: none;
+  z-index: 2;
+}
+/* corner flourishes 폐기 (zoom_frame_simple.png 가 외곽 문양 담당) */
+body.game-mode .tr-tz-corner{ display: none; }
+body.game-mode .tr-tz-info{
+  display: flex; flex-direction: column; gap: 18px;
+  align-items: flex-start; width: 480px;
+}
+body.game-mode .tr-tz-flavor{
+  font: 400 13px/1 'Noto Serif KR'; color: var(--tr-text-3);
+  font-style: italic; letter-spacing: .18em;
+}
+body.game-mode .tr-tz-title{ display: flex; align-items: baseline; gap: 14px; }
+body.game-mode .tr-tz-title .nm{
+  font: 900 40px/1 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .06em; text-shadow: 0 0 22px rgba(232,189,74,.4), 0 2px 6px #000;
+}
+body.game-mode .tr-tz-title .lv{
+  font: 700 14px/1 'Cinzel','Noto Serif KR'; color: var(--tr-text-2); letter-spacing: .18em;
+}
+body.game-mode .tr-tz-chips{ display: flex; gap: 8px; }
+body.game-mode .tr-tz-chip{
+  padding: 7px 18px;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  font: 700 11px/1 'Cinzel','Noto Serif KR'; color: var(--tr-text-1); letter-spacing: .16em;
+}
+body.game-mode .tr-tz-chip.tone-rar{
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border-color: var(--tr-gilt-deep); color: var(--tr-gilt-pale);
+}
+body.game-mode .tr-tz-chip.tone-el{ color: #ff9966; }
+body.game-mode .tr-tz-chip.tone-role{ color: #e8d5a3; }
+body.game-mode .tr-tz-stats{
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; width: 100%;
+}
+body.game-mode .tr-tz-stat{
+  padding: 14px 12px; text-align: center;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+}
+body.game-mode .tr-tz-stat .k{
+  font: 700 11px/1 'Cinzel','Noto Serif KR'; letter-spacing: .32em;
+  color: var(--tr-text-3); text-transform: uppercase;
+}
+body.game-mode .tr-tz-stat .v{
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 10px;
+  font: 900 22px/1 'Cinzel','Noto Serif KR'; color: var(--tr-text-0);
+  font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-tz-stat.hp .v{ color: #ff7a8a; }
+body.game-mode .tr-tz-stat.atk .v{ color: #8aa4d8; }
+body.game-mode .tr-tz-stat.def .v{ color: #5fd89a; }
+body.game-mode .tr-tz-stat.soul .v{ color: #c8b0ff; }
+body.game-mode .tr-tz-desc{
+  width: 100%; padding: 14px 16px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  font: 400 13px/1.6 'Noto Serif KR'; color: var(--tr-text-1);
+  font-style: italic; text-align: center;
+}
+body.game-mode .tr-tz-close{
+  position: absolute; top: 24px; right: 24px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(43,28,19,.92);
+  border: 1px solid var(--tr-gilt); color: var(--tr-gilt-pale);
+  display: flex; align-items: center; justify-content: center;
+  font: 700 18px/1 'Cinzel'; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,.7);
+}
+body.game-mode .tr-tz-hint{
+  position: absolute; bottom: 36px; left: 0; right: 0;
+  text-align: center; font: 400 11px/1 'Noto Sans KR';
+  letter-spacing: .5em; color: var(--tr-text-2); text-transform: uppercase;
+}
+
+/* AWAKENING choice popup */
+body.game-mode .tr-aw-pop{
+  position: absolute; inset: 0; z-index: 10002;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.82); cursor: pointer;
+}
+body.game-mode .tr-aw-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-aw-box{
+  width: 920px; padding: 32px; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 36px rgba(232,189,74,.4), inset 0 1px 0 rgba(241,228,195,.2);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-aw-title{
+  font: 900 22px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .18em; text-align: center;
+  text-shadow: 0 2px 6px #000; margin-bottom: 6px;
+}
+body.game-mode .tr-aw-sub{
+  font: 400 12px/1.5 'Noto Serif KR'; color: var(--tr-text-2);
+  font-style: italic; text-align: center; margin-bottom: 22px; letter-spacing: .04em;
+}
+body.game-mode .tr-aw-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+body.game-mode .tr-aw-card{
+  position: relative; padding: 14px; cursor: pointer;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  transition: all 180ms ease-out;
+  display: flex; flex-direction: column; gap: 8px;
+}
+body.game-mode .tr-aw-card::before{
+  content: ""; position: absolute; inset: 4px;
+  border: 1px solid rgba(212,168,74,.22); pointer-events: none;
+}
+body.game-mode .tr-aw-card:hover{
+  border-color: var(--tr-gilt); transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(232,189,74,.25);
+}
+body.game-mode .tr-aw-card.is-locked{
+  cursor: not-allowed; opacity: .58;
+  background: repeating-linear-gradient(45deg, #1a0f08 0 5px, #221610 5px 10px);
+  border-style: dashed;
+}
+body.game-mode .tr-aw-card.is-locked:hover{
+  transform: none; box-shadow: none; border-color: var(--tr-border-3);
+}
+body.game-mode .tr-aw-art{
+  width: 100%; aspect-ratio: 2/3; background-size: cover; background-position: center 18%;
+  border: 1px solid var(--tr-border-2); position: relative; cursor: zoom-in;
+}
+body.game-mode .tr-aw-card.is-locked .tr-aw-art{
+  cursor: not-allowed; filter: grayscale(.85) brightness(.55);
+}
+body.game-mode .tr-aw-art::after{
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,.78));
+}
+body.game-mode .tr-aw-name{
+  font: 800 14px/1.2 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .06em; text-align: center;
+}
+body.game-mode .tr-aw-tags{ display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+body.game-mode .tr-aw-tag{
+  padding: 3px 7px;
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .16em;
+  color: var(--tr-text-2);
+  background: rgba(10,6,4,.5); border: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-aw-tag.rar-leg{ color: var(--tr-gilt-pale); border-color: var(--tr-gilt-deep); }
+body.game-mode .tr-aw-tag.rar-div{ color: #fff; border-color: #7ab0ff; background: rgba(80,140,255,.15); }
+body.game-mode .tr-aw-stats{
+  display: flex; justify-content: space-around;
+  font: 900 14px/1 'Cinzel','Noto Serif KR'; font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-aw-stats .pill{
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+body.game-mode .tr-aw-stats .pill .k{
+  font: 700 8px/1 'Noto Sans KR'; letter-spacing: .3em;
+  color: var(--tr-text-3); text-transform: uppercase;
+}
+body.game-mode .tr-aw-stats .pill.hp .v{ color: #ff7a8a; }
+body.game-mode .tr-aw-stats .pill.atk .v{ color: #8aa4d8; }
+body.game-mode .tr-aw-stats .pill.def .v{ color: #5fd89a; }
+body.game-mode .tr-aw-lock-msg{
+  position: absolute; left: 8px; right: 8px; bottom: 46px; z-index: 3;
+  text-align: center; font: 700 10px/1.4 'Noto Sans KR';
+  color: #ff8a8a; letter-spacing: .12em;
+  background: rgba(40,12,12,.95); padding: 6px 8px; border: 1px solid #7a3a3a;
+  display: none;
+}
+body.game-mode .tr-aw-card.is-locked.show-msg .tr-aw-lock-msg{
+  display: block; animation: tr-tz-fade 220ms ease-out;
+}
+body.game-mode .tr-aw-pick-btn{
+  margin-top: auto; padding: 8px 0;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-gilt); color: var(--tr-gilt-pale);
+  font: 800 11px/1 'Cinzel','Noto Serif KR'; letter-spacing: .32em; text-transform: uppercase; cursor: pointer;
+}
+body.game-mode .tr-aw-card.is-locked .tr-aw-pick-btn{
+  background: rgba(60,20,20,.7); border-color: #7a3a3a; color: #c88080;
+}
+body.game-mode .tr-aw-pick-btn:hover{
+  box-shadow: 0 0 14px rgba(232,189,74,.35);
+}
+
+/* UPGRADE confirm popup */
+body.game-mode .tr-uc-pop{
+  position: absolute; inset: 0; z-index: 10003;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.78); cursor: pointer;
+}
+body.game-mode .tr-uc-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-uc-box{
+  width: 480px; padding: 28px 30px; text-align: center; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 12px 40px rgba(0,0,0,.85), 0 0 36px rgba(232,189,74,.4), inset 0 1px 0 rgba(241,228,195,.2);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-uc-title{
+  font: 900 18px/1.3 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .16em; text-shadow: 0 2px 6px #000; margin-bottom: 14px;
+}
+body.game-mode .tr-uc-body{
+  font: 400 13px/1.7 'Noto Serif KR'; color: var(--tr-text-1);
+  font-style: italic; margin-bottom: 18px; text-align: left;
+  padding: 14px 16px; background: rgba(10,6,4,.45); border: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-uc-body b{ color: var(--tr-gilt-pale); font-style: normal; font-weight: 700; }
+body.game-mode .tr-uc-actions{ display: flex; gap: 10px; justify-content: center; }
+body.game-mode .tr-uc-btn{
+  flex: 1; padding: 12px 0;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3); color: var(--tr-text-2);
+  font: 700 12px/1 'Cinzel','Noto Serif KR'; letter-spacing: .32em; text-transform: uppercase;
+  cursor: pointer; transition: all 150ms;
+}
+body.game-mode .tr-uc-btn:hover{ border-color: var(--tr-gilt); color: var(--tr-gilt-pale); }
+body.game-mode .tr-uc-btn.primary{
+  background: linear-gradient(180deg, #a02828, #5a0e0e);
+  border-color: var(--tr-gilt); color: var(--tr-text-0);
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.3), 0 3px 10px rgba(110,20,20,.5), 0 0 16px rgba(232,189,74,.16);
+}
+body.game-mode .tr-uc-btn.primary:hover{
+  box-shadow: inset 0 1px 0 rgba(255,200,150,.4), 0 4px 14px rgba(110,20,20,.7), 0 0 22px rgba(232,189,74,.28);
+}
+
+/* LIBRARY popup (학습 가능 스킬 풀) */
+body.game-mode .tr-lib-pop{
+  position: absolute; inset: 0; z-index: 10004;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.94); cursor: pointer; padding: 0;
+}
+body.game-mode .tr-lib-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-lib-box{
+  width: 96vw; max-width: 1240px; height: 96vh; max-height: 704px;
+  padding: 24px 30px; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 32px rgba(232,189,74,.35), inset 0 1px 0 rgba(241,228,195,.18);
+  position: relative; display: flex; flex-direction: column; gap: 14px;
+  animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-lib-title{
+  font: 900 18px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .18em; text-align: center;
+}
+body.game-mode .tr-lib-filters{
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--tr-border-2); border-bottom: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-lib-fgroup{ display: flex; gap: 4px; align-items: center; }
+body.game-mode .tr-lib-fgroup .gl{
+  font: 700 9px/1 'Noto Sans KR'; letter-spacing: .32em;
+  color: var(--tr-text-3); text-transform: uppercase; margin-right: 6px;
+}
+body.game-mode .tr-lib-chip{
+  padding: 5px 10px;
+  font: 700 10px/1 'Noto Sans KR'; letter-spacing: .16em;
+  background: linear-gradient(180deg, #1a0f08, #0a0805);
+  border: 1px solid var(--tr-border-2); color: var(--tr-text-3); cursor: pointer;
+}
+body.game-mode .tr-lib-chip:hover{ border-color: var(--tr-gilt-deep); color: var(--tr-gilt-pale); }
+body.game-mode .tr-lib-chip.is-active{
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border-color: var(--tr-gilt); color: var(--tr-gilt-pale);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.15);
+}
+body.game-mode .tr-lib-grid{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 140px));
+  gap: 20px; justify-content: center;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 14px 16px 14px 4px; flex: 1;
+  scrollbar-width: thin; scrollbar-color: var(--tr-gilt-deep) rgba(10,6,4,.7);
+}
+body.game-mode .tr-lib-grid::-webkit-scrollbar{ width: 10px; }
+body.game-mode .tr-lib-grid::-webkit-scrollbar-track{
+  background: linear-gradient(180deg, rgba(10,6,4,.85), rgba(20,12,6,.85));
+  border-left: 1px solid var(--tr-border-2); border-right: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-lib-grid::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, var(--tr-gilt), var(--tr-gilt-deep));
+  border: 1px solid var(--tr-gilt-deep);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.3), 0 1px 3px rgba(0,0,0,.6);
+}
+body.game-mode .tr-lib-grid::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg, var(--tr-gilt-pale), var(--tr-gilt));
+}
+
+/* LIBRARY action popup (라이브러리 → 카드 클릭 시 학습/줌 선택) */
+body.game-mode .tr-la-pop{
+  position: absolute; inset: 0; z-index: 10007;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.82); cursor: pointer;
+}
+body.game-mode .tr-la-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-la-box{
+  width: 420px; padding: 24px 26px; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 32px rgba(232,189,74,.35), inset 0 1px 0 rgba(241,228,195,.18);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+  display: flex; flex-direction: column; gap: 12px;
+}
+body.game-mode .tr-la-title{
+  font: 900 18px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .16em; text-align: center;
+}
+body.game-mode .tr-la-sub{
+  font: 400 11px/1.5 'Noto Serif KR'; color: var(--tr-text-2);
+  font-style: italic; text-align: center; margin-bottom: 4px;
+}
+body.game-mode .tr-la-btn{
+  padding: 14px 16px; text-align: left; cursor: pointer;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3); color: var(--tr-gilt-pale);
+  font: 800 12px/1.2 'Cinzel','Noto Serif KR'; letter-spacing: .14em;
+  display: flex; align-items: center; gap: 12px;
+}
+body.game-mode .tr-la-btn:hover{
+  border-color: var(--tr-gilt); box-shadow: 0 0 16px rgba(232,189,74,.3);
+}
+body.game-mode .tr-la-btn .ic{
+  width: 32px; height: 32px; border-radius: 50%; flex: 0 0 32px;
+  display: flex; align-items: center; justify-content: center;
+  font: 900 16px/1 'Cinzel';
+  background: radial-gradient(circle at 30% 30%, var(--tr-gilt-pale), var(--tr-gilt) 55%, var(--tr-gilt-deep));
+  color: #3a1f00; border: 1px solid var(--tr-gilt-deep);
+}
+body.game-mode .tr-la-btn .meta{ flex: 1; }
+body.game-mode .tr-la-btn .meta .nm{
+  font: 800 13px/1.2 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+}
+body.game-mode .tr-la-btn .meta .d{
+  font: 400 10px/1.4 'Noto Sans KR'; color: var(--tr-text-3);
+  margin-top: 3px; letter-spacing: .04em;
+}
+
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "스킬카드 클릭 시 그냥 V4 카드 + 스킬카드 정보" — 시안 sk-box 340x510 정합 */
+/* SKILL CARD ZOOM (engraving / upgrade 카드 확대 — V4 카드 mount, info 카드 안에) */
+body.game-mode .tr-sk-zoom{
+  position: absolute; inset: 0; z-index: 10005;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.82); cursor: pointer;
+}
+body.game-mode .tr-sk-zoom.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-sk-box{
+  position: relative; cursor: default;
+  animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+  display: flex; align-items: center; justify-content: center;
+}
+/* V4 카드 native 240×336 → scale 1.4 = 336×470 (시안 sk-box 340×510 비율 정합) */
+body.game-mode .tr-sk-box .card-v4{
+  transform: scale(1.4); transform-origin: center; margin: 100px 60px;
+  filter: drop-shadow(0 16px 50px rgba(0,0,0,.85)) drop-shadow(0 0 36px rgba(232,189,74,.4));
+}
+
+/* LEVEL UP overlay */
+body.game-mode .tr-lvup{
+  position: absolute; inset: 0; z-index: 9000; pointer-events: none; display: none;
+}
+body.game-mode .tr-lvup.is-active{ display: block; pointer-events: auto; cursor: pointer; }
+body.game-mode .tr-lvup-veil{
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255,210,90,.55), rgba(255,180,60,.18) 35%, transparent 65%);
+  opacity: 0;
+}
+body.game-mode .tr-lvup.is-active .tr-lvup-veil{ animation: tr-lvup-veil 1.2s ease-out; }
+@keyframes tr-lvup-veil{ 0%{opacity:0;} 20%{opacity:1;} 100%{opacity:0;} }
+body.game-mode .tr-lvup-popup{
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 420px; padding: 28px 32px; text-align: center;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 10px 40px rgba(0,0,0,.85), inset 0 1px 0 rgba(241,228,195,.2), 0 0 40px rgba(232,189,74,.4);
+  opacity: 0;
+}
+body.game-mode .tr-lvup.is-active .tr-lvup-popup{
+  animation: tr-lvup-popup 1.2s cubic-bezier(.2,.8,.2,1.05);
+}
+@keyframes tr-lvup-popup{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.6);}
+  25%{opacity:1;transform:translate(-50%,-50%) scale(1.05);}
+  35%{transform:translate(-50%,-50%) scale(1);}
+  85%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-55%) scale(.95);}
+}
+body.game-mode .tr-lvup-label{
+  font: 700 11px/1 'Noto Sans KR'; letter-spacing: .6em;
+  color: var(--tr-gilt-pale); text-transform: uppercase; margin-bottom: 14px;
+}
+body.game-mode .tr-lvup-big{
+  font: 900 36px/1.05 'Cinzel Decorative','Noto Serif KR'; letter-spacing: .18em;
+  color: var(--tr-gilt-pale);
+  text-shadow: 0 0 22px rgba(255,215,90,.7), 0 3px 8px #000; margin-bottom: 8px;
+}
+body.game-mode .tr-lvup-arrow{
+  display: inline-block; margin: 0 14px;
+  color: var(--tr-gilt); font-size: .65em; vertical-align: middle;
+}
+body.game-mode .tr-lvup-prompt{
+  font: 400 12px/1.4 'Noto Serif KR'; color: var(--tr-text-2);
+  font-style: italic; margin-bottom: 16px; letter-spacing: .04em;
+}
+body.game-mode .tr-lvup-choices{ display: flex; flex-direction: column; gap: 10px; }
+body.game-mode .tr-stat-pick{
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3); cursor: pointer;
+  transition: all 150ms ease-out; text-align: left;
+}
+body.game-mode .tr-stat-pick:hover{
+  border-color: var(--tr-gilt);
+  background: linear-gradient(180deg, #3a2819, #221610);
+  box-shadow: 0 0 14px rgba(232,189,74,.2);
+}
+body.game-mode .tr-stat-pick .icon{
+  width: 38px; height: 38px; border-radius: 50%; flex: 0 0 38px;
+  background: radial-gradient(circle at 30% 30%, var(--tr-gilt-pale), var(--tr-gilt) 60%, var(--tr-gilt-deep));
+  border: 1.5px solid var(--tr-gilt-deep);
+  display: flex; align-items: center; justify-content: center;
+  font: 900 18px/1 'Cinzel'; color: #3a1f00;
+}
+body.game-mode .tr-stat-pick.atk .icon{
+  background: radial-gradient(circle at 30% 30%, #ffaa78, #c44a3a 60%, #5a1810); color: #fff;
+}
+body.game-mode .tr-stat-pick.hp .icon{
+  background: radial-gradient(circle at 30% 30%, #ff9090, #c43838 60%, #5a0e0e); color: #fff;
+}
+body.game-mode .tr-stat-pick.soul .icon{
+  background: radial-gradient(circle at 30% 30%, #d8b0ff, #8855cc 60%, #3a2060); color: #fff;
+}
+body.game-mode .tr-stat-pick .meta{ flex: 1; min-width: 0; }
+body.game-mode .tr-stat-pick .k{
+  font: 800 12px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .16em; text-transform: uppercase;
+}
+body.game-mode .tr-stat-pick .d{
+  font: 400 10px/1.4 'Noto Sans KR'; color: var(--tr-text-3);
+  margin-top: 4px; letter-spacing: .04em;
+}
+body.game-mode .tr-stat-pick .v{
+  font: 900 18px/1 'Cinzel','Noto Serif KR'; color: #5fd89a;
+  font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-stat-pick .v::before{ content: "+"; }
+
+/* design-confirmed: 2026-05-25 사유: 사용자 명시 "통째 ABC" 완성 — 시안 button 11 popup 누락분 정본 적용 */
+
+/* ===========================================================
+   ── STAT 분배 popup (수련 탭 btn-stat-open) — 시안 line 1543~1558
+   =========================================================== */
+body.game-mode .tr-stat-pop{
+  position: absolute; inset: 0; z-index: 9001;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.7); cursor: pointer;
+}
+body.game-mode .tr-stat-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-stat-box{
+  width: 440px; padding: 24px 26px; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 32px rgba(232,189,74,.35);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-stat-label{
+  font: 700 11px/1 'Noto Sans KR'; letter-spacing: .6em;
+  color: var(--tr-gilt-pale); text-transform: uppercase; margin-bottom: 14px; text-align: center;
+}
+body.game-mode .tr-stat-sub{
+  font: 400 12px/1.4 'Noto Serif KR'; color: var(--tr-text-2);
+  font-style: italic; margin-bottom: 14px; letter-spacing: .04em; text-align: center;
+}
+body.game-mode .tr-stat-sub b{ color: var(--tr-gilt-pale); font-size: 15px; }
+body.game-mode .tr-stat-picks{ display: flex; flex-direction: column; gap: 10px; }
+
+/* ===========================================================
+   ── LVUP overlay (수련 시 레벨업 애니) — 시안 line 709~782
+   =========================================================== */
+body.game-mode .tr-lvup-overlay{
+  position: absolute; inset: 0; z-index: 9000; pointer-events: none; display: none;
+}
+body.game-mode .tr-lvup-overlay.is-active{ display: block; pointer-events: auto; cursor: pointer; }
+body.game-mode .tr-lvup-veil{
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255,210,90,.55), rgba(255,180,60,.18) 35%, transparent 65%);
+  opacity: 0;
+}
+body.game-mode .tr-lvup-overlay.is-active .tr-lvup-veil{ animation: tr-lvup-veil 1.2s ease-out; }
+@keyframes tr-lvup-veil{ 0%{opacity:0;} 20%{opacity:1;} 100%{opacity:0;} }
+body.game-mode .tr-lvup-rays{
+  position: absolute; left: 50%; top: 50%; width: 240px; height: 240px; transform: translate(-50%,-50%);
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255,220,120,.55) 6deg, transparent 12deg, transparent 36deg, rgba(255,220,120,.5) 42deg, transparent 48deg, transparent 72deg, rgba(255,220,120,.55) 78deg, transparent 84deg, transparent 108deg, rgba(255,220,120,.5) 114deg, transparent 120deg, transparent 144deg, rgba(255,220,120,.55) 150deg, transparent 156deg);
+  mix-blend-mode: screen; opacity: 0;
+}
+body.game-mode .tr-lvup-overlay.is-active .tr-lvup-rays{ animation: tr-lvup-rays 1.2s ease-out; }
+@keyframes tr-lvup-rays{
+  0%{ opacity: 0; transform: translate(-50%,-50%) scale(.3) rotate(0deg); }
+  25%{ opacity: 1; transform: translate(-50%,-50%) scale(1.5) rotate(60deg); }
+  100%{ opacity: 0; transform: translate(-50%,-50%) scale(3) rotate(180deg); }
+}
+
+/* ===========================================================
+   ── AWAKENING choice popup (각성 btn-awaken) — 시안 line 804~864, 1375~1410
+   =========================================================== */
+body.game-mode .tr-aw-grid{
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+body.game-mode .tr-aw-card{
+  position: relative; padding: 14px; cursor: pointer;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  transition: all 180ms ease-out;
+  display: flex; flex-direction: column; gap: 8px;
+}
+body.game-mode .tr-aw-card::before{
+  content: ""; position: absolute; inset: 4px;
+  border: 1px solid rgba(212,168,74,.22); pointer-events: none;
+}
+body.game-mode .tr-aw-card:hover{
+  border-color: var(--tr-gilt); transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(232,189,74,.25);
+}
+body.game-mode .tr-aw-card.is-locked{
+  cursor: not-allowed; opacity: .58;
+  background: repeating-linear-gradient(45deg, #1a0f08 0 5px, #221610 5px 10px);
+  border-style: dashed;
+}
+body.game-mode .tr-aw-art{
+  width: 100%; aspect-ratio: 2/3;
+  background-size: cover; background-position: center 18%;
+  border: 1px solid var(--tr-border-2); position: relative;
+}
+body.game-mode .tr-aw-art::after{
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,.78));
+}
+body.game-mode .tr-aw-name{
+  font: 800 14px/1.2 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .06em; text-align: center;
+}
+body.game-mode .tr-aw-tags{ display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+body.game-mode .tr-aw-tag{
+  padding: 3px 7px; font: 700 9px/1 'Noto Sans KR'; letter-spacing: .16em;
+  color: var(--tr-text-2);
+  background: rgba(10,6,4,.5); border: 1px solid var(--tr-border-2);
+}
+body.game-mode .tr-aw-stats{
+  display: flex; justify-content: space-around;
+  font: 900 14px/1 'Cinzel','Noto Serif KR'; font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-aw-stats .pill{ display: flex; flex-direction: column; align-items: center; gap: 4px; }
+body.game-mode .tr-aw-stats .pill .k{
+  font: 700 8px/1 'Noto Sans KR'; letter-spacing: .3em;
+  color: var(--tr-text-3); text-transform: uppercase;
+}
+body.game-mode .tr-aw-stats .pill.hp .v{ color: #ff7a8a; }
+body.game-mode .tr-aw-stats .pill.atk .v{ color: #8aa4d8; }
+body.game-mode .tr-aw-stats .pill.def .v{ color: #5fd89a; }
+body.game-mode .tr-aw-lock-msg{
+  position: absolute; left: 8px; right: 8px; bottom: 46px; z-index: 3;
+  text-align: center; font: 700 10px/1.4 'Noto Sans KR';
+  color: #ff8a8a; letter-spacing: .12em;
+  background: rgba(40,12,12,.95); padding: 6px 8px; border: 1px solid #7a3a3a;
+}
+body.game-mode .tr-aw-pick-btn{
+  margin-top: auto; padding: 8px 0;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-gilt); color: var(--tr-gilt-pale);
+  font: 800 11px/1 'Cinzel','Noto Serif KR';
+  letter-spacing: .32em; text-transform: uppercase; cursor: pointer;
+}
+body.game-mode .tr-aw-pick-btn:hover{ box-shadow: 0 0 14px rgba(232,189,74,.35); }
+
+/* ===========================================================
+   ── STAT UPGRADE popup (강화 btn-stat-upgrade) — 시안 line 879~925
+   =========================================================== */
+body.game-mode .tr-su-pop{
+  position: absolute; inset: 0; z-index: 10006;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.82); cursor: pointer;
+}
+body.game-mode .tr-su-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-su-box{
+  width: 460px; padding: 28px 30px; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid var(--tr-gilt);
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 32px rgba(232,189,74,.35), inset 0 1px 0 rgba(241,228,195,.18);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-su-title{
+  font: 900 20px/1.2 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .18em; text-align: center;
+  text-shadow: 0 2px 6px #000; margin-bottom: 6px;
+}
+body.game-mode .tr-su-sub{
+  font: 400 12px/1.5 'Noto Serif KR'; color: var(--tr-text-2);
+  font-style: italic; text-align: center; margin-bottom: 18px; letter-spacing: .04em;
+}
+body.game-mode .tr-su-remain{
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; background: rgba(10,6,4,.5);
+  border: 1px solid var(--tr-gilt-deep); margin-bottom: 16px;
+}
+body.game-mode .tr-su-remain .orb{
+  width: 38px; height: 38px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--tr-gilt-pale), var(--tr-gilt) 55%, var(--tr-gilt-deep));
+  border: 1.5px solid var(--tr-gilt-deep);
+  font: 900 18px/34px 'Cinzel'; color: #3a1f00; text-align: center;
+}
+body.game-mode .tr-su-remain .label{
+  font: 700 11px/1 'Noto Sans KR'; letter-spacing: .32em;
+  color: var(--tr-text-2); text-transform: uppercase;
+}
+body.game-mode .tr-su-remain .label b{ color: var(--tr-gilt-pale); font-size: 13px; }
+body.game-mode .tr-su-rows{ display: flex; flex-direction: column; gap: 8px; }
+body.game-mode .tr-su-row{
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+}
+body.game-mode .tr-su-row .ic{
+  width: 34px; height: 34px; border-radius: 50%; flex: 0 0 34px;
+  border: 1.5px solid var(--tr-gilt-deep);
+  display: flex; align-items: center; justify-content: center;
+  font: 900 16px/1 'Cinzel';
+}
+body.game-mode .tr-su-row .ic.atk{ background: radial-gradient(circle at 30% 30%, #ffaa78, #c44a3a 60%, #5a1810); color: #fff; }
+body.game-mode .tr-su-row .ic.dmg{ background: radial-gradient(circle at 30% 30%, #ff9090, #c43838 60%, #5a0e0e); color: #fff; }
+body.game-mode .tr-su-row .ic.cost{ background: radial-gradient(circle at 30% 30%, #d8b0ff, #8855cc 60%, #3a2060); color: #fff; }
+body.game-mode .tr-su-row .info{ flex: 1; min-width: 0; }
+body.game-mode .tr-su-row .nm{
+  font: 800 11px/1 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .14em; text-transform: uppercase;
+}
+body.game-mode .tr-su-row .desc{
+  font: 400 10px/1.4 'Noto Sans KR'; color: var(--tr-text-3); margin-top: 4px;
+}
+body.game-mode .tr-su-row .v{
+  display: flex; align-items: baseline; gap: 6px;
+  font: 900 14px/1 'Cinzel','Noto Serif KR'; color: var(--tr-text-0);
+  font-variant-numeric: tabular-nums;
+}
+body.game-mode .tr-su-row .v .next{ color: #5fd89a; }
+body.game-mode .tr-su-row .v .next::before{ content: "▶ "; color: var(--tr-text-3); font-weight: 400; }
+body.game-mode .tr-su-row .plus{
+  width: 32px; height: 32px; flex: 0 0 32px;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-gilt); color: var(--tr-gilt-pale);
+  font: 900 16px/1 'Cinzel'; cursor: pointer;
+}
+body.game-mode .tr-su-row .plus:hover{
+  background: linear-gradient(180deg, #4a3525, #221610);
+  box-shadow: inset 0 1px 0 rgba(241,228,195,.25), 0 0 12px rgba(232,189,74,.3);
+}
+body.game-mode .tr-su-row .plus:disabled{ opacity: .35; cursor: not-allowed; }
+/* su-warn */
+body.game-mode .tr-su-warn{
+  width: 380px; padding: 32px; text-align: center; cursor: default;
+  background: linear-gradient(180deg, rgba(43,28,19,.97), rgba(20,12,6,.97));
+  border: 2px solid #7a3a3a;
+  box-shadow: 0 14px 40px rgba(0,0,0,.85), 0 0 28px rgba(180,40,40,.4);
+  position: relative; animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-su-warn .glyph{
+  font: 900 48px/1 'Cinzel','Noto Serif KR'; color: #d88080;
+  margin-bottom: 10px; text-shadow: 0 0 18px rgba(200,80,80,.5);
+}
+body.game-mode .tr-su-warn .title{
+  font: 900 18px/1.2 'Cinzel','Noto Serif KR';
+  color: #e8a8a8; letter-spacing: .16em; margin-bottom: 8px;
+}
+body.game-mode .tr-su-warn .msg{
+  font: 400 12px/1.6 'Noto Serif KR'; color: var(--tr-text-2); font-style: italic;
+}
+
+/* ===========================================================
+   ── LIBRARY popup (학습 btn-learn) — 시안 line 466~517
+   이미 tr-lib-pop 정의됨 (라인 ~755). 추가 child rule 만:
+   =========================================================== */
+body.game-mode .tr-lib-grid .tr-eg-card{ cursor: pointer; }
+body.game-mode .tr-lib-grid .tr-eg-card .tr-eg-name{ display: block; padding: 6px 4px 2px; font: 700 10px/1.2 'Cinzel','Noto Serif KR'; color: var(--tr-gilt-pale); text-align: center; }
+body.game-mode .tr-lib-grid .tr-eg-card .tr-eg-desc{ display: block; padding: 0 4px; font: 400 9px/1.3 'Noto Sans KR'; color: var(--tr-text-2); text-align: center; }
+
+/* ===========================================================
+   ── LEARNING SKILL ZOOM (ls-pop) — 시안 line 575~590
+   =========================================================== */
+body.game-mode .tr-ls-pop{
+  position: absolute; inset: 0; z-index: 10007;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.85); cursor: pointer;
+}
+body.game-mode .tr-ls-pop.is-active{ display: flex; animation: tr-tz-fade 200ms ease-out; }
+body.game-mode .tr-ls-box{
+  display: flex; gap: 32px; cursor: default;
+  animation: tr-pop-in 380ms cubic-bezier(.2,.8,.2,1.05) both;
+}
+body.game-mode .tr-ls-info{
+  display: flex; flex-direction: column; justify-content: center; width: 440px; gap: 18px;
+  color: var(--tr-text-1);
+}
+body.game-mode .tr-ls-info .nm{
+  font: 900 36px/1.1 'Cinzel Decorative','Noto Serif KR'; color: var(--tr-gilt-pale);
+  letter-spacing: .06em;
+  text-shadow: 0 0 22px rgba(232,189,74,.4), 0 2px 6px #000;
+}
+body.game-mode .tr-ls-info .tags{ display: flex; gap: 8px; }
+body.game-mode .tr-ls-info .tag{
+  padding: 6px 14px;
+  background: linear-gradient(180deg, #3a2819, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  font: 700 10px/1 'Cinzel'; color: var(--tr-gilt-pale); letter-spacing: .16em;
+}
+body.game-mode .tr-ls-info .desc{
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #2b1c13, #1a0f08);
+  border: 1px solid var(--tr-border-3);
+  font: 400 13px/1.6 'Noto Serif KR'; color: var(--tr-text-1); font-style: italic;
+}
+body.game-mode .tr-ls-info .cost{
+  font: 700 11px/1 'Noto Sans KR'; letter-spacing: .3em;
+  color: var(--tr-text-3); text-transform: uppercase;
+}
+body.game-mode .tr-ls-info .cost b{ color: var(--tr-gilt-pale); font-size: 14px; }

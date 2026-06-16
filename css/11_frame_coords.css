@@ -1,0 +1,240 @@
+/* 11_frame_coords.css — 자동 생성 (11_frame_coords.json에서)
+ * 원천: css/11_frame_coords.json (수동 측정)
+ * 재생성: node tools/json_to_frame_css.js
+ * 생성일: 2026-04-20
+ */
+
+.card-v2.bronze{
+  --gem-atk-x: 12.74%;
+  --gem-atk-y: 35.84%;
+  --gem-def-x: 12.58%;
+  --gem-def-y: 43.81%;
+  --gem-spd-x: 12.58%;
+  --gem-spd-y: 52.40%;
+  --gem-hp-x: 84.12%;
+  --gem-hp-y: 24.73%;
+  --gem-nrg-x: 85.22%;
+  --gem-nrg-y: 68.02%;
+  --gem-luck-x: 12.58%;
+  --gem-luck-y: 59.40%;
+  --box-name-x: 30.26%;
+  --box-name-y: 9.58%;
+  --box-name-w: 39.56%;
+  --box-name-h: 6.23%;
+  --box-tags-x: 41.79%;
+  --box-tags-y: 88.05%;
+  --box-tags-w: 15.34%;
+  --box-tags-h: 6.67%;
+  --box-desc-x: 12.99%;
+  --box-desc-y: 73.41%;
+  --box-desc-w: 74.75%;
+  --box-desc-h: 9.16%;
+}
+.card-v2.silver{
+  --gem-atk-x: 10.38%;
+  --gem-atk-y: 40.02%;
+  --gem-def-x: 10.53%;
+  --gem-def-y: 48.82%;
+  --gem-spd-x: 10.69%;
+  --gem-spd-y: 57.42%;
+  --gem-hp-x: 84.12%;
+  --gem-hp-y: 19.79%;
+  --gem-nrg-x: 86.79%;
+  --gem-nrg-y: 68.97%;
+  --gem-luck-x: 10.69%;
+  --gem-luck-y: 64.42%;
+  --box-name-x: 28.20%;
+  --box-name-y: 11.04%;
+  --box-name-w: 42.87%;
+  --box-name-h: 5.60%;
+  --box-tags-x: 41.32%;
+  --box-tags-y: 86.01%;
+  --box-tags-w: 16.38%;
+  --box-tags-h: 6.36%;
+  --box-desc-x: 18.02%;
+  --box-desc-y: 71.74%;
+  --box-desc-w: 63.27%;
+  --box-desc-h: 11.15%;
+}
+.card-v2.gold{
+  --gem-atk-x: 12.11%;
+  --gem-atk-y: 39.39%;
+  --gem-def-x: 12.11%;
+  --gem-def-y: 46.31%;
+  --gem-spd-x: 12.42%;
+  --gem-spd-y: 53.33%;
+  --gem-hp-x: 83.33%;
+  --gem-hp-y: 24.21%;
+  --gem-nrg-x: 83.81%;
+  --gem-nrg-y: 67.71%;
+  --gem-luck-x: 12.42%;
+  --gem-luck-y: 60.33%;
+  --box-name-x: 30.40%;
+  --box-name-y: 12.19%;
+  --box-name-w: 39.10%;
+  --box-name-h: 5.07%;
+  --box-tags-x: 43.51%;
+  --box-tags-y: 88.86%;
+  --box-tags-w: 14.93%;
+  --box-tags-h: 6.49%;
+  --box-desc-x: 20.38%;
+  --box-desc-y: 73.21%;
+  --box-desc-w: 59.97%;
+  --box-desc-h: 11.77%;
+}
+.card-v2.legendary{
+  --gem-atk-x: 12.89%;
+  --gem-atk-y: 38.99%;
+  --gem-def-x: 13.05%;
+  --gem-def-y: 48.42%;
+  --gem-spd-x: 13.05%;
+  --gem-spd-y: 57.75%;
+  --gem-hp-x: 84.12%;
+  --gem-hp-y: 17.27%;
+  --gem-nrg-x: 85.69%;
+  --gem-nrg-y: 69.39%;
+  --gem-luck-x: 13.05%;
+  --gem-luck-y: 64.75%;
+  --box-name-x: 28.68%;
+  --box-name-y: 10.31%;
+  --box-name-w: 41.92%;
+  --box-name-h: 6.54%;
+  --box-tags-x: 41.80%;
+  --box-tags-y: 82.73%;
+  --box-tags-w: 16.89%;
+  --box-tags-h: 5.93%;
+  --box-desc-x: 22.99%;
+  --box-desc-y: 72.37%;
+  --box-desc-w: 53.90%;
+  --box-desc-h: 11.15%;
+}
+.card-v2.divine{
+  --gem-atk-x: 12.58%;
+  --gem-atk-y: 36.98%;
+  --gem-def-x: 12.74%;
+  --gem-def-y: 45.28%;
+  --gem-spd-x: 12.89%;
+  --gem-spd-y: 53.12%;
+  --gem-hp-x: 82.23%;
+  --gem-hp-y: 26.49%;
+  --gem-nrg-x: 84.43%;
+  --gem-nrg-y: 66.14%;
+  --gem-luck-x: 12.89%;
+  --gem-luck-y: 60.12%;
+  --box-name-x: 27.43%;
+  --box-name-y: 12.40%;
+  --box-name-w: 42.07%;
+  --box-name-h: 5.39%;
+  --box-tags-x: 41.50%;
+  --box-tags-y: 86.02%;
+  --box-tags-w: 17.92%;
+  --box-tags-h: 6.46%;
+  --box-desc-x: 22.26%;
+  --box-desc-y: 69.22%;
+  --box-desc-w: 52.74%;
+  --box-desc-h: 13.04%;
+}
+.card-v2.divine[data-element="fire"]{
+  --gem-atk-x: 12.58%;
+  --gem-atk-y: 36.98%;
+  --gem-def-x: 12.74%;
+  --gem-def-y: 45.28%;
+  --gem-spd-x: 12.89%;
+  --gem-spd-y: 53.12%;
+  --gem-hp-x: 82.23%;
+  --gem-hp-y: 26.49%;
+  --gem-nrg-x: 84.43%;
+  --gem-nrg-y: 66.14%;
+  --gem-luck-x: 12.89%;
+  --gem-luck-y: 60.12%;
+  --box-name-x: 27.43%;
+  --box-name-y: 12.40%;
+  --box-name-w: 42.07%;
+  --box-name-h: 5.39%;
+  --box-tags-x: 41.50%;
+  --box-tags-y: 86.02%;
+  --box-tags-w: 17.92%;
+  --box-tags-h: 6.46%;
+  --box-desc-x: 22.26%;
+  --box-desc-y: 69.22%;
+  --box-desc-w: 52.74%;
+  --box-desc-h: 13.04%;
+}
+.card-v2.divine[data-element="lightning"]{
+  --gem-atk-x: 12.58%;
+  --gem-atk-y: 36.98%;
+  --gem-def-x: 12.74%;
+  --gem-def-y: 45.28%;
+  --gem-spd-x: 12.89%;
+  --gem-spd-y: 53.12%;
+  --gem-hp-x: 82.23%;
+  --gem-hp-y: 26.49%;
+  --gem-nrg-x: 84.43%;
+  --gem-nrg-y: 66.14%;
+  --gem-luck-x: 12.89%;
+  --gem-luck-y: 60.12%;
+  --box-name-x: 27.43%;
+  --box-name-y: 12.40%;
+  --box-name-w: 42.07%;
+  --box-name-h: 5.39%;
+  --box-tags-x: 41.50%;
+  --box-tags-y: 86.02%;
+  --box-tags-w: 17.92%;
+  --box-tags-h: 6.46%;
+  --box-desc-x: 22.26%;
+  --box-desc-y: 69.22%;
+  --box-desc-w: 52.74%;
+  --box-desc-h: 13.04%;
+}
+.card-v2.divine[data-element="holy"]{
+  --gem-atk-x: 12.58%;
+  --gem-atk-y: 36.98%;
+  --gem-def-x: 12.74%;
+  --gem-def-y: 45.28%;
+  --gem-spd-x: 12.89%;
+  --gem-spd-y: 53.12%;
+  --gem-hp-x: 82.23%;
+  --gem-hp-y: 26.49%;
+  --gem-nrg-x: 84.43%;
+  --gem-nrg-y: 66.14%;
+  --gem-luck-x: 12.89%;
+  --gem-luck-y: 60.12%;
+  --box-name-x: 27.43%;
+  --box-name-y: 12.40%;
+  --box-name-w: 42.07%;
+  --box-name-h: 5.39%;
+  --box-tags-x: 41.50%;
+  --box-tags-y: 86.02%;
+  --box-tags-w: 17.92%;
+  --box-tags-h: 6.46%;
+  --box-desc-x: 22.26%;
+  --box-desc-y: 69.22%;
+  --box-desc-w: 52.74%;
+  --box-desc-h: 13.04%;
+}
+.card-v2.divine[data-element="dark"]{
+  --gem-atk-x: 12.58%;
+  --gem-atk-y: 36.98%;
+  --gem-def-x: 12.74%;
+  --gem-def-y: 45.28%;
+  --gem-spd-x: 12.89%;
+  --gem-spd-y: 53.12%;
+  --gem-hp-x: 82.23%;
+  --gem-hp-y: 26.49%;
+  --gem-nrg-x: 84.43%;
+  --gem-nrg-y: 66.14%;
+  --gem-luck-x: 12.89%;
+  --gem-luck-y: 60.12%;
+  --box-name-x: 27.43%;
+  --box-name-y: 12.40%;
+  --box-name-w: 42.07%;
+  --box-name-h: 5.39%;
+  --box-tags-x: 41.50%;
+  --box-tags-y: 86.02%;
+  --box-tags-w: 17.92%;
+  --box-tags-h: 6.46%;
+  --box-desc-x: 22.26%;
+  --box-desc-y: 69.22%;
+  --box-desc-w: 52.74%;
+  --box-desc-h: 13.04%;
+}

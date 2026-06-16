@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 2026-05-02: 개발 중 캐시 무력화 (사용자 답답함 해소). 출시 시 제거 권장. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- 2026-04-22: 타이틀 배경 preload — JPEG 변환으로 각 ~700KB. CSS 파싱 전에 fetch 시작. -->
+<link rel="preload" as="image" href="img/backgrounds/bg_title_angel.jpg">
+<link rel="preload" as="image" href="img/backgrounds/bg_title_demon.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700;900&family=Cinzel+Decorative:wght@700;900&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<title>Realm of Fates - Card Auto Battler</title>
+<link rel="stylesheet" href="css/00_reset.css">
+<link rel="stylesheet" href="css/10_tokens.css">
+<link rel="stylesheet" href="css/20_layout.css">
+<link rel="stylesheet" href="css/30_components.css">
+<link rel="stylesheet" href="css/31_card_system.css">
+<link rel="stylesheet" href="css/32_card_v4.css?v=20260606h"> <!-- design-confirmed: 2026-06-06 사유: 종족 아이콘 + cost/elem 시안 위치 + 매치손패 보드/영구레벨 코인 (사용자 mockup 컨펌) -->
+<link rel="stylesheet" href="css/36_chat.css">
+<link rel="stylesheet" href="css/41_formation.css?v=20260509b">
+<link rel="stylesheet" href="css/42_screens.css?v=20260601a">
+<!-- PHASE 6 TCG 매치 화면 (2026-05-05 Phase D-1) -->
+<link rel="stylesheet" href="css/43_match.css?v=20260616c"> <!-- design-confirmed: 2026-06-16 사유: cache-bust — 데미지 3밴드 임팩트 + 타겟 화살표 V2 화살촉 (.line-head) -->
+<link rel="stylesheet" href="css/44_matchmaking.css">
+<link rel="stylesheet" href="css/45_reward.css">
+<link rel="stylesheet" href="css/46_book_of_life.css">
+<!-- design-confirmed: 2026-05-24 사유: 선술집 용병모집 v3 정본 적용 (시안 통째 ABC) — battle_system_decisions §선술집 용병 영입 표준 룰 -->
+<link rel="stylesheet" href="css/47_tavern.css?v=20260524c">
+<link rel="stylesheet" href="css/48_hourglass.css?v=20260525a">
+<!-- design-confirmed: 2026-05-25 사유: 훈련소 v1 시안 통째 ABC — battle_system_decisions §훈련소 v1 표준 룰 / feature_manifest 3.19 -->
+<link rel="stylesheet" href="css/49_training.css?v=20260525a">
+<!-- design-confirmed: 2026-06-07 사유: 사용자 컨펌 (시안 mockup/card_levelup/v2.html + mockup/card_reward_pack/v2.html, 컨펌자 ChaHongPil "게임 적용하자") — 레벨업/카드보상 오버레이 UI -->
+<link rel="stylesheet" href="css/50_card_overlays.css?v=20260607a">
+<!-- design-confirmed: 2026-06-01 사유: 사용자 지시 — 클로드디자인 시안(성_퀘스트/quest_board.html) 적용 -->
+<link rel="stylesheet" href="css/55_quest_board.css?v=20260601b">
+<link rel="stylesheet" href="css/80_animations.css">
+<!-- 2026-05-06 D-3a: PHASE 3 시네마틱 전투 CSS (41_battle_v2.css + 80_animations_battle_v2.css) trash. PHASE 6 #tcg-screen 으로 대체. -->
+<link rel="stylesheet" href="css/90_utilities.css">
+<!-- <link rel="stylesheet" href="css/91_cursors.css"> --> <!-- design-confirmed: 2026-05-22 사유: 사용자 명시 원복 — 일반 마우스 커서로 복귀. 자산은 보존 (필요 시 link 복구). -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="js/00_namespace.js"></script>
+<script defer src="js/10_constants.js"></script>
+<script defer src="js/11_data_units.js?v=20260616b"></script>
+<script defer src="js/11_data_heroes.js"></script>
+<script defer src="js/12_data_skills.js?v=20260616a"></script>
+<script defer src="js/13_data_relics.js"></script>
+<script defer src="js/14_data_images.js"></script>
+<!-- 2026-05-24 — 11b/12b (UNITS_V6/SKILLS_V6 STEP 1 시범) trash 이동. 정본은 11_data_units.js / 12_data_skills.js. -->
+<!-- 옛 위치: trash/2026-05-24/{11b_data_units_phase6.js, 12b_data_skills_phase6.js} -->
+
+<!-- 15_data_traits.js: 2026-04-27 사용자 결정으로 trait 시스템 폐기 → trash/2026-04-27_traits_removed/ 이동 -->
+<script defer src="js/15_data_quests.js"></script>  <!-- 2026-05-31 퀘스트 시스템 v1 데이터 -->
+<!-- 2026-05-06 D-3a: config_battle.js trash (PHASE 3 시네마틱 전투 설정). FEATURE.CINEMATIC_BATTLE / Battle.SPEED·TIMING·LAYOUT·SCREEN·PHASE 모두 사용처 0 확인 후 폐기. -->
+<script defer src="js/20_helpers.js"></script>
+<script defer src="js/22_ability_parser.js"></script>
+<script defer src="js/30_sfx.js"></script>
+<script defer src="js/31_ui.js"></script>
+<script defer src="js/32_auth.js"></script>
+<!-- S1: Supabase Backend (오프라인 시 자동 폴백) -->
+<!-- offline deploy mirror: cloud backend disabled -->
+<script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script defer src="js/35_backend.js"></script>
+<script defer src="js/36_chat.js"></script>
+<script defer src="js/37_settings.js"></script>
+<script defer src="js/38_profile.js"></script>
+<script defer src="js/39_formation_slots.js"></script>
+<script defer src="js/38_chat_filters.js"></script>
+<script defer src="js/40_cards.js?v=20260616a"></script>
+<!-- 2026-05-24 — 메타 progression (수련장 / 각인 / 업그레이드 / 각성 / 학습). 정본: design/meta_progression_spec.md v1. -->
+<script defer src="js/41_data_mastery.js"></script>
+<script defer src="js/42_data_engraving.js"></script>
+<script defer src="js/43_data_awakening.js"></script>
+<script defer src="js/44_data_upgrade.js"></script>
+<script defer src="js/45_data_learning.js"></script>
+<script defer src="js/50_game_core.js"></script>
+<script defer src="js/51_game_town.js"></script>
+<!-- 2026-05-24 선술집 영입 대사 (51 유닛, RoF.HireLines.get) — feature_manifest §3.18 -->
+<script defer src="js/47_data_hire_lines.js"></script>
+<script defer src="js/52_game_tavern.js"></script>
+<script defer src="js/53_game_deck.js?v=20260616a"></script>
+<script defer src="js/54_game_castle.js?v=20260601a"></script>
+<!-- PHASE 6 매치/배틀 헬퍼 (2026-05-10 Plan 1 Task 1) — generateBot 적 봇 자동 구성 -->
+<script defer src="js/55_game_battle.js?v=20260518f"></script>
+<script defer src="js/56_book_of_life.js?v=20260518a"></script>
+<!-- 2026-05-25 훈련소 v1 (시안 통째 ABC) — Meta.Mastery/Awakening/Learning/Engraving/Upgrade 5 탭 -->
+<script defer src="js/57_game_training.js?v=20260525a"></script>
+<script defer src="js/56_game_quests.js"></script>  <!-- 2026-05-31 퀘스트 상태/로직 (RoF.Quest) — 50_game_core 뒤 -->
+<script defer src="js/58_quest_ui.js?v=20260601a"></script>  <!-- 2026-06-01 퀘스트 게시판 UI (RoF.QuestUI) — 시안 적용 -->
+<!-- PHASE 6 TCG 신엔진 (2026-05-05 Phase C) — 코어 상태 머신 -->
+<script defer src="js/60_turnbattle_v6.js?v=20260616c"></script> <!-- cache-bust: unit-attack 이벤트 dmg 동봉 (팅 밴드) -->
+<!-- PHASE 6 TCG 매치 UI (2026-05-05 Phase D-1) — RoF.Match 와 DOM 연동 -->
+<script defer src="js/61_match_ui.js?v=20260616c"></script>
+<!-- 2026-06-07: 카드 오버레이 (통합 레벨업 + 카드 부여 보상) — RoF.UI.showLevelUp / showCardReward -->
+<script defer src="js/62_card_overlays.js?v=20260607a"></script>
+<script defer src="js/70_formation_v6.js"></script>
+<script defer src="js/80_fx.js"></script>
+<script defer src="js/98_dev_helpers.js?v=20260606e"></script>
+<script defer src="js/99_bindings.js"></script>
+<script defer src="js/99_bootstrap.js"></script>
+</head>
+<body>
+
+<!-- SETTINGS LAUNCHER (2026-04-27: 호버 펼침 폐기 — 톱니 단일 버튼.
+     볼륨/음소거/전체화면은 설정 모달 안으로 이동. 사용자 의도: 톱니 호버 시 슬라이더 안 나옴, 클릭 시 모달. -->
+<div class="sound-panel" id="sound-panel">
+  <span class="sp-btn sp-settings" id="settings-btn" data-action="settings.open" onclick="if(window.RoF&&RoF.Settings&&RoF.Settings.open)RoF.Settings.open()" title="설정">⚙️</span>
+</div>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen active">
+  <video id="title-bg-video" class="title-bg-video" autoplay loop muted playsinline preload="auto" poster="img/backgrounds/bg_title_angel.jpg">
+    <source src="img/backgrounds/bg_title.mp4" type="video/mp4">
+  </video>
+  <div class="title-fire"></div>
+  <div style="position:relative;z-index:2;text-align:center;">
+    <div style="font-size:1.2rem;color:#8899bb;letter-spacing:8px;font-family:'Cinzel',serif;margin-bottom:6px;text-shadow:0 0 20px rgba(136,153,187,.3);">LEAGUE OF THE GODS</div>
+    <h1>신들의 리그</h1>
+    <p class="subtitle" style="font-size:1.1rem;letter-spacing:4px;color:#aaa;text-shadow:0 2px 10px rgba(0,0,0,.8);">운명의 왕좌를 차지하라</p>
+    <div class="title-buttons" style="margin-top:25px;">
+      <button class="btn" data-action="ui.show" data-arg="login-screen" style="font-size:1.1rem;padding:14px 30px;">⚔️ 왕좌로 돌아가기</button>
+      <button class="btn btn-green" data-action="ui.show" data-arg="signup-screen" style="font-size:1.1rem;padding:14px 30px;">✨ 새로운 운명</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen" class="screen">
+  <div class="auth-box">
+    <h2>⚔️ 모험 이어하기</h2>
+    <input type="text" id="login-id" placeholder="영웅의 이름" autocomplete="off">
+    <input type="password" id="login-pw" placeholder="암호" data-action-enter="auth.login">
+    <div class="auth-msg" id="login-msg"></div>
+    <button class="btn" data-action="auth.login">입장</button>
+    <div class="auth-back" data-action="ui.show" data-arg="title-screen">← 돌아가기</div>
+  </div>
+</div>
+
+<!-- SIGNUP — 2026-05-10 v10: 계정 ID 만 입력. 영웅 이름(heroName)은 프롤로그에서 별도 입력. -->
+<div id="signup-screen" class="screen">
+  <div class="auth-box">
+    <h2>✨ 새로운 모험의 시작</h2>
+    <input type="text" id="signup-id" placeholder="계정 ID (2~12자)" maxlength="12" autocomplete="off">
+    <input type="password" id="signup-pw" placeholder="암호 (4자 이상)">
+    <input type="password" id="signup-pw2" placeholder="암호 확인" data-action-enter="auth.signup">
+    <div class="auth-msg" id="signup-msg"></div>
+    <button class="btn btn-green" data-action="auth.signup">운명의 문을 열다</button>
+    <div class="auth-back" data-action="ui.show" data-arg="title-screen">← 돌아가기</div>
+  </div>
+</div>
+
+<!-- PROLOGUE — 2026-05-10 v10: 인터랙티브 6 스테이지 (꿈→이름→성별→직업→카드등장→여신만남→마무리) -->
+<div id="prologue-screen" class="screen">
+  <!-- 2026-05-17: 시네마틱 컷 6 layer (시안 3 몽환 디졸브) — design/prologue_cutscene_spec.md -->
+  <div class="pl-cut-stage" id="prologue-cut-stage">
+    <div class="pl-cut" data-cut="0"><img src="img/prologue_cuts/01_thread.png" alt=""></div>
+    <div class="pl-cut" data-cut="1"><img src="img/prologue_cuts/02_weaver.png" alt=""></div>
+    <div class="pl-cut" data-cut="2"><img src="img/prologue_cuts/03_silhouette.png" alt=""></div>
+    <div class="pl-cut" data-cut="3"><img src="img/prologue_cuts/04_crossroads.png" alt=""></div>
+    <div class="pl-cut" data-cut="4"><img src="img/prologue_cuts/05_card_birth.png" alt=""></div>
+    <div class="pl-cut" data-cut="5"><img src="img/prologue_cuts/06_six_thrones.png" alt=""></div>
+  </div>
+  <div class="prologue-text" id="prologue-text"></div>
+  <button class="btn btn-s prologue-skip" id="prologue-skip-btn" data-action="auth.skipPrologue">건너뛰기 →</button>
+
+  <!-- Stage: 이름 입력 -->
+  <div id="prologue-name-form" class="pl-stage" style="display:none;">
+    <input type="text" id="prologue-name" class="pl-name-input" placeholder="그대의 이름..." maxlength="12" autocomplete="off" data-action-enter="auth.submitName">
+    <div class="pl-name-msg" id="prologue-name-msg"></div>
+    <button class="btn pl-name-btn" data-action="auth.submitName">이 이름으로 답하리라</button>
+  </div>
+
+  <!-- Stage: 성별 선택 -->
+  <div id="prologue-gender" class="pl-stage" style="display:none;">
+    <div class="pl-choices">
+      <button class="pl-choice" data-action="auth.pickGender" data-arg="m">사내</button>
+      <button class="pl-choice" data-action="auth.pickGender" data-arg="f">여인</button>
+    </div>
+  </div>
+
+  <!-- Stage: 직업 선택 (4번째 버튼 = 성별 되돌리기, 라벨 동적) -->
+  <div id="prologue-role" class="pl-stage" style="display:none;">
+    <div class="pl-choices pl-choices-vert">
+      <button class="pl-choice" data-action="auth.pickRole" data-arg="warrior">검과 방패</button>
+      <button class="pl-choice" data-action="auth.pickRole" data-arg="ranger">활과 화살</button>
+      <button class="pl-choice" data-action="auth.pickRole" data-arg="support">마법서</button>
+      <button class="pl-choice pl-choice-back" data-action="auth.backToGender" id="prologue-role-back">— 잠깐, 나는 다른 모습이다</button>
+    </div>
+  </div>
+
+  <!-- Stage: 카드 등장 (빛 번쩍 + 영웅 카드 페이드인) -->
+  <div id="prologue-card-reveal" class="pl-stage" style="display:none;">
+    <div class="pl-card-flash" id="prologue-card-flash"></div>
+    <div class="pl-card-wrap" id="prologue-card-wrap"></div>
+  </div>
+
+  <!-- Stage: 여신 만남 — 카드 reveal 바로 아래 위치 (CSS top:74%). prompt 삭제, 버튼이 곧 행동 라벨. -->
+  <div id="prologue-meet" class="pl-stage" style="display:none;">
+    <div class="pl-choices pl-choices-vert">
+      <button class="pl-choice" data-action="auth.acceptGoddess">운명의 여신에게 다가갑니다</button>
+      <button class="pl-choice pl-choice-back" data-action="auth.backToRole">— 다른 길을 고르겠다</button>
+    </div>
+  </div>
+
+  <!-- Stage: 마무리 (final 시네마틱 끝나면 노출) -->
+  <div id="prologue-btns" style="display:none;position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);z-index:2;text-align:center;">
+    <button class="btn" data-action="auth.endPrologue">운명을 받아들인다</button>
+  </div>
+</div>
+
+<!-- CHAR SELECT — STEP 1 (원소 선택) — 2026-04-13 분리 -->
+<div id="char-element-screen" class="screen">
+  <div class="char-select-title" id="char-element-title">어떤 신의 축복을 받겠습니까?</div>
+  <div class="char-select-sub" id="char-element-msg">어떤 신이 당신에게 힘을 내려줄 것인가...</div>
+  <div class="char-id-preview" id="char-element-preview"></div>
+  <div class="char-select-grid" id="char-element-grid"></div>
+  <div style="padding:12px;display:flex;gap:10px;justify-content:center;">
+    <button class="btn" data-action="auth.confirmElement" id="btn-confirm-element" disabled>다음 →</button>
+    <button class="btn btn-s" id="btn-element-back" data-action="auth.backToPrologue">← 돌아가기</button>
+  </div>
+</div>
+
+<!-- CHAR SELECT — STEP 2 (역할/영웅 확정 + 성별 토글) — 2026-04-21 성별 토글 추가 -->
+<div id="char-hero-screen" class="screen">
+  <div class="char-select-title" id="char-hero-title">왕좌를 향한 길을 선택하세요</div>
+  <div class="char-select-sub" id="char-hero-msg"></div>
+  <div class="char-id-preview" id="char-hero-preview"></div>
+  <div class="gender-toggle" id="hero-gender-toggle"></div>
+  <div class="char-select-grid" id="char-hero-grid"></div>
+  <button class="btn" data-action="auth.confirmHero" id="btn-confirm-hero" disabled>영웅 확정!</button>
+  <button class="btn btn-s" id="btn-hero-back" data-action="auth.backToElement">← 원소 다시 선택</button>
+</div>
+
+<!-- MAIN MENU / TOWN -->
+<div id="menu-screen" class="screen">
+  <div class="town-sky" id="town-sky"></div>
+  <div class="town-hud">
+    <div class="town-hud-left">
+      <!-- 2026-05-03: 프로필 슬롯 — 영웅 카드 미니 일러스트 + 닉. 클릭 → 프로필 카드 변경 모달. -->
+      <div class="th-profile" id="town-profile" title="프로필 카드 변경" data-action="profile.open">
+        <div class="th-profile-img" id="town-profile-img"></div>
+        <div class="th-profile-text">
+          <div class="th-profile-name" id="town-profile-name">—</div>
+          <div class="th-profile-lv" id="town-profile-lv">Lv.1</div>
+        </div>
+      </div>
+      <div class="th-stat" id="town-league"></div>
+      <div class="th-stat" title="보유 전력"><span style="opacity:.75;">⚔</span><span id="town-deck-count">0</span></div>
+    </div>
+    <div class="town-hud-right">
+      <div class="th-stat">💰<span id="town-gold">0</span></div>
+      <div class="th-stat">💎<span id="town-gems">0</span></div>
+      <div class="th-stat">✨<span id="town-bless">0</span></div>
+      <div class="th-stat" id="town-ap"></div>
+      <!-- 2026-04-24: HUD 정리. 클라우드 연결은 ⚙️ 설정 모달로 이관. 접근성 보존을 위해 hidden 버튼은 유지 (_updateCloudBtn 이 id 를 참조). -->
+      <button id="btn-cloud-link" data-action="backend.showLinkModal" title="클라우드 연결" style="display:none;" aria-hidden="true">☁️ 클라우드</button>
+    </div>
+  </div>
+  <div class="town-container" id="town-container">
+    <!-- 2026-04-24: 마을 배경 영상 (미세 애니 — 새·구름). PNG 는 poster/폴백. -->
+    <video id="town-bg-video" class="town-bg-video" autoplay loop muted playsinline preload="auto" poster="img/backgrounds/bg_town_v3.png">
+      <source src="img/backgrounds/bg_town_v3.mp4" type="video/mp4">
+    </video>
+  </div>
+  <!-- 2026-04-24: menu-deck 삭제 (대표님 지시 — 덱 프리뷰 불필요, 도서관에서 확인) -->
+  <!-- 2026-04-23 밤: town-footer 삭제 (A안). ☁️ 클라우드 → HUD 우측 이동, 🛏️ 휴식(=logout) 은 설정 모달 "저장 후 종료" 와 중복이라 제거 -->
+</div>
+
+<!-- CLOUD LINK MODAL -->
+<div id="cloud-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 id="cloud-modal-title">☁️ 클라우드 세이브</h3>
+    <div id="cloud-status"></div>
+    <div id="cloud-form">
+      <input type="email" id="cloud-email" placeholder="이메일 주소" class="auth-input" autocomplete="email">
+      <input type="password" id="cloud-pw" placeholder="비밀번호 (6자 이상)" class="auth-input" autocomplete="new-password">
+      <div id="cloud-msg" class="auth-msg"></div>
+      <div class="modal-buttons">
+        <button class="btn btn-s" id="cloud-btn-register" data-action="backend.register">새로 등록</button>
+        <button class="btn btn-s" id="cloud-btn-login" data-action="backend.linkLogin">기존 연결</button>
+      </div>
+    </div>
+    <button class="btn btn-s btn-red" data-action="backend.closeModal">닫기</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL (2026-04-23 / 2026-04-24 확장) -->
+<div id="settings-modal" class="modal-overlay">
+  <div class="modal-box set-modal">
+    <h3>⚙️ 설정</h3>
+    <div class="set-account">
+      <div class="set-row"><span class="set-label">계정</span><strong class="set-user-name">—</strong></div>
+      <div class="set-row"><span class="set-label">클라우드</span><span class="set-cloud-status">—</span></div>
+    </div>
+    <div class="set-section-title">진행</div>
+    <div class="modal-buttons set-vert">
+      <button class="btn btn-s" data-action="settings.saveOnly" title="현재 진행 저장 (로그아웃 없이 계속 플레이)">💾 저장하기</button>
+      <button class="btn btn-s" data-action="backend.showLinkModal" title="이메일로 다른 기기와 연결">☁️ 클라우드 연결</button>
+    </div>
+    <div class="set-section-title">사운드</div>
+    <div class="set-vol-row">
+      <span class="sp-btn" id="sound-toggle" data-action="sfx.toggle" title="음소거 토글">🔊</span>
+      <input type="range" id="vol-slider" min="0" max="100" value="40" data-action-input="sfx.setVolume" title="볼륨">
+      <span class="sp-vol" id="vol-display">40</span>
+    </div>
+    <div class="modal-buttons set-vert">
+      <button class="btn btn-s set-bgm-btn" data-action="settings.toggleBgm">🔊 BGM 끄기</button>
+    </div>
+    <div class="set-section-title">디스플레이</div>
+    <div class="modal-buttons set-vert">
+      <button class="btn btn-s sp-fs" id="fullscreen-toggle" data-action="ui.toggleFullscreen" title="전체화면 (F)">⛶ 전체화면 토글</button>
+    </div>
+    <div class="set-section-title">세션</div>
+    <div class="modal-buttons set-vert">
+      <button class="btn btn-s btn-red" data-action="settings.logout" title="저장 후 세션 종료 + 타이틀로">🚪 로그아웃</button>
+      <button class="btn btn-s btn-red" data-action="settings.exitGame" title="진행 자동 저장 후 게임 창 닫기">❌ 게임 종료</button>
+    </div>
+    <div class="modal-buttons set-close-row">
+      <button class="btn btn-s" data-action="settings.close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORMATION SLOTS MODAL (2026-05-03) — 출정 편성 화면의 "편성 슬롯" 버튼 클릭 시 -->
+<div id="formation-slots-modal" class="modal-overlay">
+  <div class="modal-box fs-modal-box">
+    <h3>📜 편성 슬롯</h3>
+    <div class="fs-modal-info">3개 슬롯에 편성을 저장하고 불러올 수 있습니다. 이름을 편집해 용도별로 구분하세요 (예: 리그용 / 캠페인용).</div>
+    <div id="fs-grid" class="fs-grid"></div>
+    <div class="modal-buttons set-close-row">
+      <button class="btn btn-s" data-action="formationSlots.close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE CARD SELECT MODAL (2026-05-03) — 마을 좌상단 프로필 슬롯 클릭 시
+     2026-05-14 사용자 컨펌 — 팝오버 (2 메뉴) + 프레임 모달 신규. 일러스트 모달은 그대로. -->
+<div id="profile-popover" class="profile-popover">
+  <div class="pp-item" data-action="profile.openIllust">프로필 변경</div>
+  <div class="pp-item" data-action="profile.openFrame">프레임 변경</div>
+</div>
+<div id="profile-modal" class="modal-overlay">
+  <div class="modal-box profile-modal-box">
+    <h3>프로필 변경</h3>
+    <div class="profile-modal-info">마을 좌상단에 표시할 카드를 선택하세요.</div>
+    <div id="profile-grid" class="profile-grid"></div>
+    <div class="modal-buttons set-close-row">
+      <button class="btn btn-s" data-action="profile.close">닫기</button>
+    </div>
+  </div>
+</div>
+<div id="profile-frame-modal" class="modal-overlay">
+  <div class="modal-box profile-modal-box">
+    <h3>프레임 변경</h3>
+    <div class="profile-modal-info">프로필 카드 위에 씌울 프레임을 선택하세요.</div>
+    <div id="profile-frame-grid" class="profile-grid"></div>
+    <div class="modal-buttons set-close-row">
+      <button class="btn btn-s" data-action="profile.closeFrame">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAVERN SCREEN -->
+<!-- design-confirmed: 2026-05-24 사유: 선술집 용병모집 v3 정본 적용 (시안 통째 ABC)
+     시안 원본: 0.claulde.design/20260524/선술집_용병모집_디자인_0524/tavern_recruit.html
+     battle_system_decisions.md §선술집 용병 영입 표준 룰 / feature_manifest 3.18 -->
+<div id="tavern-screen" class="screen">
+  <div class="tav-screen-inner" id="tav-screen-inner">
+
+    <!-- TOPBAR -->
+    <div class="tav-topbar">
+      <button class="tav-iconbtn" data-action="game.showMenu" title="돌아가기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tav-crumb">Tavern</div>
+      <div class="tav-title">선술집 · 용병 모집</div>
+      <div class="tav-gilt-line"></div>
+      <div class="tav-meta">
+        <div class="tav-coin">
+          <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="#e8bd4a" stroke="#8b6914" stroke-width="1.5"/></svg>
+          <b id="tav-gold">0</b>
+        </div>
+        <div class="tav-coin">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3 L20 12 L12 21 L4 12 Z" fill="#4a7ea8" stroke="#1e3a6a" stroke-width="1.5"/></svg>
+          <b id="tav-gems">0</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- NPC BAR — 주모 헬가 (인사말 동적: RoF.Game.getNpc('tavern').greet) -->
+    <div class="tav-npc-bar">
+      <div class="tav-npc-portrait">🍺</div>
+      <div class="tav-npc-meta">
+        <div class="tav-npc-name">주모 헬가</div>
+        <div class="tav-npc-role">Tavern Keeper</div>
+      </div>
+      <div class="tav-npc-line" id="tav-npc-line">— 오늘은 어떤 인연이 자네를 기다리고 있을까. —</div>
+      <button class="tav-btn-refresh" data-action="game.refreshTavern">🔄 다른 동료 보기 <span class="cost">2💰</span></button>
+    </div>
+
+    <!-- SECTION HEADING -->
+    <div class="tav-heading">
+      <span class="label">— 오늘의 모집 · TODAY</span>
+      <span class="ko">4명이 자네를 기다리고 있어</span>
+      <span class="tav-gilt-line"></span>
+      <span class="tav-deck-pill">덱 <b id="tav-deck">0</b> / 36 장</span>
+    </div>
+
+    <!-- RECRUIT GRID (4 slot — JS genTavernCards 가 채움) -->
+    <div class="tav-recruit" id="tav-grid"></div>
+
+    <!-- 옛 info 라벨 — JS 호환 (tav-info 참조 유지, 시각 숨김) -->
+    <div id="tav-info" style="display:none;"></div>
+    <div id="tav-name" style="display:none;"></div>
+
+    <!-- BOTTOM ACTION BAR -->
+    <div class="tav-actionbar">
+      <div class="left">
+        <button class="tav-btn" data-action="game.showFormation">📜 전열 정비</button>
+        <button class="tav-btn" data-action="game.showDeckView">📖 도감</button>
+      </div>
+      <div class="right">
+        <span class="tav-deck-info">덱 한도 <b id="tav-deck-limit">0 / 36</b></span>
+        <button class="tav-btn" data-action="game.showMenu">← 마을로</button>
+      </div>
+    </div>
+
+    <!-- SCREEN-WIDE FX + DIM (등급별 reveal 시) -->
+    <div class="tav-screen-dim" id="tav-screen-dim"></div>
+    <div class="tav-screen-fx" id="tav-screen-fx"></div>
+
+    <!-- HIRE DIALOG (영입한다 클릭 시 380ms slide-up) -->
+    <div class="tav-hire-dialog" id="tav-hire-dialog">
+      <div class="tav-hire-box">
+        <div class="tav-hire-portrait"><img id="tav-hire-portrait-img" src="" alt=""></div>
+        <div class="tav-hire-text">
+          <div class="tav-hire-name"><span id="tav-hire-name">—</span><span class="role" id="tav-hire-role"></span></div>
+          <div class="tav-hire-line" id="tav-hire-l1"></div>
+          <div class="tav-hire-line" id="tav-hire-l2"></div>
+          <div class="tav-hire-line" id="tav-hire-l3"></div>
+        </div>
+        <span class="tav-hire-next">▶ 계속</span>
+      </div>
+    </div>
+
+    <!-- CARD ZOOM (revealed 후 카드 클릭 — 도감 패턴) -->
+    <div class="tav-card-zoom" id="tav-card-zoom">
+      <button class="tav-zoom-close" aria-label="닫기">✕</button>
+      <div class="tav-zoom-layout">
+        <div class="tav-zoom-card-side" id="tav-zoom-card-host"></div>
+        <div class="tav-zoom-skill-side" id="tav-zoom-skill-host"></div>
+      </div>
+      <div class="tav-zoom-hint">아무 곳이나 클릭 · ESC 닫기</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- UPGRADE SCREEN -->
+<div id="upgrade-screen" class="screen">
+  <div class="hud">
+    <div class="hud-left"><div class="hud-name" id="upg-name"></div><div class="hud-stat">Lv.<span id="upg-lv">1</span></div></div>
+    <div class="hud-right"><div class="hud-stat">💰<span id="upg-gold">0</span></div></div>
+  </div>
+  <div class="upgrade-title">🔧 동료 단련</div>
+  <div class="upgrade-info" id="upg-info">단련할 동료를 선택하세요 (비용: 동료 수련도 × 3 💰)</div>
+  <div class="upgrade-grid" id="upg-grid"></div>
+  <div style="padding:10px;"><button class="btn btn-s" data-action="game.showMenu">← 돌아가기</button></div>
+</div>
+
+<!-- DECK VIEW / CODEX -->
+<div id="deckview-screen" class="screen">
+  <div class="hud">
+    <div class="hud-left"><div class="hud-name" id="dv-name"></div></div>
+    <div class="hud-right"><div class="hud-stat">지휘권 <span id="dv-slots">1</span></div><div class="hud-stat">유물 보유량 <span id="dv-rslots">1</span></div></div>
+  </div>
+  <div style="text-align:center;padding:6px;">
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:6px;">
+      <button class="btn btn-s" id="tab-deck" data-action="game.showDeckTab" style="border-color:#ffd700;color:#ffd700;">📋 전력 열람</button>
+      <button class="btn btn-s" id="tab-codex" data-action="game.showCodexTab">📖 생명의 서</button>
+    </div>
+  </div>
+  <!-- DECK TAB -->
+  <div id="deck-tab">
+    <div style="font-size:.75rem;color:#aaa;text-align:center;">동료를 선택하여 자세히 살펴보세요</div>
+    <div style="font-size:.8rem;color:#ccc;text-align:center;margin:4px;">영웅 & 동료</div>
+    <div id="dv-grid" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px;align-content:flex-start;"></div>
+    <div style="font-size:.8rem;color:#ccc;text-align:center;margin:4px;">습득한 비전 (클릭하여 장착/해제)</div>
+    <div id="dv-skills" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px;min-height:40px;align-content:flex-start;"></div>
+    <div style="font-size:.8rem;color:#ccc;text-align:center;margin:4px;">소지한 유물</div>
+    <div id="dv-relics" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px;min-height:40px;align-content:flex-start;"></div>
+  </div>
+  <!-- CODEX TAB -->
+  <div id="codex-tab" style="display:none;">
+    <!-- 2026-05-10: sub-tab — 동료 / 스킬 (중립 포함) -->
+    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:6px;">
+      <button class="btn btn-s" id="codex-sub-units"  data-action="game.showCodexUnits"  style="border-color:#ffd700;color:#ffd700;">🛡 동료</button>
+      <button class="btn btn-s" id="codex-sub-skills" data-action="game.showCodexSkills">📜 스킬</button>
+    </div>
+    <div style="text-align:center;margin-bottom:8px;">
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;" id="codex-filters"></div>
+    </div>
+    <div id="codex-grid" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px;align-content:flex-start;"></div>
+  </div>
+  <div style="padding:8px;text-align:center;"><button class="btn btn-s" data-action="game.showMenu">← 돌아가기</button></div>
+
+  <!-- 2026-04-27: 카드 클릭 시 중앙 확대 + 보유 스킬카드 표시 (전투 char-focus 와 동형).
+       이전 #detail-modal (텍스트 설명창) 폐기. dvf-* CSS 는 css/42_screens.css 의 deckview 섹션. -->
+  <div id="dv-focus" class="dv-focus-overlay" onclick="if(event.target===this)RoF.Game.closeDeckCardFocus()">
+    <div class="dvf-backdrop"></div>
+    <div class="dvf-main-card"></div>
+    <div class="dvf-skill-row"></div>
+    <div class="dvf-close-row"><button class="btn btn-s" data-action="game.closeDeckCardFocus">닫기</button></div>
+  </div>
+</div>
+
+<!-- CASTLE SCREEN — 2026-05-02: 단련 탭 제거, 퀘스트 + 전직(예정) 만 -->
+<!-- design-confirmed: 2026-06-01 사유: 옛 .hud(🏰 성/골드) + 옛 돌아가기 버튼 제거 (사용자 "게임적용 하자" 컨펌 + 검수).
+     퀘스트 게시판(.qb-head)이 자체 제목/도전레벨/chevron back 버튼을 가져 옛 chrome 중복 → 제거. -->
+<div id="castle-screen" class="screen">
+  <div id="castle-quest-area"></div>
+</div>
+
+<!-- design-confirmed: 2026-05-25 사유: 훈련소 v1 시안 통째 ABC 정본 적용 (사용자 공급 시안 0.claulde.design/20260525/훈련소시안_0525/ + "오케이" 컨펌)
+     custom: 시안 마크업 그대로 (인라인 SVG 동전/보석 아이콘 포함 — 선술집 v3 패턴 동일)
+     battle_system_decisions §훈련소 v1 표준 룰 / feature_manifest 3.19
+     5 탭: 수련(mastery) / 각성(awakening) / 학습(learning) / 각인(engraving) / 강화(upgrade)
+     CSS: css/49_training.css (tr- prefix). JS: js/53_game_training.js (RoF.Game.showTraining* + Meta.* API). -->
+<div id="training-screen" class="screen">
+  <div class="tr-screen-inner" id="tr-screen-inner">
+
+    <!-- TOPBAR -->
+    <div class="tr-topbar">
+      <button class="tr-iconbtn" data-action="game.showMenu" title="돌아가기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tr-crumb">Training Hall</div>
+      <div class="tr-title">훈련소 · 영구 강화</div>
+      <div class="tr-gilt-line"></div>
+      <div class="tr-meta">
+        <div class="tr-coin"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="#e8bd4a" stroke="#8b6914" stroke-width="1.5"/></svg><b id="tr-gold">0</b></div>
+        <div class="tr-coin"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3 L20 12 L12 21 L4 12 Z" fill="#4a7ea8" stroke="#1e3a6a" stroke-width="1.5"/></svg><b id="tr-gem">0</b></div>
+        <div class="tr-coin">📜 <b id="tr-scroll">0</b></div>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT (260 + 1fr) -->
+    <div class="tr-layout">
+
+      <!-- LEFT — PARTY rail -->
+      <div class="tr-rail">
+        <div class="tr-rail-head">
+          <div class="tr-src-toggle">
+            <button class="tr-src-btn is-active" data-src="formation">전열</button>
+            <button class="tr-src-btn" data-src="all">전체 유닛</button>
+          </div>
+          <span class="tr-sub" id="tr-src-count">5 / 5</span>
+          <div class="tr-el-filter" id="tr-el-filter">
+            <button class="tr-el-chip is-active" data-el="all">전체</button>
+            <button class="tr-el-chip" data-el="fire"><span class="tr-ic">🔥</span>화</button>
+            <button class="tr-el-chip" data-el="water"><span class="tr-ic">💧</span>수</button>
+            <button class="tr-el-chip" data-el="earth"><span class="tr-ic">🌿</span>지</button>
+            <button class="tr-el-chip" data-el="lightning"><span class="tr-ic">⚡</span>뇌</button>
+            <button class="tr-el-chip" data-el="holy"><span class="tr-ic">✨</span>성</button>
+            <button class="tr-el-chip" data-el="dark"><span class="tr-ic">🌑</span>암</button>
+          </div>
+          <div class="tr-el-filter" id="tr-rar-filter" style="margin-top:4px;">
+            <button class="tr-el-chip is-active" data-rar="all">전체</button>
+            <button class="tr-el-chip rc-common" data-rar="common">일반</button>
+            <button class="tr-el-chip rc-rare" data-rar="rare">희귀</button>
+            <button class="tr-el-chip rc-noble" data-rar="noble">고귀한</button>
+            <button class="tr-el-chip rc-legendary" data-rar="legendary">전설</button>
+            <button class="tr-el-chip rc-divine" data-rar="divine">신</button>
+          </div>
+        </div>
+        <div class="tr-pm-list"></div>
+      </div>
+
+      <!-- RIGHT — main panel (5 tabs) -->
+      <div class="tr-main">
+        <div class="tr-tabs">
+          <div class="tr-tab is-active" data-tab="mastery"><span class="tr-ko">수련</span>MASTERY</div>
+          <div class="tr-tab" data-tab="awakening"><span class="tr-ko">각성</span>AWAKENING</div>
+          <div class="tr-tab" data-tab="learning"><span class="tr-ko">학습</span>LEARNING</div>
+          <div class="tr-tab" data-tab="engraving"><span class="tr-ko">각인</span>ENGRAVING</div>
+          <div class="tr-tab" data-tab="upgrade"><span class="tr-ko">강화</span>UPGRADE</div>
+        </div>
+        <button class="tr-help-btn" title="이 탭 설명">?</button>
+        <div class="tr-tab-content">
+          <div class="tr-panel is-active" data-panel="mastery"></div>
+          <div class="tr-panel" data-panel="awakening"></div>
+          <div class="tr-panel" data-panel="learning"></div>
+          <div class="tr-panel" data-panel="engraving"></div>
+          <div class="tr-panel" data-panel="upgrade"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- POPUPS -->
+    <!-- HELP popup -->
+    <div class="tr-help-pop">
+      <div class="tr-help-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-help-tag">— Help —</div>
+        <div class="tr-help-title">—</div>
+        <div class="tr-help-body"></div>
+        <div class="tr-help-hint">바깥 클릭 · 닫기</div>
+      </div>
+    </div>
+
+    <!-- ENGRAVE SUCCESS popup -->
+    <div class="tr-eg-pop">
+      <div class="tr-eg-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="glyph">✨</div>
+        <div class="title">각인되었습니다</div>
+        <div class="sub"><b class="tr-eg-skill-name">스킬</b>이 영혼의 서고에 새겨졌다.</div>
+        <div class="sub">이제 누구든 <b>학습</b> 탭에서 익혀 쓸 수 있다.</div>
+        <div class="hint">클릭 · 닫기</div>
+      </div>
+    </div>
+
+    <!-- SEAL CONFIRM popup -->
+    <div class="tr-confirm-pop" id="tr-seal-pop">
+      <div class="tr-confirm-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-confirm-title">봉인 의식</div>
+        <div class="tr-confirm-body"><b class="tr-seal-skill-name">스킬</b>을(를) 봉인하시겠습니까?<br>학습 슬롯이 비워집니다.</div>
+        <div class="tr-confirm-actions">
+          <button class="no" id="tr-seal-no">취소</button>
+          <button class="yes" id="tr-seal-yes">봉 인 한 다</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- design-confirmed: 2026-05-25 사유: 사용자 명시 "시안대로" 확대 popup (tz-overlay 380x540 + 480 info / sk-zoom 340x510 V4 mount) -->
+    <!-- CHARACTER PROFILE ZOOM (좌측 사이드 프로필 자리 클릭 시) -->
+    <div class="tr-tz-overlay">
+      <div class="tr-tz-layout" onclick="event.stopPropagation()">
+        <div class="tr-tz-illust-frame">
+          <span class="tr-tz-corner tl"></span><span class="tr-tz-corner tr"></span><span class="tr-tz-corner bl"></span><span class="tr-tz-corner br"></span>
+          <div class="tr-tz-illust-inner"><img class="tr-tz-img" src="" alt=""></div>
+        </div>
+        <div class="tr-tz-info">
+          <div class="tr-tz-flavor"></div>
+          <div class="tr-tz-title"><span class="nm">—</span><span class="lv">Lv 1</span></div>
+          <div class="tr-tz-chips"></div>
+          <div class="tr-tz-stats"></div>
+          <div class="tr-tz-desc">—</div>
+        </div>
+      </div>
+      <button class="tr-tz-close">✕</button>
+      <div class="tr-tz-hint">바깥 클릭 · ESC 닫기</div>
+    </div>
+
+    <!-- SKILL CARD ZOOM (eg-card 그리드 클릭 시 V4 카드 mount) -->
+    <div class="tr-sk-zoom">
+      <div class="tr-sk-box" data-tr-mount="sk-card-v4" onclick="event.stopPropagation()"></div>
+    </div>
+
+    <!-- design-confirmed: 2026-05-25 사유: 사용자 명시 "통째 ABC" 완성 — 11 popup 누락분 정본 적용 -->
+
+    <!-- STAT 분배 popup (수련 탭) — 시안 line 1543~1558 -->
+    <div class="tr-stat-pop">
+      <div class="tr-stat-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-stat-label">— 스탯 분배 —</div>
+        <div class="tr-stat-sub">남은 스탯 · <b class="tr-stat-remain">2</b></div>
+        <div class="tr-stat-picks">
+          <button class="tr-stat-pick atk" data-stat="atk"><div class="icon">⚔</div><div class="meta"><div class="k">ATK</div><div class="d">공격력 증가</div></div><div class="v">2</div></button>
+          <button class="tr-stat-pick hp" data-stat="hp"><div class="icon">♥</div><div class="meta"><div class="k">HP</div><div class="d">체력 증가</div></div><div class="v">5</div></button>
+          <button class="tr-stat-pick soul" data-stat="soul"><div class="icon">✨</div><div class="meta"><div class="k">SOUL <span style="color:var(--tr-gilt-pale);font-size:9px;letter-spacing:.2em;margin-left:6px;">영웅전용</span></div><div class="d">시그니처 운용 한도</div></div><div class="v">1</div></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LVUP overlay (수련 시 레벨업 burst + 팝업) -->
+    <div class="tr-lvup-overlay">
+      <div class="tr-lvup-veil"></div>
+      <div class="tr-lvup-rays"></div>
+    </div>
+
+    <!-- AWAKENING choice popup (각성 의식 → 3 선택) -->
+    <div class="tr-aw-pop">
+      <div class="tr-aw-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-aw-title">— 각성 의식 —</div>
+        <div class="tr-aw-sub">신탁이 세 가지 길을 보였다. 그중 하나만이 그대의 운명이다.</div>
+        <div class="tr-aw-grid"></div>
+        <div style="text-align:center;margin-top:18px;font:400 10px/1 'Noto Sans KR';letter-spacing:.5em;color:var(--tr-text-3);text-transform:uppercase;">바깥 클릭 · 닫기</div>
+      </div>
+    </div>
+
+    <!-- UPGRADE 3-CHOICE popup (강화 진화 → 3 선택, aw-pop CSS 재사용) -->
+    <div class="tr-aw-pop tr-up-choice-pop">
+      <div class="tr-aw-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-aw-title">— 강 화 진 화 —</div>
+        <div class="tr-aw-sub">두 가지 진화 중 하나만이 영구히 새겨진다.</div>
+        <div class="tr-aw-grid"></div>
+        <div style="text-align:center;margin-top:18px;font:400 10px/1 'Noto Sans KR';letter-spacing:.5em;color:var(--tr-text-3);text-transform:uppercase;">바깥 클릭 · 닫기</div>
+      </div>
+    </div>
+
+    <!-- UPGRADE confirm popup (강화 확인) -->
+    <div class="tr-uc-pop">
+      <div class="tr-uc-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-uc-title">강 화 하 시 겠 습 니 까?</div>
+        <div class="tr-uc-body">강화 시, 전 등급 스킬은 <b>각인했다면 학습으로 배울 수 있다</b>. 강화 후에는 되돌릴 수 없다.</div>
+        <div class="tr-uc-actions">
+          <button class="tr-uc-btn tr-uc-cancel">취 소</button>
+          <button class="tr-uc-btn primary tr-uc-confirm">강화한다 ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAT UPGRADE popup (강화 스탯 분배) -->
+    <div class="tr-su-pop">
+      <div class="tr-su-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-su-title">— 스탯 강화 —</div>
+        <div class="tr-su-sub">스탯 1개를 올려 스킬을 다듬는다.</div>
+        <div class="tr-su-remain">
+          <div class="orb tr-su-remain-orb">3</div>
+          <div class="label">남은 스탯 포인트 · <b class="tr-su-remain-num">3</b></div>
+        </div>
+        <div class="tr-su-rows">
+          <div class="tr-su-row"><div class="ic atk">⚔</div><div class="info"><div class="nm">위력</div><div class="desc">스킬 데미지·회복량 증가</div></div><div class="v">82<span class="next">86</span></div><button class="plus" data-stat="pow">+</button></div>
+          <div class="tr-su-row"><div class="ic dmg">⚡</div><div class="info"><div class="nm">집중</div><div class="desc">크리티컬·관통 확률 증가</div></div><div class="v">12<span class="next">14</span></div><button class="plus" data-stat="foc">+</button></div>
+          <div class="tr-su-row"><div class="ic cost">✦</div><div class="info"><div class="nm">절약</div><div class="desc">SOUL 소모량 감소</div></div><div class="v">3<span class="next">2</span></div><button class="plus" data-stat="cost">+</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAT UPGRADE warning (포인트 없음) -->
+    <div class="tr-su-pop tr-su-warn-pop">
+      <div class="tr-su-warn" onclick="event.stopPropagation()">
+        <div class="glyph">✗</div>
+        <div class="title">스탯 포인트가 없다</div>
+        <div class="msg">강화할 스탯이 없습니다.<br>스킬을 사용하거나 영구 강화로 포인트를 모으세요.</div>
+      </div>
+    </div>
+
+    <!-- REVERT confirm popup (각성/강화 회귀) -->
+    <div class="tr-confirm-pop tr-revert-pop">
+      <div class="tr-confirm-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-confirm-title tr-revert-title">회귀 의식</div>
+        <div class="tr-confirm-body">정말 전 등급으로 회귀하시겠습니까?<br><span style="color:#e8a8a8;font-style:italic;font-size:12px;">모든 스킬과 경험치는 사라집니다.</span></div>
+        <div class="tr-confirm-actions">
+          <button class="no tr-revert-no">취소</button>
+          <button class="yes tr-revert-yes">회 귀 한 다</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIBRARY popup (학습 가능 스킬 풀) -->
+    <div class="tr-lib-pop">
+      <div class="tr-lib-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-lib-title">— 학습 가능 스킬 —</div>
+        <div class="tr-lib-filters">
+          <div class="tr-lib-fgroup">
+            <span class="gl">원소</span>
+            <button class="tr-lib-chip is-active" data-el="all">전체</button>
+            <button class="tr-lib-chip" data-el="fire">🔥 화</button>
+            <button class="tr-lib-chip" data-el="water">💧 수</button>
+            <button class="tr-lib-chip" data-el="earth">🌿 지</button>
+            <button class="tr-lib-chip" data-el="lightning">⚡ 뇌</button>
+            <button class="tr-lib-chip" data-el="holy">✨ 성</button>
+            <button class="tr-lib-chip" data-el="dark">🌑 암</button>
+          </div>
+          <div class="tr-lib-fgroup" style="margin-left:auto;">
+            <span class="gl">등급</span>
+            <button class="tr-lib-chip is-active" data-rar="all">전체</button>
+            <button class="tr-lib-chip" data-rar="common">일반</button>
+            <button class="tr-lib-chip" data-rar="rare">희귀</button>
+            <button class="tr-lib-chip" data-rar="noble">고귀한</button>
+            <button class="tr-lib-chip" data-rar="legendary">전설</button>
+            <button class="tr-lib-chip" data-rar="divine">신</button>
+          </div>
+        </div>
+        <div class="tr-lib-grid"></div>
+        <div style="text-align:center;font:400 10px/1 'Noto Sans KR';letter-spacing:.5em;color:var(--tr-text-3);text-transform:uppercase;padding-top:6px;">바깥 클릭 · 닫기</div>
+      </div>
+    </div>
+
+    <!-- LEARNING action popup (라이브러리 클릭 → 학습/줌 선택) -->
+    <div class="tr-la-pop">
+      <div class="tr-la-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-la-title">—</div>
+        <div class="tr-la-sub">어떻게 할까?</div>
+        <button class="tr-la-btn tr-la-act-learn"><div class="ic">📜</div><div class="meta"><div class="nm">학습하기</div><div class="d">슬롯에 새로 새긴다</div></div></button>
+        <button class="tr-la-btn tr-la-act-zoom"><div class="ic">⌕</div><div class="meta"><div class="nm">확대 보기</div><div class="d">일러스트와 정보를 자세히 본다</div></div></button>
+        <div style="text-align:center;font:400 9px/1 'Noto Sans KR';letter-spacing:.5em;color:var(--tr-text-3);text-transform:uppercase;margin-top:4px;">바깥 클릭 · 닫기</div>
+      </div>
+    </div>
+
+    <!-- LEARNING confirm popup (학습 확인) -->
+    <div class="tr-confirm-pop tr-lc-pop">
+      <div class="tr-confirm-box" onclick="event.stopPropagation()">
+        <span class="tr-cb tl"></span><span class="tr-cb tr"></span><span class="tr-cb bl"></span><span class="tr-cb br"></span>
+        <div class="tr-confirm-title">학습 의식</div>
+        <div class="tr-confirm-body"><b class="tr-lc-skill-name">스킬</b>을 학습하시겠습니까?<br>학습 비용은 <b class="tr-lc-cost">800</b> 골드입니다.<div class="tr-confirm-warn">⚠ 기존 <b class="tr-lc-old-skill">스킬</b>은(는) 대체됩니다.</div></div>
+        <div class="tr-confirm-actions">
+          <button class="no tr-lc-no">취소</button>
+          <button class="yes tr-lc-yes">학 습 한 다</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEARNING SKILL ZOOM popup (라이브러리 카드 확대) -->
+    <div class="tr-ls-pop">
+      <div class="tr-ls-box" onclick="event.stopPropagation()">
+        <div class="tr-tz-illust-frame">
+          <span class="tr-tz-corner tl"></span><span class="tr-tz-corner tr"></span><span class="tr-tz-corner bl"></span><span class="tr-tz-corner br"></span>
+          <div class="tr-tz-illust-inner"><img class="tr-ls-img" src="" alt=""></div>
+        </div>
+        <div class="tr-ls-info">
+          <div class="nm">—</div>
+          <div class="tags"><span class="tag tr-ls-tag-el">화</span><span class="tag tr-ls-tag-rar">전설</span></div>
+          <div class="desc">—</div>
+          <div class="cost">학습 비용 · <b>800</b> 골드</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CHURCH SCREEN -->
+<div id="church-screen" class="screen">
+  <div class="hud">
+    <div class="hud-left"><div class="hud-name">⛪ 교회</div></div>
+    <div class="hud-right"><div class="hud-stat">💰<span id="church-gold">0</span></div></div>
+  </div>
+  <div style="text-align:center;padding:8px;">
+    <div style="font-size:1.2rem;color:#ffd700;">⛪ 신의 은총</div>
+    <div style="font-size:.8rem;color:#aaa;" id="church-info">부상당한 동료를 치유하거나, 영면에 들게 하세요</div>
+  </div>
+  <div id="church-grid" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:10px;flex:1;align-items:flex-start;align-content:flex-start;"></div>
+  <div style="padding:8px;text-align:center;"><button class="btn btn-s" data-action="game.showMenu">← 돌아가기</button></div>
+</div>
+
+<!-- MATCHMAKING SCREEN -->
+<!-- design-confirmed: 2026-05-18 사유: 시안 matchmaking.jsx 카운트다운 ring SVG + 시안 외곽 정합 (사용자 응급 우회 컨펌, custom: 시안 BC X / 6원소 IP X / 단순 SVG ring) -->
+<!-- Step 3-A (2026-05-18): 매칭 시안 (matchmaking.jsx) vanilla 마이그레이션. iframe 폐기. -->
+<div id="match-screen" class="screen">
+  <div class="mm-stage" id="mm-stage">
+    <!-- TOP BAR (46px) -->
+    <header class="mm-topbar">
+      <div class="mm-topbar-brand">
+        <div class="mm-topbar-eyebrow">MATCHMAKING</div>
+        <div class="mm-topbar-title">운명의 실타래</div>
+      </div>
+      <div class="mm-topbar-sep"></div>
+      <div class="mm-topbar-season">
+        <span>SEASON 3</span><span class="dim">·</span>
+        <span class="gold" id="mm-league-name">골드 III</span><span class="dim">·</span>
+        <span id="mm-league-pts">425 / 600</span>
+      </div>
+      <div class="mm-topbar-spacer"></div>
+      <span class="mm-chip mm-chip-ping"><span class="mm-dot mm-dot-pulse"></span>PING 32ms</span>
+      <button class="mm-topbar-close" data-action="game.cancelMatchmaking">✕</button>
+    </header>
+
+    <!-- MAIN 3-COLUMN -->
+    <div class="mm-main">
+      <!-- LEFT: PLAYER -->
+      <aside class="mm-side mm-side-player" id="mm-side-player">
+        <div class="mm-side-bg" id="mm-side-player-bg"></div>
+        <div class="mm-side-tint mm-side-tint-player"></div>
+        <div class="mm-side-radial mm-side-radial-player"></div>
+        <div class="mm-side-fade"></div>
+        <div class="mm-side-chips mm-side-chips-player">
+          <div class="mm-side-label mm-side-label-player">당신</div>
+          <span class="mm-chip mm-chip-tendency" id="mm-player-tendency" style="display:none;"></span>
+        </div>
+        <div class="mm-side-info" id="mm-side-player-info">
+          <div class="mm-side-title" id="mm-player-title">"여명의 수호자"</div>
+          <div class="mm-side-name-row">
+            <div class="mm-side-name" id="mm-player-name">—</div>
+            <div class="mm-side-lv" id="mm-player-lv">Lv 1</div>
+          </div>
+          <div class="mm-side-comps-wrap">
+            <div class="mm-side-section-label" id="mm-player-comps-label">보유 유닛 (0/5)</div>
+            <div class="mm-side-comps" id="mm-player-comps"></div>
+          </div>
+          <div class="mm-side-syn-wrap">
+            <div class="mm-side-section-label">활성 시너지</div>
+            <div class="mm-side-syn" id="mm-player-syn"></div>
+          </div>
+          <div class="mm-side-record-wrap">
+            <div class="mm-side-record" id="mm-player-record"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER SPINE -->
+      <section class="mm-center">
+        <div class="mm-center-status">
+          <div class="mm-status-dot" id="mm-status-dot"></div>
+          <div class="mm-status-text" id="mm-status-text">SCANNING FATE…</div>
+        </div>
+        <div class="mm-status-sub" id="mm-status-sub">운명의 실타래를 추적하는 중...</div>
+
+        <!-- League badge -->
+        <div class="mm-league">
+          <div class="mm-league-badge" id="mm-league-badge"><!-- SVG injected --></div>
+          <div class="mm-league-text">
+            <div class="mm-league-season-label">SEASON 3</div>
+            <div class="mm-league-name">신들의 리그</div>
+            <div class="mm-league-rank" id="mm-league-rank-text">골드 III · 425점</div>
+          </div>
+        </div>
+
+        <!-- VS giant -->
+        <div class="mm-vs-area">
+          <div class="mm-vs-halo"></div>
+          <div class="mm-vs-stack">
+            <div class="mm-vs-text">VS</div>
+            <div class="mm-vs-divider"></div>
+            <div class="mm-vs-predict">
+              <div class="mm-vs-predict-win">승리 시<br><span>+15점</span></div>
+              <div class="mm-vs-predict-lose">패배 시<br><span>+5점</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Countdown ring (시안 matchmaking.jsx:432~448 정합 — 단순 SVG ring, 자작 X / IP 고유 X) -->
+        <div class="mm-cd-ring" id="mm-cd-ring">
+          <svg width="88" height="88">
+            <circle cx="44" cy="44" r="38" fill="none" stroke="#3a2410" stroke-width="4"></circle>
+            <circle id="mm-cd-arc" cx="44" cy="44" r="38" fill="none" stroke="#f3d676" stroke-width="4"
+              stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="0"
+              transform="rotate(-90 44 44)"></circle>
+          </svg>
+          <div class="mm-cd-inner">
+            <div class="mm-cd-num" id="mm-cd-num">—</div>
+            <div class="mm-cd-label">SEC</div>
+          </div>
+        </div>
+
+        <!-- Action button (primary) -->
+        <button class="mm-action mm-action-disabled" id="mm-action-btn" disabled>
+          <span class="mm-dots"><span></span><span></span><span></span></span>상대를 찾고 있습니다
+        </button>
+
+        <!-- Secondary row -->
+        <div class="mm-secondary">
+          <button class="mm-btn-back" data-action="game.cancelMatchmaking">◂ 편성 변경</button>
+          <button class="mm-btn-forfeit" data-action="game.cancelMatchmaking">⚠ 포기하기</button>
+        </div>
+
+        <!-- Footer -->
+        <div class="mm-footer">
+          <label class="mm-autoskip">
+            <input type="checkbox" id="mm-autoskip-cb"> 자동 스킵
+          </label>
+          <button class="mm-rescan" id="mm-rescan-btn" disabled>↺ 재탐색</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: OPPONENT -->
+      <aside class="mm-side mm-side-enemy" id="mm-side-enemy">
+        <div class="mm-side-bg mm-side-bg-blur" id="mm-side-enemy-bg"></div>
+        <div class="mm-side-tint mm-side-tint-enemy"></div>
+        <div class="mm-side-radial mm-side-radial-enemy"></div>
+        <div class="mm-side-fade"></div>
+        <!-- SCANNING overlay (mode='searching' 일 때 표시) -->
+        <div class="mm-scan-overlay" id="mm-scan-overlay">
+          <div class="mm-scan-rings">
+            <div class="mm-scan-ring mm-scan-ring-1"></div>
+            <div class="mm-scan-ring mm-scan-ring-2"></div>
+            <div class="mm-scan-ring-core"></div>
+          </div>
+          <div class="mm-scan-label">SCANNING</div>
+          <div class="mm-scan-sub">상대를 찾는 중...</div>
+        </div>
+        <div class="mm-side-chips mm-side-chips-enemy">
+          <div class="mm-side-label mm-side-label-enemy">상대</div>
+          <span class="mm-chip mm-chip-tendency" id="mm-enemy-tendency" style="display:none;"></span>
+        </div>
+        <div class="mm-side-info" id="mm-side-enemy-info" style="display:none;">
+          <div class="mm-side-title" id="mm-enemy-title">—</div>
+          <div class="mm-side-name-row">
+            <div class="mm-side-name" id="mm-enemy-name">—</div>
+            <div class="mm-side-lv" id="mm-enemy-lv">Lv 1</div>
+          </div>
+          <div class="mm-side-comps-wrap">
+            <div class="mm-side-section-label" id="mm-enemy-comps-label">보유 유닛 (0/5)</div>
+            <div class="mm-side-comps" id="mm-enemy-comps"></div>
+          </div>
+          <div class="mm-side-syn-wrap">
+            <div class="mm-side-section-label">활성 시너지</div>
+            <div class="mm-side-syn" id="mm-enemy-syn"></div>
+          </div>
+          <div class="mm-side-record-wrap">
+            <div class="mm-side-record" id="mm-enemy-record"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <!-- 호환 stub: 옛 #match-box 참조 잔존 코드 보호 -->
+  <div class="match-box" id="match-box" style="display:none;"></div>
+</div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-box" style="max-width:400px;width:90%;max-height:85vh;overflow-y:auto;text-align:left;">
+    <div id="detail-content"></div>
+    <div style="text-align:center;margin-top:12px;"><button class="btn btn-s btn-red" data-dismiss="detail-modal">닫기</button></div>
+  </div>
+</div>
+
+<!-- CARD SELECT (before battle) -->
+<div id="cardselect-screen" class="screen">
+  <div class="hud">
+    <div class="hud-left"><div class="hud-name" id="cs-name"></div></div>
+    <div class="hud-right"><div class="hud-stat">지휘권: <span id="cs-slots">1</span></div><div class="hud-stat">유물 보유량: <span id="cs-rslots">1</span></div></div>
+  </div>
+  <div style="text-align:center;padding:8px;">
+    <div style="font-size:1.4rem;color:#ffd700;margin-bottom:4px;">⚔️ 출정 편성</div>
+    <div style="font-size:.95rem;color:#aaa;" id="cs-info">동료와 유물을 선택하세요</div>
+  </div>
+  <!-- 출전 카드 (상단) -->
+  <div style="font-size:.85rem;color:#ffd700;text-align:center;margin:4px 0;">▼ 출전 동료 ▼</div>
+  <div id="cs-selected" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:10px 15px;min-height:80px;background:rgba(255,215,0,.08);border:2px solid #ffd700;border-radius:8px;margin:0 10px 10px;"></div>
+  <div class="cs-actions" style="padding:8px;text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-s" data-action="game.showMenu">← 돌아가기</button>
+    <!-- 2026-05-03: 편성 기억/소환 통합 → 편성 슬롯 모달 (3슬롯 + 이름 편집) -->
+    <button class="btn btn-s btn-blue" data-action="formationSlots.open">📜 편성 슬롯</button>
+    <button class="btn btn-green" id="cs-go-btn" data-action="game.confirmCardSelect" disabled style="font-size:1.1rem;padding:12px 36px;">⚔️ 도전자 찾기 →</button>
+  </div>
+  <!-- 유물 출전 -->
+  <div style="font-size:.85rem;color:#aa66ff;text-align:center;margin:6px 0;">▼ 휴대 유물 ▼</div>
+  <div id="cs-relics-selected" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:6px 10px;min-height:50px;background:rgba(170,102,255,.08);border:1px solid #aa66ff;border-radius:8px;margin:0 10px 8px;"></div>
+  <!-- 보유 전력 (하단) -->
+  <div style="font-size:.8rem;color:#888;text-align:center;margin:4px 0;">보유 동료 (클릭 선택/해제)</div>
+  <div id="cs-grid" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:8px;align-content:flex-start;"></div>
+  <div style="font-size:.8rem;color:#888;text-align:center;margin:4px 0;">소지한 유물 (클릭 선택/해제)</div>
+  <div id="cs-relics-grid" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:8px;align-content:flex-start;min-height:50px;"></div>
+</div>
+
+<!-- FORMATION -->
+<!-- FORMATION SCREEN — 2026-05-09 v2 (풀바디 슬롯 강조) 재설계.
+     옛 PHASE 3 진형 배치 (5 슬롯 가로 + 대기석) 폐기.
+     좌측 세로 슬롯 5칸 (영웅+동료4) + 우측 메인 (선택 캐릭터 정보 + 시그니처 카드 7장) -->
+<div id="formation-screen" class="screen">
+  <!-- 2026-05-18 Step 1 — 시안 외곽 (`0.claulde.design/20260517/전열정비_디자인/`) 정합 markup.
+       알맹이 (state.hero/companions/equipped + mkCardElV4) 옛 거 유지. -->
+  <div class="form-stage" id="form-stage">
+    <!-- TOP ACTION BAR -->
+    <header class="form-top-bar">
+      <div class="form-title-block">
+        <div class="form-micro-label">FORMATION</div>
+        <div class="form-title">전열 정비</div>
+      </div>
+      <div class="form-group-controls">
+        <span class="form-group-label">출전 그룹</span>
+        <input class="form-group-input" id="form-group-name" type="text" placeholder="리그 도전명단 1"/>
+        <button class="form-btn-gold" id="form-group-save-btn">💾 저장</button>
+        <div class="form-load-wrap">
+          <button class="form-btn-dim" id="form-load-btn">📂 불러오기 (0)▾</button>
+          <div class="form-load-menu" id="form-load-menu"></div>
+        </div>
+      </div>
+      <!-- design-confirmed: 2026-05-18 사유: routing fix — 사용자 명시 "전열정비 돌아가기 = 마을로 (성 X)" -->
+      <button class="form-btn-secondary" data-action="game.showTown">◂ 돌아가기</button>
+      <button class="form-btn-primary" data-action="formation.startBattle">⚔ 출 전 ▸</button>
+    </header>
+
+    <!-- PARTY ROW (영웅 1 + 동료 4 가로) -->
+    <section class="form-section form-party-section">
+      <div class="form-section-label" id="form-party-label">파티 · 영웅 1 + 동료 0 / 4</div>
+      <div class="form-party-row" id="form-party-row"><!-- JS render: 5 slots --></div>
+    </section>
+
+    <!-- MIDDLE: 선택 카드 + 능력치 패널 -->
+    <section class="form-middle">
+      <aside class="form-card-preview-panel">
+        <div class="form-section-label" id="form-card-preview-label">⚔ 영웅 카드</div>
+        <div class="form-card-preview" id="form-card-preview"><!-- JS: mkCardElV4 --></div>
+        <div class="form-card-zoom-hint">🔍 확대</div>
+      </aside>
+      <div class="form-stats-panel">
+        <div class="form-section-label">능력치</div>
+        <div class="form-stats-grid" id="form-stats-grid"><!-- JS: 4-col HP/ATK/SOUL/LV --></div>
+        <div class="form-exp-bar" id="form-exp-bar"><!-- JS: xp bar --></div>
+        <div class="form-tags-row" id="form-tags-row"><!-- JS: 원소/역할/등급 --></div>
+        <button class="form-btn-secondary form-replace-btn" id="form-replace-btn" data-action="formation.openReplace">동료 교체하기 ▸</button>
+      </div>
+    </section>
+
+    <!-- SPELL POOL (10 슬롯 4×3 grid) -->
+    <section class="form-section form-spell-pool-section">
+      <div class="form-spell-pool-header">
+        <div>
+          <div class="form-section-label">시그니처 스킬 풀</div>
+          <div class="form-active-count" id="form-active-count">활성 0 / 5장</div>
+        </div>
+        <div class="form-spell-pool-hint">10장 풀 → 5장 활성 토글 · 🔄 = 스킬 교체 · 🔍 = 확대 (Step 2 예정)</div>
+      </div>
+      <div class="form-spell-pool-grid" id="form-spell-pool-grid"><!-- JS render: 10 slots --></div>
+      <!-- 블로커 fix #3 (2026-05-18 storyboard-inspector): 시안 line 747~753 덱 규칙 안내 -->
+      <div class="form-spell-pool-rules">
+        <span class="form-spell-pool-rules-label">덱 규칙</span>
+        · 풀 10장에서 <b class="form-spell-pool-rules-em">0~5장 자유 활성</b>
+        · 각 스킬 1장씩
+        · 🔄 으로 보유 스킬 풀에서 교체 (곧)
+      </div>
+    </section>
+  </div>
+
+  <!-- 옛 form-slots/form-main 호환 stub (회귀 셀렉터 대응, 시각 영향 0) -->
+  <div id="form-slots" style="display:none;"></div>
+  <div id="form-main" style="display:none;"></div>
+  <!-- 동료 교체 모달 -->
+  <!-- Step 2-2 cluster A (2026-05-18): 시안 formation_v2.jsx PickerModal 헤더 정합 (eyebrow + 큰 제목 + 부제목) -->
+  <div id="form-replace-modal" class="form-modal" style="display:none;">
+    <div class="form-modal-box">
+      <div class="form-modal-header">
+        <div class="form-modal-header-text">
+          <div class="form-modal-eyebrow" id="form-replace-eyebrow">COMPANION SWAP</div>
+          <div class="form-modal-title-big" id="form-replace-title">동료 슬롯 — 교체</div>
+          <div class="form-modal-subtitle" id="form-replace-subtitle">보유 동료 · 원소·등급별 필터로 빠르게 찾기</div>
+        </div>
+        <button class="form-modal-close" data-action="formation.closeReplace">✕ 닫기</button>
+      </div>
+      <div class="form-filter-row" id="form-replace-filters"></div>
+      <div class="form-card-grid" id="form-replace-grid"><!-- JS render --></div>
+    </div>
+  </div>
+  <!-- Step 2-3 (2026-05-18): CardZoomModal — 시안 formation_v2.jsx:155 정합 -->
+  <div id="form-card-zoom-modal" class="form-card-zoom" style="display:none;">
+    <button class="form-card-zoom-close" data-action="formation.closeCardZoom">✕ 닫기 (ESC)</button>
+    <div class="form-card-zoom-card" id="form-card-zoom-card"><!-- JS: mkCardElV4 scale 2x --></div>
+    <div class="form-card-zoom-info" id="form-card-zoom-info"><!-- JS render --></div>
+  </div>
+  <!-- 스킬 변경 모달 -->
+  <div id="form-skill-modal" class="form-modal" style="display:none;">
+    <div class="form-modal-box">
+      <div class="form-modal-title">
+        <span id="form-skill-title">스킬 변경</span>
+        <button class="form-modal-close" data-action="formation.closeSkill">✕ 닫기</button>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:.85rem;color:#9b8acc;margin-bottom:8px;">현재 장착 (<span id="form-skill-equipped-count">0</span> / 7)</div>
+        <div class="form-card-grid" id="form-skill-equipped"><!-- JS render --></div>
+      </div>
+      <div>
+        <div style="font-size:.85rem;color:#9b8acc;margin-bottom:8px;">보유 스킬 (장착 가능)</div>
+        <div class="form-card-grid" id="form-skill-available"><!-- JS render --></div>
+      </div>
+      <div class="form-modal-actions">
+        <button class="btn btn-s" data-action="formation.closeSkill">완료</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TCG MATCH (PHASE 6 — 2026-05-05 Phase D-1) -->
+<!-- 옛 #battle-screen 은 PHASE 3 시네마틱 잔재 — D-1 끝나고 trash 예정 -->
+<div id="tcg-screen" class="screen">
+  <!-- battle_v3.jsx 시안 정합 markup (2026-05-08 T2-C) -->
+
+  <!-- 적 손패 fan-down (top:-40, CardBack 6장 — 장식) -->
+  <div class="tcg-opp-hand" id="tcg-opp-hand"></div>
+
+  <!-- 보드 outer container: 중앙, translateY(-20%) 위로 띄움.
+       내부: 적 row (7) + mid divider + 아군 row (7). 각 슬롯 192×204. -->
+  <div class="tcg-board-outer">
+    <div class="tcg-board-row tcg-board-row-enemy" id="tcg-e-board"></div>
+    <div class="tcg-board-mid-divider"></div>
+    <div class="tcg-board-row tcg-board-row-player" id="tcg-p-board"></div>
+  </div>
+
+  <!-- design-confirmed: 2026-05-17 사유: 묶음 1 UX 강화 페이즈 라벨 가로 띠 (시안 mockup/phase6_ux_turn_clarity/v3_final.html 컨펌) -->
+  <div class="tcg-phase-band" id="tcg-phase-band">
+    <span class="pb-icon">📜</span>
+    <span class="pb-text">CARD PHASE</span>
+  </div>
+
+  <!-- 적 차례 지속 배지 (2026-06-09 사용자 컨펌 mockup/enemy_turn_badge v1) — CSS 가 data-side="enemy" 시 표시, 매치 종료 시 숨김 -->
+  <div class="tcg-enemy-turn-badge" id="tcg-enemy-turn-badge">
+    <span class="etb-icon">⚔</span>
+    <span class="etb-text">적의 차례</span>
+  </div>
+
+  <!-- 영웅 portrait 마크업 폐기 (2026-05-10) — 영웅은 _renderBoard 가 보드 row 가운데 cell (idx=3) 에
+       V4 in-play 카드로 동적 생성. id="tcg-{p,e}-hero" 는 그 cell 에 부여. -->
+
+  <!-- 적 프로필 패널 (좌상단, 2026-05-10 결정 — 영웅 위치를 보드 정중앙으로 이동하면서 자리 신규) -->
+  <div class="tcg-profile is-enemy" id="tcg-e-profile">
+    <div class="pf-avatar" id="tcg-e-pf-avatar">?</div>
+    <div class="pf-info">
+      <div class="pf-name" id="tcg-e-pf-name">도전자</div>
+      <div class="pf-level" id="tcg-e-pf-level">시즌 Lv 1</div>
+      <div class="pf-title" id="tcg-e-pf-title">도전자</div>
+    </div>
+  </div>
+
+  <!-- 내 프로필 패널 (좌하단, 2026-05-10 결정 — 옛 좌하단 영웅 자리에 프로필 신규) -->
+  <div class="tcg-profile is-player" id="tcg-p-profile">
+    <div class="pf-avatar" id="tcg-p-pf-avatar">?</div>
+    <div class="pf-info">
+      <div class="pf-name" id="tcg-p-pf-name">나</div>
+      <div class="pf-level" id="tcg-p-pf-level">시즌 Lv 1</div>
+      <div class="pf-title" id="tcg-p-pf-title">도전자</div>
+    </div>
+  </div>
+
+  <!-- 영혼력 구체 (2026-05-13 사용자 — 다이아 SVG + 7개 orb 폐기, soul_orb.png 단일 구체)
+       2026-05-14 사용자 — 적 영혼력 신규 (적 프로필 밑, 96×96, player 와 left:24 정렬). -->
+  <div class="tcg-mana-crystal" id="tcg-mana-player">
+    <div class="mc-crystal">
+      <div class="mc-text"><span id="tcg-p-soul">0</span><span class="mc-sep">/</span><span class="mc-max" id="tcg-mana-max">7</span></div>
+    </div>
+  </div>
+  <div class="tcg-mana-crystal" id="tcg-mana-enemy">
+    <div class="mc-crystal">
+      <div class="mc-text"><span id="tcg-e-soul">0</span><span class="mc-sep">/</span><span class="mc-max" id="tcg-mana-max-enemy">7</span></div>
+    </div>
+  </div>
+
+  <!-- design-confirmed: 2026-05-25 사유: mockup/hourglass_v3/v3_final.html 시안 사용자 컨펌 + "정본 적용" 키워드.
+       custom: 단순 SVG geometric / 시안 commit 43985b2 (Step 7) 재이식 + v3 (1/4 크기) + 큐 바 통합.
+       옛 .tcg-turn-panel / .tcg-end-turn-v3 / .tcg-timer 별도 div → .tcg-hg-hud 안 통합. 옛 id 모두 보존 (회귀 호환). -->
+  <div class="tcg-hg-hud" id="tcg-hg-hud">
+    <div class="tcg-hg-brand">REALM OF FATES</div>
+
+    <!-- 모래시계 SVG (45×70, viewBox 110×170 = 1/4 크기) -->
+    <svg class="tcg-hg-svg" width="45" height="70" viewBox="0 0 110 170">
+      <defs>
+        <linearGradient id="hgGoldFrame" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f3d676"/>
+          <stop offset=".5" stop-color="#c89030"/>
+          <stop offset="1" stop-color="#5a3a18"/>
+        </linearGradient>
+        <radialGradient id="hgThreadGlow" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="#fff8e0"/>
+          <stop offset=".4" stop-color="#f3d676"/>
+          <stop offset="1" stop-color="#c89030" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="hgThreadCol" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff8e0"/>
+          <stop offset="1" stop-color="#c89030"/>
+        </linearGradient>
+        <clipPath id="hgTopBulb">
+          <path d="M 25 18 L 85 18 L 75 70 Q 65 80 55 80 Q 45 80 35 70 Z"/>
+        </clipPath>
+        <clipPath id="hgBotBulb">
+          <path d="M 35 100 Q 45 90 55 90 Q 65 90 75 100 L 85 152 L 25 152 Z"/>
+        </clipPath>
+      </defs>
+      <!-- Caps -->
+      <rect x="18" y="10" width="74" height="9" rx="2" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".8"/>
+      <rect x="14" y="6"  width="82" height="6" rx="2" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".8"/>
+      <rect x="18" y="151" width="74" height="9" rx="2" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".8"/>
+      <rect x="14" y="158" width="82" height="6" rx="2" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".8"/>
+      <!-- Bulbs -->
+      <path d="M 25 18 L 85 18 L 75 70 Q 65 80 55 80 Q 45 80 35 70 Z" fill="rgba(20,12,6,.4)" stroke="#c89030" stroke-width="1.5"/>
+      <path d="M 35 100 Q 45 90 55 90 Q 65 90 75 100 L 85 152 L 25 152 Z" fill="rgba(20,12,6,.4)" stroke="#c89030" stroke-width="1.5"/>
+      <path d="M 52 80 L 58 80 L 58 90 L 52 90 Z" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".6"/>
+      <!-- Top thread (모래) — JS 가 timeLeft 따라 y/height 갱신 -->
+      <g clip-path="url(#hgTopBulb)">
+        <rect id="tcg-hg-top-fill" x="20" y="20" width="70" height="60" fill="url(#hgThreadCol)" style="transition: y 1s linear, height 1s linear;"/>
+      </g>
+      <!-- Falling stream -->
+      <g id="tcg-hg-stream">
+        <line x1="55" y1="83" x2="55" y2="150" stroke="url(#hgThreadCol)" stroke-width="2.4" opacity=".9"/>
+        <line x1="55" y1="83" x2="55" y2="150" stroke="#fff8e0" stroke-width="1" opacity=".7"/>
+      </g>
+      <!-- Bottom pile -->
+      <g clip-path="url(#hgBotBulb)">
+        <rect id="tcg-hg-bot-fill" x="20" y="152" width="70" height="0" fill="url(#hgThreadCol)" opacity=".88" style="transition: y 1s linear, height 1s linear;"/>
+      </g>
+      <!-- Side pillars -->
+      <rect x="11" y="14" width="3" height="148" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".5"/>
+      <rect x="96" y="14" width="3" height="148" fill="url(#hgGoldFrame)" stroke="#3a2410" stroke-width=".5"/>
+      <!-- Neck glow halo -->
+      <circle id="tcg-hg-neck-halo" cx="55" cy="88" r="6" fill="url(#hgThreadGlow)" opacity=".7">
+        <animate attributeName="opacity" values=".5;1;.5" dur="1.6s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+
+    <!-- TURN / ROUND (옛 #tcg-turn-num / #tcg-round-num id 보존) -->
+    <div class="tcg-hg-tr">
+      <div class="tcg-hg-tr-cell">
+        <div class="tcg-hg-tr-label">TURN</div>
+        <div class="tcg-hg-tr-num" id="tcg-turn-num">01</div>
+      </div>
+      <div class="tcg-hg-tr-divider"></div>
+      <div class="tcg-hg-tr-cell">
+        <div class="tcg-hg-tr-label">ROUND</div>
+        <div class="tcg-hg-tr-num"><span id="tcg-round-num">1</span></div>
+      </div>
+    </div>
+
+    <!-- 보드 큐 진행 바 (12 cells, board phase 만 표시) -->
+    <div class="tcg-queue-bar">
+      <div class="qb-label">보드 큐 진행</div>
+      <div class="qb-cells" id="tcg-qb-cells"></div>
+    </div>
+
+    <!-- Countdown timer (옛 #tcg-timer id 보존) -->
+    <div class="tcg-hg-timer" id="tcg-hg-timer-box">
+      <span class="tcg-hg-timer-icon">⧖</span>
+      <span class="tcg-hg-timer-num" id="tcg-timer">0:75</span>
+    </div>
+
+    <!-- END TURN 버튼 (옛 #tcg-end-turn-btn id + class 보존 — 회귀 호환) -->
+    <button class="tcg-hg-end-turn tcg-end-turn-v3" id="tcg-end-turn-btn" data-action="match.endTurnUI">END TURN ▸</button>
+  </div>
+
+  <!-- design-confirmed: 2026-05-12 사유: V2 갤러리 시안 사용자 컨펌 (mockup/match_phase_indicator/v2.html, 좌표 사용자 결정) -->
+  <!-- custom: 단순 기하 SVG 검 (geometric primitives — rect/circle/path), 외부 라이브러리 없음. 갤러리 시안 그대로. -->
+  <div class="tcg-sword tcg-sword-player" id="tcg-sword-player">
+    <svg width="24" height="64">
+      <rect x="10" y="48" width="4" height="14" rx="1" fill="#4a3220" stroke="#8a6840" stroke-width=".5"/>
+      <circle cx="12" cy="60" r="2.5" fill="#c8a060"/>
+      <rect x="4" y="46" width="16" height="3" fill="#8a6840"/>
+      <path d="M 10 46 L 11 4 L 12 1 L 13 4 L 14 46 Z" fill="url(#tcgSwordBladeGrad)" stroke="#fff" stroke-width=".5"/>
+      <defs>
+        <linearGradient id="tcgSwordBladeGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f0f0f0"/>
+          <stop offset=".5" stop-color="#b8c0c8"/>
+          <stop offset="1" stop-color="#7080a0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="tcg-sword tcg-sword-enemy" id="tcg-sword-enemy">
+    <svg width="24" height="64">
+      <rect x="10" y="48" width="4" height="14" rx="1" fill="#4a3220" stroke="#8a6840" stroke-width=".5"/>
+      <circle cx="12" cy="60" r="2.5" fill="#c8a060"/>
+      <rect x="4" y="46" width="16" height="3" fill="#8a6840"/>
+      <path d="M 10 46 L 11 4 L 12 1 L 13 4 L 14 46 Z" fill="url(#tcgSwordBladeGrad)" stroke="#fff" stroke-width=".5"/>
+    </svg>
+  </div>
+
+  <!-- design-confirmed: 2026-05-25 사유: 모래시계 HUD 통합 — 옛 #tcg-end-turn-btn / #tcg-timer 별도 div 폐기 (.tcg-hg-hud 안 통합) -->
+  <!-- 옛 END TURN / timer 별도 div 폐기 → .tcg-hg-hud 안 통합 (id 중복 방지). -->
+
+
+  <!-- 손패 (하단, bottom:0 height:336 + translateY(-58)) -->
+  <div class="tcg-hand" id="tcg-hand">
+    <div class="tcg-hand-card" id="tcg-hand-1" data-hand-idx="0"></div>
+    <div class="tcg-hand-card" id="tcg-hand-2" data-hand-idx="1"></div>
+    <div class="tcg-hand-card" id="tcg-hand-3" data-hand-idx="2"></div>
+    <div class="tcg-hand-card" id="tcg-hand-4" data-hand-idx="3"></div>
+    <div class="tcg-hand-card" id="tcg-hand-5" data-hand-idx="4"></div>
+    <div class="tcg-hand-card" id="tcg-hand-6" data-hand-idx="5"></div>
+    <div class="tcg-hand-card" id="tcg-hand-7" data-hand-idx="6"></div>
+    <div class="tcg-hand-card" id="tcg-hand-8" data-hand-idx="7"></div>
+    <div class="tcg-hand-card" id="tcg-hand-9" data-hand-idx="8"></div>
+    <div class="tcg-hand-card" id="tcg-hand-10" data-hand-idx="9"></div>
+  </div>
+
+  <!-- 카드 주머니 (덱) — Phase 1A.1 보존 -->
+  <div class="tcg-deck-pouch is-enemy" id="tcg-deck-enemy" aria-label="적 운명서 (덱)">
+    <div class="dp-stack"></div>
+    <div class="dp-rune">✦</div>
+    <div class="dp-count" id="tcg-deck-enemy-count">0</div>
+    <div class="dp-label">운명서</div>
+  </div>
+  <div class="tcg-deck-pouch is-player" id="tcg-deck-player" aria-label="내 운명서 (덱)">
+    <div class="dp-stack"></div>
+    <div class="dp-rune">✦</div>
+    <div class="dp-count" id="tcg-deck-player-count">0</div>
+    <div class="dp-label">운명서</div>
+  </div>
+
+  <!-- 2026-05-14 사용자 컨펌 — 매치 전용 톱니/모달 폐기. 전역 sound-panel 톱니 통합 (매치 안 새 사각형 디자인).
+       클릭 시 전역 #settings-modal 열림. 매치 active 시 로그아웃/게임종료 = confirm 경고 + 자동 패배 처리 (js/37_settings.js). -->
+
+  <!-- 2026-05-16 카드 사용 흐름 UX element (v4 시안 단계 1 정본 적용)
+       단계 2~4 에서 JS 핸들러 연결. 지금은 element 만. -->
+  <div class="tcg-spell-cast-card" id="tcg-spell-cast-card"></div>
+  <div class="tcg-board-hover-preview" id="tcg-board-hover-preview"></div>
+  <div class="tcg-drag-ghost" id="tcg-drag-ghost"></div>
+
+  <!-- 2026-05-17 매치 알림 banner (시안 v1 정본 적용 — 큰 banner / 작은 banner / 동전 뒤집기) -->
+  <div class="tcg-banner-big" id="tcg-banner-big"></div>
+  <div class="tcg-banner-small" id="tcg-banner-small"></div>
+  <!-- design-confirmed: 2026-05-24 사유: 운명의 신탁 v3 정본 적용 (mockup/coin_flip_2026-05-24 사용자 컨펌)
+       시안 원본: 0.claulde.design/20260524/동전_디자인_0524/coin_oracle.html (사용자 공급)
+       battle_system_decisions.md §운명의 신탁 (coin-flip v3) 표준 룰 / feature_manifest 3.8
+       옛 markup (.tcg-coin 단순 div + label + result) 폐기. 옛 클래스 (.tcg-coin-label / .tcg-coin-result) 도 함께 폐기. -->
+  <div class="tcg-coin-stage" id="tcg-coin-stage">
+    <div class="tcg-coin-title">운명의 신탁</div>
+    <div class="tcg-coin-sub">— 선공이 결정된다 —</div>
+    <div class="tcg-runic-ring outer is-spinning"></div>
+    <div class="tcg-runic-ring is-spinning"></div>
+    <div class="tcg-runic-ring inner is-spinning"></div>
+    <div class="tcg-coin-runes" id="tcg-coin-runes"></div>
+    <div class="tcg-coin-particles" id="tcg-coin-particles"></div>
+    <div class="tcg-coin-host" id="tcg-coin-host">
+      <div class="tcg-coin-aura"></div>
+      <div class="tcg-coin" id="tcg-coin">
+        <div class="tcg-coin-face holy"><img src="img/ui/coins/coin_holy.png" alt="신성"></div>
+        <div class="tcg-coin-face dark"><img src="img/ui/coins/coin_dark.png" alt="암흑"></div>
+        <div class="tcg-coin-edge"></div>
+      </div>
+    </div>
+    <div class="tcg-coin-result-panel" id="tcg-coin-result-panel">
+      <div class="r-label">결과</div>
+      <div class="r-name" id="tcg-coin-r-name">—</div>
+      <div class="r-tag" id="tcg-coin-r-tag">선공 / 후공</div>
+    </div>
+    <div class="tcg-coin-hint" id="tcg-coin-hint">신탁을 기다리는 중…</div>
+    <div class="tcg-coin-flash" id="tcg-coin-flash"></div>
+  </div>
+
+  <!-- 2026-05-24 매치 시작 cinematic (V2 갤러리 사용자 컨펌 mockup/match_start_cinematic/)
+       battle_system_decisions.md §매치 시작 cinematic 표준 룰 / feature_manifest 3.17 -->
+  <div class="tcg-cinematic-dim" id="tcg-cinematic-dim"></div>
+
+  <!-- 2026-05-24 매치 종료 cascade (LoR 식 V2 사용자 갤러리 컨펌 mockup/match_end_cascade/) -->
+  <div class="tcg-screen-fade" id="tcg-screen-fade"></div>
+  <div class="tcg-match-end-banner" id="tcg-match-end-banner"></div>
+  <div class="tcg-reward-preview" id="tcg-reward-preview">
+    <div class="tcg-reward-preview-inner">⭐</div>
+  </div>
+  <button class="tcg-continue-button" id="tcg-continue-button">보상 받기</button>
+</div>
+
+<!-- ACTION OVERLAY (card zoom center) -->
+<div id="action-overlay">
+  <div id="action-card">
+    <div class="ac-inner" id="ac-inner">
+      <div class="ac-icon" id="ac-icon"></div>
+      <div class="ac-name" id="ac-name"></div>
+      <div class="ac-action" id="ac-action"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHOICE SCREEN (after each round) -->
+<div id="choice-screen" class="screen">
+  <div class="choice-title" id="ch-title"></div>
+  <div class="choice-sub" id="ch-sub"></div>
+  <div class="choice-options" id="ch-options"></div>
+</div>
+
+<!-- PICK SUB (add card / upgrade / relic) -->
+<div id="pick-screen" class="screen">
+  <div class="pick-area">
+    <div class="pick-title" id="pick-title"></div>
+    <div class="pick-sub" id="pick-sub"></div>
+    <div class="pick-grid" id="pick-grid"></div>
+    <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-s btn-green" id="pick-confirm-btn" data-action="game.finishPick" disabled>✅ 완료</button>
+      <button class="btn btn-s" data-action="game.finishPick">⏭️ 건너뛰기</button>
+      <button class="btn btn-s btn-blue" data-action="game.rerollPick">🔄 다시 뽑기 (2💰)</button>
+    </div>
+  </div>
+</div>
+
+<!-- EQUIP SELECT MODAL -->
+<div class="equip-modal" id="equip-modal">
+  <div class="equip-modal-box">
+    <h3 id="equip-title">비전/장비 장착 대상 선택</h3>
+    <div id="equip-skill-info" style="color:#aaa;font-size:.8rem;margin-bottom:8px;"></div>
+    <div class="equip-targets" id="equip-targets"></div>
+    <button class="btn btn-s btn-red" data-dismiss="equip-modal">취소</button>
+  </div>
+</div>
+
+<!-- REWARD -->
+<!-- design-confirmed: 2026-05-18 사유: 시안 book_of_life.jsx vanilla 마이그레이션 — Step 6 (사용자 응급 우회 컨펌). custom: 시안 BC X / IP 고유 X. -->
+<!-- Step 6 (2026-05-18): 생명의 서 (Book of Life) — 펼친 책 layout. 도서관 NPC 진입. -->
+<div id="book-of-life-screen" class="screen">
+  <div class="bol-stage" id="bol-stage">
+    <!-- TOP BAR -->
+    <header class="bol-topbar">
+      <div class="bol-topbar-brand">
+        <div class="bol-topbar-eyebrow">서고 · ARCHIVE</div>
+        <div class="bol-topbar-title">생명의 서</div>
+        <div class="bol-topbar-subtitle">— Liber Vitae</div>
+      </div>
+      <div class="bol-topbar-sep"></div>
+      <div class="bol-topbar-tagline">나의 동료들의 생사와 그 기록이 새겨진 책</div>
+      <div class="bol-topbar-spacer"></div>
+      <span class="bol-chip bol-chip-active"><span class="bol-dot"></span>정상 <span id="bol-count-active">0</span></span>
+      <span class="bol-chip bol-chip-wounded"><span class="bol-dot"></span>부상 <span id="bol-count-wounded">0</span></span>
+      <span class="bol-chip bol-chip-buried"><span class="bol-dot"></span>매장 <span id="bol-count-buried">0</span></span>
+      <button class="bol-topbar-close" data-action="game.showCastle" title="닫기">✕</button>
+    </header>
+
+    <!-- BODY: 펼친 책 (좌 인덱스 + spine + 우 마스터) -->
+    <div class="bol-body">
+      <!-- LEFT PAGE: Index -->
+      <aside class="bol-left-page">
+        <div class="bol-left-header">
+          <div class="bol-section-label">INDEX · 동료 명부</div>
+          <div class="bol-left-total">총 <span id="bol-total">0</span>명</div>
+        </div>
+
+        <div class="bol-filter-row" id="bol-filter-row">
+          <button class="bol-filter is-active" data-filter="all">전체<br><span class="bol-filter-n" id="bol-filter-n-all">0</span></button>
+          <button class="bol-filter bol-filter-active" data-filter="active">정상<br><span class="bol-filter-n" id="bol-filter-n-active">0</span></button>
+          <button class="bol-filter bol-filter-wounded" data-filter="wounded">부상<br><span class="bol-filter-n" id="bol-filter-n-wounded">0</span></button>
+          <button class="bol-filter bol-filter-buried" data-filter="buried">매장<br><span class="bol-filter-n" id="bol-filter-n-buried">0</span></button>
+        </div>
+
+        <div class="bol-search">
+          <span class="bol-search-icon">⌕</span>
+          <input id="bol-search-input" type="text" placeholder="이름 또는 칭호로 찾기..."/>
+        </div>
+
+        <div class="bol-unit-list" id="bol-unit-list"><!-- JS render --></div>
+      </aside>
+
+      <!-- BOOK SPINE -->
+      <div class="bol-spine">
+        <div class="bol-spine-line"></div>
+        <div class="bol-spine-ribbon"></div>
+      </div>
+
+      <!-- RIGHT PAGE: Master detail -->
+      <section class="bol-right-page" id="bol-right-page">
+        <div class="bol-right-placeholder">좌측에서 동료를 선택하세요.</div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Portrait Zoom Modal -->
+  <div class="bol-portrait-zoom" id="bol-portrait-zoom" style="display:none;">
+    <button class="bol-portrait-close" data-action="bookOfLife.closePortraitZoom">✕ 닫기 (ESC)</button>
+    <div class="bol-portrait-zoom-card" id="bol-portrait-zoom-card"></div>
+    <div class="bol-portrait-zoom-info" id="bol-portrait-zoom-info"></div>
+  </div>
+</div>
+
+<!-- design-confirmed: 2026-05-18 사유: 시안 result_victory.jsx vanilla 마이그레이션 — Step 4-A (사용자 응급 우회 컨펌). custom: 시안 BC X / IP 고유 X. -->
+<!-- Step 4 (2026-05-18): 보상 화면 시안 정합 vanilla 마이그레이션. iframe 폐기. 승리/패배 모두 같은 markup, JS 가 데이터로 분기. -->
+<div id="reward-screen" class="screen">
+  <div class="rw-stage" id="rw-stage">
+    <!-- TOP BAR (블로커 fix 마이너: 상대 title + ✕ 닫기 + 상태 dot) -->
+    <header class="rw-topbar" id="rw-topbar">
+      <div class="rw-topbar-brand">
+        <div class="rw-topbar-eyebrow">BATTLE RESULT</div>
+        <div class="rw-topbar-title-row">
+          <div class="rw-topbar-status-dot" id="rw-status-dot"></div>
+          <div class="rw-topbar-title" id="rw-topbar-title">승리</div>
+        </div>
+      </div>
+      <div class="rw-topbar-sep"></div>
+      <div class="rw-topbar-vs">
+        <span class="rw-topbar-vs-text">vs.</span>
+        <div class="rw-topbar-opp-info">
+          <div class="rw-topbar-opp-title" id="rw-opp-title">불의 대행자</div>
+          <div class="rw-topbar-opp-line">
+            <span class="rw-topbar-opp-name" id="rw-opp-name">—</span>
+            <span class="dim">·</span>
+            <span class="rw-topbar-opp-lv" id="rw-opp-lv">Lv 1</span>
+          </div>
+        </div>
+      </div>
+      <div class="rw-topbar-spacer"></div>
+      <div class="rw-topbar-rounds">
+        <span class="dim">라운드</span>
+        <span class="gold" id="rw-rounds">5</span>
+      </div>
+      <div class="rw-topbar-score" id="rw-topbar-score">+15점</div>
+      <button class="rw-topbar-close" data-action="game.afterBattle" title="닫기">✕</button>
+    </header>
+
+    <!-- BODY 2-column -->
+    <div class="rw-body">
+      <!-- LEFT (540px): Dialog + HeroXP + SpellXP -->
+      <div class="rw-left">
+        <!-- Dialog box: 동료 portrait + 말풍선 -->
+        <div class="rw-dialog" id="rw-dialog">
+          <div class="rw-dialog-portrait" id="rw-dialog-portrait"><!-- JS: background-image --></div>
+          <div class="rw-dialog-body">
+            <div class="rw-dialog-speaker">
+              <span class="rw-dialog-role" id="rw-dialog-role">동료</span>
+              <span class="rw-dialog-name" id="rw-dialog-speaker-name">—</span>
+            </div>
+            <div class="rw-dialog-text" id="rw-dialog-text">—</div>
+          </div>
+        </div>
+
+        <!-- Hero XP card -->
+        <div class="rw-hero-xp">
+          <div class="rw-section-label">출전 영웅 경험치</div>
+          <div class="rw-hero-xp-row">
+            <div class="rw-hero-xp-portrait" id="rw-hero-portrait"></div>
+            <div class="rw-hero-xp-body">
+              <div class="rw-hero-xp-name-row">
+                <div class="rw-hero-xp-name" id="rw-hero-name">—</div>
+                <div class="rw-hero-xp-lv">Lv <span id="rw-hero-lv">1</span></div>
+              </div>
+              <div class="rw-bar">
+                <div class="rw-bar-fill rw-bar-fill-before" id="rw-hero-bar-before"></div>
+                <div class="rw-bar-fill rw-bar-fill-gain" id="rw-hero-bar-gain"></div>
+                <div class="rw-bar-shimmer rw-bar-shimmer-gain" id="rw-hero-bar-shimmer"></div>
+              </div>
+              <div class="rw-hero-xp-numbers">
+                <span class="dim" id="rw-hero-xp-before">0</span>
+                <span class="rw-hero-xp-gain" id="rw-hero-xp-gain">+0</span>
+                <span class="dim">/</span>
+                <span id="rw-hero-xp-max">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spell XP list -->
+        <div class="rw-spell-xp">
+          <div class="rw-section-label">스펠 사용 경험치</div>
+          <div class="rw-spell-xp-list" id="rw-spell-xp-list"><!-- JS render --></div>
+        </div>
+      </div>
+
+      <!-- design-confirmed: 2026-05-18 사유: 시안 result_victory.jsx RewardsView 통째 정합 (storyboard-inspector 블로커 #1/#2 fix) -->
+      <!-- RIGHT (flex:1): 보상 / 1~3위 / 전체보기 3 탭 (시안 정합 — 블로커 #1, #2 fix) -->
+      <div class="rw-right">
+        <div class="rw-rpanel">
+          <div class="rw-rpanel-header">
+            <div class="rw-rpanel-tabs" id="rw-rpanel-tabs">
+              <button class="rw-rpanel-tab is-active" data-tab="rewards">✦ 보상</button>
+              <button class="rw-rpanel-tab" data-tab="top3">1~3위</button>
+              <button class="rw-rpanel-tab" data-tab="all">전체 보기</button>
+            </div>
+            <div class="rw-rpanel-totals">
+              <div class="rw-rpanel-total">
+                <div class="rw-rpanel-total-label">가한 피해</div>
+                <div class="rw-rpanel-total-value gold" id="rw-dmg-dealt">0</div>
+              </div>
+              <div class="rw-rpanel-total">
+                <div class="rw-rpanel-total-label">받은 피해</div>
+                <div class="rw-rpanel-total-value crimson" id="rw-dmg-taken">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✦ 보상 탭 (시안 RewardsView 정합 — 블로커 #1) -->
+          <div class="rw-rpanel-body rw-rewards" id="rw-rewards-body">
+            <div class="rw-rewards-league">
+              <div class="rw-league-badge">
+                <div class="rw-league-rank" id="rw-league-rank">III</div>
+              </div>
+              <div class="rw-league-info">
+                <div class="rw-league-meta">SEASON 3</div>
+                <div class="rw-league-name" id="rw-league-name">신들의 리그 · 골드</div>
+                <div class="rw-league-bar">
+                  <div class="rw-league-bar-fill" id="rw-league-bar-fill"></div>
+                  <div class="rw-league-bar-gain" id="rw-league-bar-gain"></div>
+                </div>
+                <div class="rw-league-score-row">
+                  <span id="rw-league-score-before">425</span>
+                  <span class="rw-league-score-gain gold" id="rw-league-score-gain">+15</span>
+                  <span class="dim">→</span>
+                  <span id="rw-league-score-after">440</span>
+                  <span class="dim">/</span>
+                  <span id="rw-league-score-next">600</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rw-rewards-grid">
+              <div class="rw-rsrc rw-rsrc-gold"><div class="rw-rsrc-icon">💰</div><div class="rw-rsrc-label">골드</div><div class="rw-rsrc-value" id="rw-rsrc-gold">+0</div></div>
+              <div class="rw-rsrc rw-rsrc-gem"><div class="rw-rsrc-icon">💎</div><div class="rw-rsrc-label">보석</div><div class="rw-rsrc-value" id="rw-rsrc-gem">+0</div></div>
+              <div class="rw-rsrc rw-rsrc-honor"><div class="rw-rsrc-icon">🛡</div><div class="rw-rsrc-label">명예</div><div class="rw-rsrc-value" id="rw-rsrc-honor">+0</div></div>
+              <div class="rw-rsrc rw-rsrc-exp"><div class="rw-rsrc-icon">⭐</div><div class="rw-rsrc-label">경험치</div><div class="rw-rsrc-value" id="rw-rsrc-exp">+0</div></div>
+            </div>
+
+            <div class="rw-rewards-relic" id="rw-rewards-relic">
+              <div class="rw-relic-icon">🔮</div>
+              <div class="rw-relic-info">
+                <div class="rw-relic-label">신의 잔재</div>
+                <div class="rw-relic-value"><span id="rw-relic-amount">+1</span> 획득</div>
+              </div>
+            </div>
+
+            <div class="rw-rewards-season">
+              <div class="rw-season-row">
+                <div class="rw-season-label">시즌 패스</div>
+                <div class="rw-season-lv">Lv <span id="rw-season-lv">14</span></div>
+              </div>
+              <div class="rw-bar">
+                <div class="rw-bar-fill rw-bar-fill-before" id="rw-season-bar-before"></div>
+                <div class="rw-bar-fill rw-bar-fill-gain" id="rw-season-bar-gain"></div>
+                <div class="rw-bar-shimmer" id="rw-season-bar-shimmer"></div>
+              </div>
+              <div class="rw-season-numbers">
+                <span class="dim" id="rw-season-xp-before">240</span>
+                <span class="rw-season-xp-gain" id="rw-season-xp-gain">+60</span>
+                <span class="dim">/</span>
+                <span id="rw-season-xp-max">500</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1~3위 탭 (TopRankCard 큰 카드 3개 — 블로커 #2) -->
+          <div class="rw-rpanel-body rw-top3" id="rw-top3-body" style="display:none;">
+            <div class="rw-top3-list" id="rw-top3-list"><!-- JS render --></div>
+          </div>
+
+          <!-- 전체보기 탭 (AllRankRow 작은 row) -->
+          <div class="rw-rpanel-body rw-all" id="rw-all-body" style="display:none;">
+            <div class="rw-damage-list" id="rw-damage-list"><!-- JS render --></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <footer class="rw-actionbar">
+      <button class="rw-btn-back" data-action="game.afterBattle">◂ 마을로</button>
+      <div class="rw-actionbar-summary" id="rw-actionbar-summary">
+        <span class="dim">승리 보상</span>
+        <b class="gold" id="rw-summary-score">+15점</b>
+        <span class="dim">· 골드</span> <span id="rw-summary-gold">+0</span>
+        <span class="dim">· 명예</span> <span id="rw-summary-honor">+0</span>
+        <span class="dim">· 잔해</span> <span id="rw-summary-relic">+0</span>
+      </div>
+      <button class="rw-btn-next" id="rw-btn-next" data-action="game.afterBattle">⚔ 다음 도전 ▸</button>
+    </footer>
+  </div>
+  <!-- 호환 stub: 옛 reward 셀렉터 잔존 코드 보호 -->
+  <div id="rew-title" style="display:none;"></div>
+  <div id="rew-sub" style="display:none;"></div>
+  <div id="rew-stats" style="display:none;"></div>
+  <div id="reward-cards" style="display:none;"></div>
+</div>
+</div>
+
+<!-- GAMEOVER -->
+<div id="gameover-screen" class="screen">
+  <h1>💀 영웅의 몰락</h1>
+  <div class="final-stats" id="final-stats"></div>
+  <div style="display:flex;gap:10px;">
+    <button class="btn" data-action="game.newRun">⚔️ 다시 일어서다</button>
+    <button class="btn btn-red" data-action="game.logout">🛏️ 휴식</button>
+  </div>
+</div>
+
+<!-- NPC DIALOG OVERLAY (2026-04-24 재설계 — 매 진입 시 큰 반신 + 한 줄 인사 + 선택지 메뉴) -->
+<div class="npc-dialog-overlay" id="npc-dialog-overlay">
+  <img class="npc-dialog-art" id="npc-dialog-art" src="" alt="">
+  <div class="npc-dialog-box">
+    <div class="npc-dialog-name" id="npc-dialog-name"></div>
+    <div class="npc-dialog-text" id="npc-dialog-text"></div>
+    <div class="npc-dialog-choices" id="npc-dialog-choices"></div>
+  </div>
+</div>
+
+<!-- design-confirmed: 2026-06-07 사유: 사용자 컨펌 (시안 mockup/card_levelup/v2.html, 컨펌자 ChaHongPil) — 통합 레벨업 오버레이 -->
+<div class="rof-cov" id="rof-levelup">
+  <div class="lvc-cardwrap" id="lvc-cardwrap"><div class="lvc-halo"></div></div>
+  <div class="lvc-panel">
+    <div class="lvc-eyebrow">Permanent Growth</div>
+    <div class="lvc-bigtitle">LEVEL UP</div>
+    <div class="lvc-name" id="lvc-name"></div>
+    <div class="lvc-lvrow"><span class="lvc-lv-old" id="lvc-lv-old">Lv 1</span><span class="lvc-lv-arrow">▶</span><span class="lvc-lv-new" id="lvc-lv-new">2</span></div>
+    <div class="lvc-xpbar"><div class="lvc-xpfill" id="lvc-xpfill"></div></div>
+    <div class="lvc-xptxt"><b id="lvc-xp-cur">0</b> / <span id="lvc-xp-max">0</span> XP</div>
+    <div class="lvc-sp" id="lvc-sp">
+      <div class="lvc-sp-head"><span class="lvc-sp-glyph">✦</span><span class="lvc-sp-title">스탯 포인트 획득</span><span class="lvc-sp-amt">+1</span></div>
+      <div class="lvc-sp-desc"><b>5레벨</b>마다 스탯 포인트 1. <b>지금 바로</b> 분배하자.</div>
+      <div class="lvc-sp-picks" id="lvc-sp-picks"></div>
+      <button class="lvc-sp-defer" id="lvc-sp-defer">다음에 훈련소에서 분배하기</button>
+      <div class="lvc-sp-result"></div>
+    </div>
+    <div class="lvc-plain" id="lvc-plain">능력치는 자동으로 오르지 않는다.<br><b>다음 5의 배수 레벨</b>에서 스탯 포인트를 받아 분배한다.</div>
+    <button class="lvc-close" id="lvc-close">✓ 확인</button>
+  </div>
+</div>
+
+<!-- design-confirmed: 2026-06-07 사유: 사용자 컨펌 (시안 mockup/card_reward_pack/v2.html, 컨펌자 ChaHongPil) — 카드 부여 보상 팩오픈 (선술집 효과 재사용) -->
+<div class="rof-cov" id="rof-cardreward">
+  <div class="crw-box">
+    <span class="crw-cb tl"></span><span class="crw-cb tr"></span><span class="crw-cb bl"></span><span class="crw-cb br"></span>
+    <div class="crw-header"><div class="crw-eyebrow">Reward · Pack</div><div class="crw-title" id="crw-title">운명의 카드를 얻었다</div></div>
+    <div class="crw-row" id="crw-row">
+      <div class="crw-stage" id="crw-stage">
+        <div class="tav-screen-fx" id="crw-fx"></div>
+        <div class="crw-badge" id="crw-badge">✦ 신규 획득</div>
+        <div class="tav-flipper" id="crw-flipper" data-tier="rare">
+          <div class="tav-reveal-fx tier-rare"></div>
+          <div class="tav-flip-inner">
+            <div class="tav-flip-face tav-flip-back"><div class="tav-card-back-art has-glow"></div></div>
+            <div class="tav-flip-face tav-flip-front" id="crw-front"></div>
+          </div>
+        </div>
+        <button class="crw-reveal-btn" id="crw-reveal">공개하기 ✦</button>
+      </div>
+      <div class="crw-pre">봉인된 카드.<br>공개하여 운명을 확인하라.</div>
+      <div class="crw-info" id="crw-info">
+        <div class="crw-name" id="crw-name"></div>
+        <div class="crw-chips" id="crw-chips"></div>
+        <div class="crw-unlock-cond" id="crw-cond" style="display:none;"></div>
+        <div class="crw-unit-only">
+          <div class="crw-owner">소속 · <b id="crw-owner"></b> 동료 시그니처 풀</div>
+          <div class="crw-desc" id="crw-desc"></div>
+          <div class="crw-sig-label">— 시그니처 —</div>
+          <div class="crw-sigs" id="crw-sigs"></div>
+        </div>
+        <div class="crw-spell-only" style="display:none;">
+          <div class="crw-ability" id="crw-ability"></div>
+          <div class="crw-needsoul">◈ 소모 영혼 · <span id="crw-ns"></span></div>
+          <div class="crw-desc" id="crw-sdesc"></div>
+        </div>
+        <div class="crw-actions">
+          <button class="crw-btn primary" id="crw-slot">＋ 전열에 넣기</button>
+          <button class="crw-btn ghost" id="crw-train">훈련소에서 보기 ▸</button>
+          <button class="crw-btn ghost" id="crw-take">받기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box"><h3 id="modal-title"></h3><p id="modal-msg"></p>
+    <div class="modal-buttons"><button class="btn btn-s" id="modal-confirm">확인</button><button class="btn btn-s btn-red" data-action="ui.closeModal">취소</button></div>
+  </div>
+</div>
+
+<!-- 2026-05-06 D-3a: PHASE 3 시네마틱 전투 v2 DOM (#battle-v2-container, ~160줄) trash. PHASE 6 #tcg-screen 으로 대체. -->
+
+<!-- PHASE 5 채팅 (Step 2: world 단일 채널) -->
+<button id="chat-toggle" type="button" title="채팅 열기">
+  💬
+  <span class="cp-badge" hidden>0</span>
+</button>
+<aside id="chat-panel">
+  <div class="cp-header">
+    <span class="cp-title">🌍 운명의 광장</span>
+    <button type="button" class="cp-close" title="채팅 닫기">✕</button>
+  </div>
+  <div class="cp-tabs">
+    <button type="button" class="cp-tab active" data-kind="world">🌍 광장</button>
+    <button type="button" class="cp-tab" data-kind="league">🏛 리그</button>
+    <button type="button" class="cp-tab" data-kind="guild">🛡 전당</button>
+  </div>
+  <div class="cp-banner" hidden></div>
+  <div class="cp-messages" aria-live="polite"></div>
+  <div class="cp-input-row">
+    <button type="button" class="cp-attach" title="카드 공유 (곧 추가)" disabled>+</button>
+    <textarea class="cp-input" placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈)" maxlength="200" rows="1"></textarea>
+    <button type="button" class="cp-send" disabled>보내기</button>
+  </div>
+  <div class="cp-counter">0/200</div>
+</aside>
+
+</body>
+</html>

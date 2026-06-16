@@ -1,0 +1,987 @@
+/* ===================================================================
+   Realm of Fates — Card V4 Frame System (2026-05-08)
+   ===================================================================
+   교체: 2026-05-08 — 핸드오프 0508 frame 시스템 (M&M Fates 레퍼런스 차용)
+   출처: mockup/frames_0508/{frame_c_v2,frame_2,frame_shield}_final.jsx
+   자산: img/handoff_0508/
+
+   원칙:
+   - 모든 선택자 `.card-v4` 스코프 prefix
+   - DS 토큰: --rar-*, FT/FD/FB 폰트
+   - 자산 경로: img/handoff_0508/
+   - PHASE 6 5필드 (HP/ATK/NEED_SOUL/SOUL/keywords) 매핑
+
+   Frame 종류 (modifier):
+     .card-v4              — 기본 = frame_c_v2 (240×336 손패)
+     .card-v4.in-play      — frame_2 (240×240 보드)
+     .card-v4.shield       — frame_shield (240×280 수호자)
+
+   등급 매핑:
+     .rar-bronze    → common
+     .rar-silver    → rare
+     .rar-gold      → epic
+     .rar-legendary → legendary
+     .rar-divine    → mythic
+   =================================================================== */
+
+/* ───── 폰트 import ───── */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Cinzel+Decorative:wght@700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap');
+
+/* 2026-05-10 — 미수집 카드 뒷면 (codex/생명의 서). V4 카드 사이즈와 일치 (240×336 손패 mode). */
+.card-back {
+  width: 240px;
+  height: 336px;
+  background: url('../img/ui/card_backs/card_back.png') center/cover no-repeat, #1a1410;
+  border-radius: 10px;
+  border: 2px solid #3a2e1a;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  box-shadow: 0 4px 10px rgba(0,0,0,.5);
+}
+.card-back:hover {
+  transform: translateY(-4px);
+  border-color: #6e4a2a;
+  box-shadow: 0 8px 20px rgba(0,0,0,.7);
+}
+
+/* ───── 등급 토큰 (5단계) ───── */
+.card-v4.rar-bronze    { --c1:#8a8278; --c2:#bcb4a4; --c3:#0e0c08; --glow:rgba(0,0,0,0); }
+.card-v4.rar-silver    { --c1:#3a6b9e; --c2:#7ab4e0; --c3:#0a1424; --glow:rgba(122,180,224,.55); }
+.card-v4.rar-gold      { --c1:#7a3bcc; --c2:#c89af0; --c3:#1a0a2a; --glow:rgba(200,154,240,.65); }
+.card-v4.rar-legendary { --c1:#c89030; --c2:#f3d676; --c3:#2a1a08; --glow:rgba(243,214,118,.7); }
+.card-v4.rar-divine    { --c1:#c83838; --c2:#ffd8a0; --c3:#3a0808; --glow:rgba(255,200,140,.8); }
+
+/* ───── 베이스 카드 (frame_c_v2 default — 240×336 손패) ───── */
+.card-v4 {
+  --cv-w: 240px;
+  --cv-h: 336px;
+  position: relative;
+  width: var(--cv-w);
+  height: var(--cv-h);
+  font-family: 'Cinzel', 'Noto Serif KR', serif;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.7));
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), filter .25s ease;
+}
+
+/* 글로우 (legendary/divine 상시 + 모든 등급 active 강화) */
+.card-v4.rar-silver,
+.card-v4.rar-gold,
+.card-v4.rar-legendary,
+.card-v4.rar-divine {
+  filter: drop-shadow(0 0 14px var(--glow)) drop-shadow(0 8px 16px rgba(0,0,0,.7));
+}
+
+.card-v4.is-active {
+  filter: drop-shadow(0 0 28px var(--glow)) drop-shadow(0 0 8px rgba(255,255,255,.5)) drop-shadow(0 8px 16px rgba(0,0,0,.7));
+}
+
+/* ───── 일러스트 (clipped octagonal) ───── */
+.card-v4 .art-clip {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+  overflow: hidden;
+  background: var(--c3);
+}
+
+.card-v4 .art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+/* 비네트 + 하단 어두움 */
+.card-v4 .art-clip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 38%, transparent 28%, color-mix(in srgb, var(--c3), transparent 47%) 70%, color-mix(in srgb, var(--c3), transparent 6%) 100%),
+    linear-gradient(180deg, transparent 50%, transparent 60%, color-mix(in srgb, var(--c3), transparent 20%) 72%, color-mix(in srgb, var(--c3), transparent 3%) 82%, var(--c3) 100%);
+  pointer-events: none;
+}
+
+/* ───── 외곽 베벨 (SVG 두 줄 stroke + 다이아) ───── */
+.card-v4 .stone-bevel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  /* design-confirmed: 2026-05-30 사유: 사용자 보고 + 시각 검수관 — SVG overflow 기본 hidden 으로 outward ring × 3 (HERO) / outward stacked stroke (SHIELD) 잘림. visible 명시. */
+  overflow: visible;
+}
+
+.card-v4 .stone-bevel .outer {
+  fill: none;
+  stroke: var(--c2);
+  stroke-width: 2.2;
+}
+
+.card-v4 .stone-bevel .inner {
+  fill: none;
+  stroke: var(--c1);
+  stroke-width: 1;
+  opacity: .7;
+}
+
+.card-v4 .stone-bevel .gem {
+  fill: var(--c2);
+  stroke: var(--c1);
+  stroke-width: .8;
+}
+
+/* ───── Active 외곽 글로우 ring ───── */
+.card-v4.is-active::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  pointer-events: none;
+  clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px);
+  border: 2px solid var(--c2);
+  box-shadow: 0 0 20px var(--c2), inset 0 0 20px color-mix(in srgb, var(--c2), transparent 60%);
+}
+
+/* ───── 좌상단 코스트 메달 (NEED_SOUL) ───── */
+/* design-confirmed: 2026-06-06 사유: 시안 card.jsx 정합 (사용자 mockup 검수 컨펌) — cost 코인 모서리 밖으로 더 왼쪽. 보드(.in-play)는 별도 규칙 우선. */
+.card-v4 .cost {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 57px;
+  height: 57px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3022, #0a0805 70%);
+  border: 2px solid var(--c2);
+  font: 900 36px/52px 'Cinzel', 'Noto Serif KR', serif;
+  color: var(--c2);
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 2px 6px rgba(0,0,0,.9), inset 0 1px 0 color-mix(in srgb, var(--c2), transparent 47%);
+  z-index: 6;
+}
+
+/* ───── 원소 아이콘 (코스트 바로 아래) ───── */
+/* design-confirmed: 2026-06-06 사유: 시안 card.jsx 정합 — 원소 아이콘 좌측 가장자리(left:-11). 보드(.in-play)는 별도 규칙 우선. */
+.card-v4 .elem {
+  position: absolute;
+  top: 49px;
+  left: -11px;
+  width: 63px;
+  height: 63px;
+  z-index: 6;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.85));
+  pointer-events: none;
+}
+
+.card-v4 .elem img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ───── 종족 아이콘 (원소 아이콘 바로 아래, 좌측 가장자리 세로 컬럼) ───── */
+/* design-confirmed: 2026-06-06 사유: 시안 card.jsx 정합 — race emblem top:102 left:-11, drop-shadow 없음(종족 PNG 자체 아우라). */
+.card-v4 .race {
+  position: absolute;
+  top: 102px;
+  left: -11px;
+  width: 63px;
+  height: 63px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.card-v4 .race img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ───── 매치 손패 카드 우상단: 보드레벨 코인 + 영구카드레벨 코인 ───── */
+/* design-confirmed: 2026-06-06 사유: 시안 card.jsx 정합 (사용자 mockup 검수 컨펌) — 매치 손패만 표시. 보드레벨=cost 미러 우상단, 영구카드레벨=그 아래 작게. */
+.card-v4 .board-lv {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 57px;
+  height: 57px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3022, #0a0805 70%);
+  border: 2px solid var(--c2);
+  font: 900 36px/52px 'Cinzel', 'Noto Serif KR', serif;
+  color: var(--c2);
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 2px 6px rgba(0,0,0,.9), inset 0 1px 0 color-mix(in srgb, var(--c2), transparent 47%);
+  z-index: 6;
+}
+
+.card-v4 .card-lv {
+  position: absolute;
+  top: 43px;
+  right: 1.5px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3022, #0a0805 70%);
+  border: 2px solid var(--c2);
+  font: 900 21px/34px 'Cinzel', 'Noto Serif KR', serif;
+  color: var(--c2);
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 2px 5px rgba(0,0,0,.9);
+  z-index: 7;
+}
+
+/* ───── 키워드 알약 (원소 아래) ───── */
+.card-v4 .keyword {
+  position: absolute;
+  top: 124px;
+  left: 35.5px;
+  transform: translateX(-50%);
+  padding: 1px 8px;
+  background: rgba(8,4,2,.85);
+  border: 1px solid color-mix(in srgb, var(--c2), transparent 47%);
+  font: 700 12px/1.4 'Cinzel', serif;
+  color: var(--c2);
+  letter-spacing: .04em;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 6;
+}
+
+/* ───── 이름 (카드 63% 위치) ───── */
+.card-v4 .name {
+  position: absolute;
+  top: 63%;
+  left: 8px;
+  right: 8px;
+  font: 900 16px/1.1 'Cinzel', 'Noto Serif KR', serif;
+  color: #f6e9c4;
+  text-align: center;
+  letter-spacing: .04em;
+  text-shadow: 0 2px 4px #000, 0 0 8px #000;
+  z-index: 5;
+}
+
+/* 이름 아래 골드 룰 */
+.card-v4 .gold-rule {
+  position: absolute;
+  top: 68%;
+  left: 30px;
+  right: 30px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c2) 20%, var(--c2) 80%, transparent);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--c2), transparent 47%);
+  z-index: 5;
+}
+
+/* ───── 설명 텍스트 ───── */
+.card-v4 .desc {
+  position: absolute;
+  top: 71%;
+  left: 14px;
+  right: 14px;
+  bottom: 38px;
+  /* 2026-05-16 카드 desc serif 적용 (사용자 컨펌 v2 Noto Serif KR — 단계 1: 카드 텍스트만) */
+  font: 400 10.5px/1.4 'Noto Serif KR', serif;
+  color: #e8e0d0;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ───── ATK 아이콘 (좌하단 검, 카드 외곽으로 살짝 걸침) ───── */
+.card-v4 .atk-icon {
+  position: absolute;
+  bottom: -14px;
+  left: -8px;
+  width: 72px;
+  height: 72px;
+  z-index: 7;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.95));
+}
+
+.card-v4 .atk-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* design-confirmed: 2026-05-16 mockup/levelup_effect/v4_persistent_color.html 사용자 컨펌 "정본 적용"
+     custom: 게임 IP 카드 아이콘 시각 보정 — 30% 어둠 (숫자 가독성 ↑) */
+  filter: brightness(0.7);
+}
+
+.card-v4 .atk-icon .num {
+  position: absolute;
+  inset: 0;
+  font: 900 36px/72px 'Cinzel', 'Noto Serif KR', serif;
+  color: #fff;
+  text-align: center;
+  /* 2026-05-09 — 8 방향 hard outline 이 좌우로 검은 1 모양 그림자 2개 만들어 "1 이 3개" 시각 착시.
+     -webkit-text-stroke 한 겹 + soft drop shadow 로 단순화. */
+  -webkit-text-stroke: 6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 2px 4px rgba(0,0,0,.85);
+}
+
+/* ───── HP 아이콘 (우하단 방패) ───── */
+.card-v4 .hp-icon {
+  position: absolute;
+  bottom: -12px;
+  right: -8px;
+  width: 72px;
+  height: 72px;
+  z-index: 7;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.95));
+}
+
+.card-v4 .hp-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* design-confirmed: 2026-05-16 사용자 컨펌 v4 시안 + custom: 게임 IP 카드 아이콘 30% 어둠 */
+  filter: brightness(0.7);
+}
+
+.card-v4 .hp-icon .num {
+  position: absolute;
+  inset: 0;
+  font: 900 36px/72px 'Cinzel', 'Noto Serif KR', serif;
+  color: #fff;
+  text-align: center;
+  /* 2026-05-09 — atk 와 동일하게 단순화 (8방향 outline → stroke 한 겹). */
+  -webkit-text-stroke: 6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 2px 4px rgba(0,0,0,.85);
+}
+
+/* ===================================================================
+   Frame 2 — 보드 in-play (240×240, 짧음, 설명 X)
+   design-confirmed: 2026-05-30 사유: 사용자 컨펌 mockup/board_frame_upgrade/options.html 옵션 C + def_position.html DEF 옵션 A
+   2026-05-30 v2 업그레이드:
+     - 라운드 사각 (border-radius:18px) — 옛 옥타곤 SVG path 시각 폐기 (.stone-bevel .outer/.inner display:none)
+     - 외부 outward-stacked box-shadow rings (등급별 누적) — 일러스트 영역 240×240 정본 유지
+     - 상단 펜타곤 notch (옵션 C 시그니처 마커) — rarity edge 폐기
+     - 시안 출처: frame_board_premium.html (사용자 공급)
+     - 일러스트/cost/elem/ATK/HP/DEF 위치·크기 모두 정본 그대로 (사용자 명시 "프레임만 변경")
+   =================================================================== */
+
+/* design-confirmed: 2026-05-30 사유: 사용자 정정 — "영웅이 일반 유닛 프레임이 됐다".
+   UNIT 만 새 v2 (라운드 사각 + ring + 펜타곤). HERO/SHIELD 는 시그니처 유지.
+   :not(.is-hero) 복구 — 영웅 W-crown 보존 */
+.card-v4.in-play {
+  --cv-h: 240px;
+}
+.card-v4.in-play:not(.is-hero) {
+  border-radius: 18px;
+}
+.card-v4.in-play:not(.is-hero) .art-clip {
+  clip-path: none !important;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.card-v4.in-play:not(.is-hero) .stone-bevel .outer,
+.card-v4.in-play:not(.is-hero) .stone-bevel .inner,
+.card-v4.in-play:not(.is-hero) .stone-bevel .gem {
+  display: none;
+}
+.card-v4.in-play:not(.is-hero)::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 11px;
+  z-index: 6;
+  background: linear-gradient(180deg, var(--c2), transparent);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  opacity: .85;
+  pointer-events: none;
+}
+.card-v4.in-play:not(.is-hero).rar-bronze    { box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 4px #6a7078, 0 0 0 6px #14171b; }
+.card-v4.in-play:not(.is-hero).rar-silver    { box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 4px #5a9bdc, 0 0 0 7px #2a5a8a, 0 0 0 10px #0c0f14, 0 0 18px 11px rgba(90,155,220,.3); }
+.card-v4.in-play:not(.is-hero).rar-gold      { box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 4px #b06ad6, 0 0 0 7px #5a2d8a, 0 0 0 10px #2a1038, 0 0 0 12px #0a0610, 0 0 20px 13px rgba(176,106,214,.3); }
+.card-v4.in-play:not(.is-hero).rar-legendary { box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 4px #f3d676, 0 0 0 7px #c89030, 0 0 0 10px #7a5814, 0 0 0 12px #3a2808, 0 0 0 14px #0c0a04, 0 0 22px 15px rgba(243,214,118,.35); }
+.card-v4.in-play:not(.is-hero).rar-divine    { box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 4px #fff4c8, 0 0 0 7px #f3d676, 0 0 0 10px #d4a84a, 0 0 0 13px #8a6a1a, 0 0 0 15px #3a2808, 0 0 0 17px #0c0a04, 0 0 26px 18px rgba(255,240,192,.45); }
+/* design-confirmed: 2026-05-31 사유: 사용자 정정 — "일러스트 240×288 + crown 모양 바깥 안 보이게".
+   art-clip clip-path = 큰 crown path (240×288). 일러스트가 crown 모양으로 잘림. */
+.card-v4.in-play.is-hero .art-clip {
+  clip-path: path('M 0 62 L 0 48 Q 28 42 42 14 Q 56 42 82 44 Q 102 38 120 2 Q 138 38 158 44 Q 184 42 198 14 Q 212 42 240 48 L 240 274 Q 240 288 226 288 L 14 288 Q 0 288 0 274 Z');
+  overflow: hidden;
+}
+/* design-confirmed: 2026-05-31 사유: 사용자 명시 "영웅 세로 더 길게 + crown 240 위에서부터".
+   영웅 카드 자체 240×288 (UNIT 240×240 보다 48 더 길게).
+   일러스트 240×240 사각 (위 fit) + crown 부분 위로 -48 별도. */
+.card-v4.in-play.is-hero {
+  --cv-h: 288px;
+  height: 288px;
+}
+/* design-confirmed: 2026-05-31 사유: 옛 art-clip top:48 폐기 — inset:0 (240×288) 으로 crown 안 일러스트 fit */
+.card-v4.in-play.is-hero .stone-bevel {
+  display: block;
+  overflow: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 288px;
+}
+.card-v4.in-play.is-hero .stone-bevel .crown-jewel { fill: #c83838; stroke: var(--c2); stroke-width: .8; }
+.card-v4.in-play.is-hero .stone-bevel .fleuron path { fill: var(--c2); stroke: #3a2408; stroke-width: .4; }
+.card-v4.in-play.is-hero .stone-bevel .fleuron circle { fill: var(--c2); }
+
+/* design-confirmed: 2026-05-31 사유: 사용자 명시 "def 아이콘/숫자, 레벨업 숫자, 원소를 일반보드유닛 기준 위치로 맞춰라".
+   영웅 카드(288)는 crown 이 위로 48px 확장 → body 240 구간은 y:48~288 (유닛 0~240 을 48 내린 것).
+   ATK/HP 는 bottom-anchor (bottom:-28) 라 카드 바닥 = body 바닥에 자동 정합 (그대로 OK).
+   top-anchor 인 cost(Lv 숫자)·원소·DEF 는 유닛값 그대로면 48px 위에 떠서 어긋남 → 영웅 한정 +48 하향.
+   (cost coin 의 자식 .tcg-hero-progress 레벨업 링은 100%/100% 라 cost 따라 자동 정합.)
+   크기/색/폰트는 .card-v4.in-play 공통 룰 그대로 (유닛 기준 동일). 유닛 룰은 불변. */
+.card-v4.in-play.is-hero .cost     { top: 40px; }    /* 유닛 -8 + 48 */
+.card-v4.in-play.is-hero .elem     { top: 102px; }   /* 유닛 54 + 48 */
+.card-v4.in-play.is-hero .def-icon { top: 226px; }   /* 유닛 178 + 48 (ATK/HP baseline 정합) */
+
+/* 시안 frame_board: name/gold-rule/desc/keyword 모두 hide (compact mode) */
+.card-v4.in-play .name,
+.card-v4.in-play .gold-rule,
+.card-v4.in-play .desc,
+.card-v4.in-play .keyword {
+  display: none;
+}
+
+/* 시안 frame_board.jsx line 85-89: LEVEL coin top:-8 left:4 60×60 font 50px/56px opacity 0.7 */
+.card-v4.in-play .cost {
+  top: -8px;
+  left: 4px;
+  width: 60px;
+  height: 60px;
+  font: 900 50px/56px 'Cinzel', 'Noto Serif KR', serif;
+  opacity: 0.7;
+  padding: 0;
+  background: radial-gradient(circle at 35% 30%, #3a3022, #0a0805 70%);
+}
+
+/* 2026-05-17 #5 — kind 시각 배지 (UNIT/SPELL/BUFF).
+   사용자 컨펌 갤러리 mockup/phase6_visual_tags/v1.html — 한 눈에 카드 종류 구분.
+   손패 모드 카드 하단 floating tag (보드 in-play 는 카드 형태로 자명).
+   design-confirmed: 2026-05-17 사유: #5 사용자 "kind 시각 배지는 좋다" 명시.
+   custom: 우리 IP — kind 별 색 토큰 (녹색/보라/오렌지) — 게임 시각 언어 통일. */
+.card-v4 .kind-tag {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 700 12px/1 'Cinzel', 'Noto Sans KR', sans-serif;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+  z-index: 50;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .8);
+}
+.card-v4.kind-unit .kind-tag {
+  background: rgba(60, 120, 80, .95);
+  color: #a0ffb0;
+  border: 1.5px solid #60c080;
+}
+.card-v4.kind-spell-target .kind-tag,
+.card-v4.kind-spell-aoe .kind-tag {
+  background: rgba(120, 60, 200, .95);
+  color: #e0c0ff;
+  border: 1.5px solid #a880e0;
+}
+.card-v4.kind-attach-hero .kind-tag,
+.card-v4.kind-attach-unit .kind-tag {
+  background: rgba(200, 140, 40, .95);
+  color: #ffe0a0;
+  border: 1.5px solid #e0b060;
+}
+/* design-confirmed: 2026-05-17 사유: #5 kind 배지 — 손패 모드 스펠 카드도 SPELL 배지 표시 (사용자 의도).
+   in-play 보드 모드만 숨김. .spell / .shield 클래스 단독 숨김 폐기 — 손패 스펠/쉴드 카드도 배지 표시. */
+.card-v4.in-play .kind-tag {
+  display: none;
+}
+
+/* 2026-05-17 #4 — Lv 2+ 시 cost coin (보드 모드 = Lv 표시) 노랑 색 + glow.
+   사용자 정정 명시: "공격력 숫자랑 체력숫자가 늘어나면 색깔이 변하잖아 그런것처럼"
+   ATK/HP buff 와 동일 영구 색 변화 패턴 (is-buffed → 녹색 / Lv 2+ → 노랑).
+   design-confirmed: 2026-05-17 사유: 사용자 #4 정정 + 동일 패턴 적용.
+   custom: 우리 IP — 매치 progression Lv 시각 표시. */
+.card-v4.in-play .cost.is-leveled-up {
+  color: #ffd060;
+  opacity: 1;
+  text-shadow: 0 0 8px rgba(255, 200, 80, .85), 0 1px 2px rgba(0, 0, 0, .9);
+  background: radial-gradient(circle at 35% 30%, #4a3a18, #1a0d02 70%);
+}
+
+/* 시안 frame_board.jsx line 92-95: ELEMENT top:54 left:4 56×56 */
+.card-v4.in-play .elem {
+  top: 54px;
+  left: 4px;
+  width: 56px;
+  height: 56px;
+}
+
+/* 시안 frame_board.jsx line 99-104: ATK bottom:-28 left:1 size 90, HP bottom:-28 right:1 size 90 */
+.card-v4.in-play .atk-icon {
+  bottom: -28px;
+  left: 1px;
+  width: 90px;
+  height: 90px;
+}
+.card-v4.in-play .hp-icon {
+  bottom: -28px;
+  right: 1px;
+  width: 90px;
+  height: 90px;
+}
+.card-v4.in-play .atk-icon .num,
+.card-v4.in-play .hp-icon .num {
+  font: 900 45px/90px 'Cinzel', 'Noto Serif KR', serif;
+}
+
+/* ───── #28 임시 스탯 버프 배지 (in-play 보드 카드) ─────
+   design-confirmed: 2026-06-06 사용자 갤러리 컨펌 (mockup/temp_buff_icon/gallery.html v4 추천 조합).
+   🔥 + 호 게이지(남은/총 라운드) + "NR" + 호버 툴팁. ATK 임시버프 = ATK 아이콘 바로 위 좌측정렬. 영구 강화(⚡)와 시각 구분 (앰버 #ffb13d). */
+.card-v4.in-play .tbuff-badge {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  z-index: 8;
+}
+/* design-confirmed: 2026-06-06 사유: 사용자 컨펌 v4 "왼쪽 정렬" 정밀화 (inspector 지적 ~3px 편차 → ATK 좌측 가장자리 일치). */
+.card-v4.in-play .tbuff-atk { bottom: 66px; left: 1px; }    /* ATK 아이콘(bottom:-28 left:1 size90) 바로 위 좌측정렬 (좌측 가장자리 일치) */
+.card-v4.in-play .tbuff-hp  { bottom: 66px; right: 1px; }   /* HP 아이콘 위 (향후 HP 임시버프 확장) */
+.card-v4.in-play .tbuff-badge .tbuff-arc { position: absolute; inset: 0; transform: rotate(-90deg); }
+.card-v4.in-play .tbuff-badge .tbuff-arc-bg { fill: none; stroke: rgba(0,0,0,.5); stroke-width: 4; }
+.card-v4.in-play .tbuff-badge .tbuff-arc-fg { fill: none; stroke: #ffb13d; stroke-width: 4; stroke-linecap: round; }
+.card-v4.in-play .tbuff-badge .tbuff-core {
+  position: absolute; inset: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 32%, #ffb15a, #ff7a2e 72%);
+  border: 2px solid #2a1000;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 23px;
+  /* 원형 코어라 box-shadow 글로우가 실루엣(원) 따라감 — feedback_glow_follow_frame 정합 */
+  box-shadow: 0 0 12px rgba(255,122,46,.6);
+}
+.card-v4.in-play .tbuff-badge .tbuff-rlabel {
+  position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  font: 800 12px/1 'Noto Sans KR', sans-serif; color: #ffd9b0;
+  background: rgba(0,0,0,.66); border-radius: 7px; padding: 1px 6px; white-space: nowrap;
+}
+/* 호버 툴팁 (배지 위) */
+.card-v4.in-play .tbuff-badge .tbuff-tip {
+  position: absolute; bottom: 62px; left: -6px; width: 210px;
+  background: linear-gradient(180deg,#2b2236,#1a1424); color: #ece6f6;
+  border: 1.5px solid #ffb13d; border-radius: 10px; padding: 9px 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.6), 0 0 14px rgba(255,177,61,.3);
+  opacity: 0; visibility: hidden; transform: translateY(6px);
+  transition: opacity .14s ease, transform .14s ease, visibility .14s;
+  pointer-events: none; z-index: 30; text-align: left;
+}
+.card-v4.in-play .tbuff-badge:hover .tbuff-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+.card-v4.in-play .tbuff-tip-row + .tbuff-tip-row { margin-top: 7px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 7px; }
+.card-v4.in-play .tbuff-tip-title { font: 800 14px/1.2 'Noto Sans KR', sans-serif; color: #ffd07a; margin-bottom: 4px; }
+.card-v4.in-play .tbuff-tip-eff { font-size: 12.5px; color: #cdebd2; }
+.card-v4.in-play .tbuff-tip-eff b { color: #80ff80; }
+.card-v4.in-play .tbuff-tip-dur { font-size: 11px; color: #bdb2d4; margin-top: 3px; }
+.card-v4.in-play .tbuff-tip-dur b { color: #ffb13d; }
+.card-v4.in-play .tbuff-tip::after {
+  content: ''; position: absolute; bottom: -7px; left: 24px; width: 12px; height: 12px;
+  background: #1a1424; border-right: 1.5px solid #ffb13d; border-bottom: 1.5px solid #ffb13d;
+  transform: rotate(45deg);
+}
+
+/* design-confirmed: 2026-05-30 사유: 사용자 컨펌 v_final4 골드 A 채택 (mockup/def_icon/v_final4.html).
+   drop-shadow/textShadow 패턴은 frame_2.jsx 정본 (line 25, 39) 의 ATK/HP 패턴 그대로 복사 — 신규 시각 효과 X.
+   정식 정본 일반보드 채택 v1 (옵시디언 정합).
+   색: #ffd700 (HS Armor 표준).
+   조건: 40_cards.js 의 isInPlay && _def>0 분기에서 렌더. DEF=0 미렌더 (잡음 0).
+   design-confirmed: 2026-05-31 사유: 사용자 갤러리 튜너 재확정 (hero_board_gallery.html).
+     ⑥ left 90 → 85 (DEF 아이콘 왼쪽으로 5px — "원래 이 위치가 아니었어").
+     ⑤ translateY -4 → 2 (DEF 숫자 ↔ HP 숫자 가로선 정합, 기준 A 숫자끼리 정렬).
+     크기 90×90 + font 45px Cinzel 은 ATK/HP 정합 유지. 유닛+영웅 공통 (영웅은 top +48 별도 정합). */
+/* design-confirmed: 2026-05-31 사유: 사용자 갤러리 컨펌 (hero_board_gallery.html) — 보드 DEF .def-icon 단일화.
+   in-play(유닛/영웅) + shield(taunt) 보드 카드 공통. 쉴드도 height 240 + ATK/HP bottom:-28 동일 geometry 라 같은 좌표 정합. */
+.card-v4.in-play .def-icon,
+.card-v4.shield .def-icon {
+  position: absolute;
+  top: 178px;
+  left: 85px;
+  width: 90px;
+  height: 90px;
+  z-index: 10;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,.95));
+  pointer-events: none;
+}
+.card-v4.in-play .def-icon img,
+.card-v4.shield .def-icon img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: translateY(2px);
+}
+/* design-confirmed: 2026-05-31 사유: 사용자 갤러리 컨펌 — DEF 숫자 translateY -4 → 2 (HP 숫자와 가로선 정합). shield 공통. */
+.card-v4.in-play .def-icon .num,
+.card-v4.shield .def-icon .num {
+  position: absolute;
+  inset: 0;
+  font: 900 45px/90px 'Cinzel', 'Noto Serif KR', serif;
+  color: #ffd700;
+  text-align: center;
+  transform: translateY(2px);
+  text-shadow:
+    3px 0 0 #000, -3px 0 0 #000, 0 3px 0 #000, 0 -3px 0 #000,
+    2.2px 2.2px 0 #000, -2.2px 2.2px 0 #000, 2.2px -2.2px 0 #000, -2.2px -2.2px 0 #000,
+    0 0 4px #000;
+}
+
+/* design-confirmed: 2026-05-30 사유: 사용자 명시 "옛 frame 다 폐기".
+   옛 Frame Hero Board (W-crown 옥타곤 + 플뢰론 + 보석) 룰 전부 폐기.
+   영웅 보드 카드도 새 v2 단일 (라운드 사각 + outward ring + 펜타곤) 적용 — line 320~358 .card-v4.in-play 룰에 통합. */
+
+/* ===================================================================
+   Frame Shield — 수호자 (240×280, 방패 모양)
+   2026-05-09: 시안 (Downloads/카드게임/handoff/frame_shield.jsx) 100% 정합 SVG inline.
+   배경/일러스트/4겹 stroke/boss/rivets/cross-line 모두 _buildCardEl 의 SVG 안에서 그림.
+   art-clip div 는 shield 에선 안 만들고, SVG 가 단독 시각.
+   =================================================================== */
+
+.card-v4.shield {
+  /* 2026-05-13 사용자 명시 — height 240 (in-play 정합). SVG 자체는 viewBox 240×280 유지 + overflow:visible 로 방패 모양 보존. */
+  --cv-h: 240px;
+  height: 240px;
+}
+
+/* design-confirmed: 2026-05-30 사유: 사용자 정정 — "SHIELD 가 일반 프레임이랑 중복"
+   라운드 사각 + ring + 펜타곤 폐기. SHIELD = 옛 heater shield SVG 시그니처 + 새 v2 outward stacked stroke (js 적용) 만. */
+.card-v4.shield {
+  --cv-h: 240px;
+  height: 240px;
+}
+.card-v4.shield .art-clip {
+  display: none;
+}
+.card-v4.shield .stone-bevel {
+  overflow: visible;
+  transform: scale(1.1) translateY(-25px);
+  transform-origin: center top;
+  height: 280px;
+  width: 100%;
+}
+.card-v4.shield .name,
+.card-v4.shield .gold-rule,
+.card-v4.shield .desc,
+.card-v4.shield .keyword {
+  display: none;
+}
+.card-v4.shield .cost {
+  top: -8px;
+  left: 4px;
+  width: 60px;
+  height: 60px;
+  font: 900 50px/56px 'Cinzel', 'Noto Serif KR', serif;
+  opacity: 0.7;
+}
+.card-v4.shield .elem {
+  top: 54px;
+  left: 4px;
+  width: 56px;
+  height: 56px;
+}
+.card-v4.shield .atk-icon {
+  top: auto;
+  bottom: -28px;
+  left: 1px;
+  width: 90px;
+  height: 90px;
+}
+.card-v4.shield .atk-icon .num,
+.card-v4.shield .hp-icon .num {
+  font: 900 45px/90px 'Cinzel', 'Noto Serif KR', serif;
+}
+.card-v4.shield .hp-icon {
+  top: auto;
+  bottom: -28px;
+  right: 1px;
+  width: 90px;
+  height: 90px;
+}
+
+/* ===================================================================
+   호버 (손패 카드만 — frame_c_v2)
+   =================================================================== */
+
+.card-v4:not(.in-play):not(.is-dragging):hover {
+  transform: translateY(-12px) scale(1.05);
+  z-index: 100;
+}
+
+/* ===================================================================
+   드래그 → 보드 변환 애니 (rotateY 360deg)
+   M&M Fates 참조: 카드 한 바퀴 돌면서 hand → board frame 변환
+   JS에서 .is-flipping 토글 후 350ms 끝에 .in-play 적용
+   =================================================================== */
+
+@keyframes card-flip-deploy {
+  0%   { transform: rotateY(0deg) scale(1.05); }
+  50%  { transform: rotateY(180deg) scale(1.2); }
+  100% { transform: rotateY(360deg) scale(1); }
+}
+
+.card-v4.is-flipping {
+  animation: card-flip-deploy 700ms cubic-bezier(.4, .2, .2, 1) forwards;
+  z-index: 200;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* 접근성 — reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .card-v4 { transition: none; }
+  .card-v4:hover { transform: none; }
+  .card-v4.is-flipping { animation: none; }
+}
+
+/* ===================================================================
+   사망 / 비활성 상태
+   =================================================================== */
+
+.card-v4.is-dead {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.card-v4.is-disabled {
+  filter: grayscale(.7) brightness(.6);
+  pointer-events: none;
+}
+
+/* ===================================================================
+   Spell Frame (frame_spell.jsx 시안) — 다이아 컷 + DMG icon + SPELL label
+   =================================================================== */
+
+/* 다이아 art-clip — frame_spell.jsx diamondPath 와 동일 형태 */
+.card-v4.spell .art-clip {
+  clip-path: polygon(
+    50% 0,
+    calc(100% - 18px) 18px,
+    100% 60px,
+    100% calc(100% - 60px),
+    calc(100% - 18px) calc(100% - 18px),
+    50% 100%,
+    18px calc(100% - 18px),
+    0 calc(100% - 60px),
+    0 60px,
+    18px 18px
+  );
+}
+
+/* spell art-clip 배경 — frame_spell.jsx 의 <linearGradient bg c3→#000> 정합 */
+.card-v4.spell .art-clip {
+  background: linear-gradient(180deg, var(--c3) 0%, #000 100%);
+}
+
+/* spell 의 vig (radialGradient cx=.5 cy=.42 r=.7) — default 비네트 override */
+.card-v4.spell .art-clip::before {
+  background: radial-gradient(
+    ellipse 70% 70% at 50% 42%,
+    rgba(0,0,0,0) 0%,
+    color-mix(in srgb, var(--c3), transparent 5%) 100%
+  );
+}
+
+/* 하단 38% 가림 (desc 가독성) — frame_spell.jsx 의 <rect y=H*0.62 fill=R.c3 opacity=.72> 정합 */
+.card-v4.spell .art-clip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  bottom: 0;
+  background: var(--c3);
+  opacity: .72;
+  pointer-events: none;
+}
+
+/* 3-layer stroke (검정 5px / c1 2.6px / c2 1.2px) + inner accent + gem + side gems */
+.card-v4.spell .stone-bevel .spell-stroke-dark {
+  fill: none;
+  stroke: #1a1108;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.card-v4.spell .stone-bevel .spell-stroke-c1 {
+  fill: none;
+  stroke: var(--c1);
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+}
+.card-v4.spell .stone-bevel .spell-stroke-c2 {
+  fill: none;
+  stroke: var(--c2);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.card-v4.spell .stone-bevel .spell-inner-accent {
+  fill: none;
+  stroke: var(--c2);
+  stroke-opacity: .3;
+  stroke-width: .8;
+  stroke-linejoin: round;
+}
+.card-v4.spell .stone-bevel .spell-gem {
+  fill: var(--c2);
+  stroke: var(--c1);
+  stroke-width: .8;
+}
+.card-v4.spell .stone-bevel .spell-side-gem {
+  fill: var(--c2);
+  stroke: var(--c1);
+  stroke-width: .6;
+}
+
+/* 2026-05-13 사용자 명시 — spell .cost/.elem override 폐기.
+   기본 .card-v4 .cost/.elem 룰 상속 (일반 unit 손패 = 스펠 손패 동일 위치). */
+
+/* spell keyword chip — 시안 frame_spell.jsx line 123-125: top:142 left:53.5 transform translateX(-50%) */
+.card-v4.spell .keyword {
+  top: 142px;
+  left: 53.5px;
+  transform: translateX(-50%);
+}
+
+/* desc — bottom 30 (unit 38) — DMG icon 위 여백 */
+.card-v4.spell .desc {
+  bottom: 30px;
+}
+
+/* DMG icon — 우하단 단일 (unit 의 ATK/HP 2개를 1개로 통합) */
+.card-v4.spell .dmg-icon {
+  position: absolute;
+  bottom: -12px;
+  right: -8px;
+  width: 72px;
+  height: 72px;
+  z-index: 7;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.95));
+}
+.card-v4.spell .dmg-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.card-v4.spell .dmg-icon .num {
+  position: absolute;
+  inset: 0;
+  font: 900 36px/72px 'Cinzel', 'Noto Serif KR', serif;
+  color: #fff;
+  text-align: center;
+  text-shadow:
+    3px 0 0 #000, -3px 0 0 #000, 0 3px 0 #000, 0 -3px 0 #000,
+    2.2px 2.2px 0 #000, -2.2px 2.2px 0 #000, 2.2px -2.2px 0 #000, -2.2px -2.2px 0 #000,
+    0 0 4px #000;
+}
+
+/* SPELL 라벨 — 하단 중앙 (좌우 라인 + center text) */
+.card-v4.spell .spell-label {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 5;
+  pointer-events: none;
+}
+.card-v4.spell .spell-label-line {
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c2));
+}
+.card-v4.spell .spell-label-line:last-child {
+  background: linear-gradient(90deg, var(--c2), transparent);
+}
+.card-v4.spell .spell-label-text {
+  font: 900 10px/1 'Cinzel Decorative', serif;
+  color: var(--c2);
+  letter-spacing: .4em;
+  white-space: nowrap;
+}
+.card-v4.spell .spell-label.has-owner .spell-label-text {
+  letter-spacing: .1em;
+}
+
+/* ===================================================================
+   design-confirmed: 2026-05-30 사유: 사용자 명시 "다 새 v2 로 적용 안 됐다".
+   매치 wrap (.match-card) 에 직접 box-shadow ring + border-radius 박기.
+   scale(0.458) 영향 0 (wrapper 자체에 적용). 시각 명확 보임.
+   매치 화면 모든 보드 카드 (mode-in-play / mode-shield) 등급별 ring + 라운드 사각.
+   =================================================================== */
+/* design-confirmed: 2026-05-31 사유: 사용자 정정 — "영웅 카드 뒤에 일반 유닛 프레임 겹침".
+   wrap 의 등급별 ring + 라운드 사각 + 펜타곤 룰에 :not(.kind-hero) 추가 (영웅 제외).
+   영웅은 자체 SVG path (큰 crown + outward gold ring × 3) 만 시각. */
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero),
+body.game-mode #tcg-screen .match-card.mode-shield {
+  border-radius: 12px;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-bronze,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-bronze {
+  box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 2px #6a7078, 0 0 0 3px #14171b !important;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-silver,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-silver {
+  box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 2px #5a9bdc, 0 0 0 4px #2a5a8a, 0 0 0 5px #0c0f14, 0 0 14px 7px rgba(90,155,220,.4) !important;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-gold,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-gold {
+  box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 2px #b06ad6, 0 0 0 4px #5a2d8a, 0 0 0 5px #2a1038, 0 0 0 6px #0a0610, 0 0 16px 8px rgba(176,106,214,.4) !important;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-legendary,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-legendary {
+  box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 2px #f3d676, 0 0 0 4px #c89030, 0 0 0 5px #7a5814, 0 0 0 6px #3a2808, 0 0 0 7px #0c0a04, 0 0 18px 10px rgba(243,214,118,.45) !important;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-divine,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-divine {
+  box-shadow: 0 5px 12px rgba(0,0,0,.55), 0 0 0 2px #fff4c8, 0 0 0 4px #f3d676, 0 0 0 5px #d4a84a, 0 0 0 6px #8a6a1a, 0 0 0 7px #3a2808, 0 0 0 8px #0c0a04, 0 0 22px 12px rgba(255,240,192,.5) !important;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero)::before,
+body.game-mode #tcg-screen .match-card.mode-shield::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 7px;
+  z-index: 50;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  opacity: .85;
+  pointer-events: none;
+}
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-bronze::before,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-bronze::before { background: linear-gradient(180deg, #bcb4a4, transparent); }
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-silver::before,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-silver::before { background: linear-gradient(180deg, #7ab4e0, transparent); }
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-gold::before,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-gold::before { background: linear-gradient(180deg, #c89af0, transparent); }
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-legendary::before,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-legendary::before { background: linear-gradient(180deg, #f3d676, transparent); }
+body.game-mode #tcg-screen .match-card.mode-in-play:not(.kind-hero).rar-divine::before,
+body.game-mode #tcg-screen .match-card.mode-shield.rar-divine::before { background: linear-gradient(180deg, #ffd8a0, transparent); }

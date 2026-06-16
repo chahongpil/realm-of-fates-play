@@ -1,0 +1,46 @@
+/* All @keyframes definitions in one place. */
+/* 2026-04-27: titleLightning keyframes 제거 — 사용자 결정으로 번개 이펙트 폐기. */
+@keyframes titleFire{0%{opacity:.3;height:25%;}100%{opacity:.6;height:35%;}}
+@keyframes titleGlow{0%{text-shadow:0 0 30px rgba(230,204,128,.4),0 0 60px rgba(255,215,0,.2),0 3px 6px rgba(0,0,0,.9);}100%{text-shadow:0 0 50px rgba(230,204,128,.7),0 0 100px rgba(255,215,0,.4),0 3px 6px rgba(0,0,0,.9);}}
+@keyframes twinkle{0%{opacity:.3;}100%{opacity:.9;}}
+@keyframes walkRight{0%{left:-5%;opacity:0;}5%{opacity:.6;}90%{opacity:.6;}100%{left:105%;opacity:0;}}
+@keyframes walkLeft{0%{left:105%;opacity:0;}5%{opacity:.6;}90%{opacity:.6;}100%{left:-5%;opacity:0;}}
+@keyframes walkUp{0%{top:95%;opacity:0;}5%{opacity:.5;}90%{opacity:.5;}100%{top:5%;opacity:0;}}
+@keyframes buildPulse{0%{transform:scale(.5);opacity:0;filter:brightness(3);}50%{transform:scale(1.3);opacity:1;}100%{transform:scale(1);filter:brightness(1);}}
+@keyframes divineGlow{0%{box-shadow:inset 0 0 25px rgba(230,204,128,.2),0 0 15px rgba(255,215,0,.3);}100%{box-shadow:inset 0 0 30px rgba(255,255,255,.2),0 0 25px rgba(255,255,255,.4);}}
+@keyframes targetPulse{0%{box-shadow:0 0 15px rgba(255,68,68,.4);}100%{box-shadow:0 0 30px rgba(255,68,68,.8);}}
+@keyframes cardZoomIn{0%{transform:translate(-50%,-50%) scale(.5);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+@keyframes skillPulse{0%{transform:scale(.8);opacity:.6;}100%{transform:scale(1.2);opacity:1;}}
+@keyframes hitFlashAnim{0%{filter:brightness(2) drop-shadow(0 0 10px rgba(255,0,0,.8));}20%{transform:scale(.92);}40%{filter:brightness(1.5) drop-shadow(0 0 5px rgba(255,0,0,.4));}60%{transform:scale(1.02);}100%{filter:none;transform:scale(1);}}
+@keyframes critHitAnim{0%{filter:brightness(3) drop-shadow(0 0 20px rgba(255,68,0,.9));transform:scale(.85);}30%{transform:scale(1.1) rotate(-3deg);}50%{filter:brightness(2) drop-shadow(0 0 10px rgba(255,0,0,.5));}70%{transform:scale(.95) rotate(2deg);}100%{filter:none;transform:scale(1) rotate(0);}}
+@keyframes slashAnim{0%{opacity:0;transform:scale(.5) rotate(-30deg);}30%{opacity:1;transform:scale(1.3) rotate(10deg);}100%{opacity:0;transform:scale(1.8) rotate(20deg) translateY(-30px);}}
+@keyframes magicAnim{0%{opacity:0;transform:scale(.3);}40%{opacity:1;transform:scale(1.5);}100%{opacity:0;transform:scale(2) translateY(-20px);}}
+@keyframes healAnim{0%{opacity:0;transform:translateY(20px);}50%{opacity:1;transform:translateY(-10px);}100%{opacity:0;transform:translateY(-30px);}}
+@keyframes hitShake{0%{transform:translateX(0);}25%{transform:translateX(-5px);}50%{transform:translateX(5px);}75%{transform:translateX(-3px);}100%{transform:translateX(0);}}
+@keyframes dmgFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-20px) scale(1.2);}}
+@keyframes upgFlash{0%{background:rgba(255,215,0,.4);}100%{background:transparent;}}
+@keyframes upgPart{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0);}}
+@keyframes rarBurst{0%{background:radial-gradient(circle at 50% 50%,rgba(255,215,0,.6),transparent 60%);}50%{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.3),transparent 70%);}100%{background:transparent;}}
+@keyframes upgGlow{0%{filter:brightness(2) drop-shadow(0 0 20px var(--curr-gold));}100%{filter:brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,.5));}}
+@keyframes cardFlip{0%{transform:rotateY(180deg) scale(.8);}50%{transform:rotateY(90deg) scale(1.1);}100%{transform:rotateY(0deg) scale(1);}}
+@keyframes legendReveal{0%{background:radial-gradient(circle,rgba(163,53,238,.5),transparent 50%);}100%{background:transparent;}}
+@keyframes goldReveal{0%{background:radial-gradient(circle,rgba(218,165,32,.4),transparent 50%);}100%{background:transparent;}}
+@keyframes screenShake{0%{transform:translate(0,0);}15%{transform:translate(-8px,4px);}30%{transform:translate(6px,-6px);}45%{transform:translate(-4px,2px);}60%{transform:translate(4px,-2px);}75%{transform:translate(-2px,1px);}100%{transform:translate(0,0);}}
+@keyframes critFlash{0%{background:rgba(255,68,68,.3);}100%{background:transparent;}}
+@keyframes heroDeath{0%{background:transparent;}30%{background:rgba(255,0,0,.3);}60%{background:rgba(0,0,0,.5);}100%{background:transparent;}}
+@keyframes victBanner{0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.2);}50%{transform:translate(-50%,-50%) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1) translateY(-30px);}}
+@keyframes sparkFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg);}100%{opacity:0;transform:translateY(100vh) rotate(360deg);}}
+@keyframes lootOpen{0%{transform:scale(1);}30%{transform:scale(1.3) rotateY(90deg);}60%{transform:scale(1.1) rotateY(180deg);}100%{transform:scale(1) rotateY(360deg);}}
+@keyframes lootReveal{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes atkDim{0%{opacity:0;}100%{opacity:1;}}
+@keyframes atkSlideIn{0%{transform:translateX(-80px) scale(.6);opacity:0;}100%{transform:translateX(0) scale(1);opacity:1;}}
+@keyframes tgtSlideIn{0%{transform:translateX(80px) scale(.6);opacity:0;}100%{transform:translateX(0) scale(1);opacity:1;}}
+@keyframes vsFlash{0%{transform:scale(.3);opacity:0;}100%{transform:scale(1);opacity:1;}}
+@keyframes fxPop{0%{transform:scale(.5);opacity:0;}100%{transform:scale(1);opacity:1;}}
+@keyframes atkCritIn{0%{transform:translateX(-100px) scale(.5) rotate(-10deg);opacity:0;}60%{transform:scale(1.1) rotate(3deg);opacity:1;}100%{transform:scale(1) rotate(0);}}
+@keyframes slowmoIn{0%{opacity:0;}100%{opacity:1;}}
+@keyframes dotPulse{0%{content:'.';}33%{content:'..';}66%{content:'...';}}
+@keyframes matchFlash{0%{transform:scale(.8);opacity:0;}50%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+@keyframes plCinIn{0%{opacity:0;transform:translate(-50%,-50%) translateY(15px) scale(.95);}100%{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1);}}
+@keyframes plCinOut{0%{opacity:1;transform:translate(-50%,-50%) translateY(0);}100%{opacity:0;transform:translate(-50%,-50%) translateY(-10px);}}
+@keyframes tutPulse{0%{filter:drop-shadow(0 0 8px rgba(255,215,0,.3));}100%{filter:drop-shadow(0 0 20px rgba(255,215,0,.8));}}

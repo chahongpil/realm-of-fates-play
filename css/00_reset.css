@@ -1,0 +1,26 @@
+/* Reset and base element styles. */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--primary-bg);color:var(--amber-pale);min-height:100vh;overflow-x:hidden;font-size:16px;}
+
+/* ── 세로 뷰포트 모드 (2026-04-12 Phase 2) ──
+   99_bootstrap.js 가 body 에 .game-mode 클래스를 추가할 때만 적용.
+   에디터/프리뷰 페이지는 이 클래스가 없어서 영향 X. */
+body.game-mode{
+  width:100vw;height:100vh;
+  background:#000;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:0;  /* override */
+}
+body.game-mode .game-root{
+  width:var(--viewport-w,390px);
+  height:var(--viewport-h,844px);
+  position:relative;
+  overflow:hidden;
+  background:var(--primary-bg);
+  transform-origin:center center;
+  /* transform: scale() 는 JS 가 fitViewport() 에서 런타임 적용 */
+}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:#111;}::-webkit-scrollbar-thumb{background:var(--gray-7);border-radius:3px;}

@@ -1,0 +1,414 @@
+/* Reusable UI components: buttons, auth box, HUD, cards, deck-mini, modals, sound panel, npc bar, timer bar, tutorial. */
+/* 2026-05-02: 사용자 결정 — btn_stone_*.png 텍스처 폐기, 단순 단색 + border 로 롤백.
+   PNG 파일은 img/ui/ 에 보존 (필요 시 복구 가능). */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:10px 28px;font-size:1rem;
+  border:1px solid var(--curr-gold-dark, #6e4a2a);
+  background:linear-gradient(180deg, #2a1f14, #1a0f08);
+  color:var(--curr-gold-pale);
+  cursor:pointer;
+  letter-spacing:1px;
+  font-family:var(--font-title);
+  font-weight:700;
+  text-shadow:0 2px 4px rgba(0,0,0,.95);
+  transition:transform .1s ease-out,filter .2s ease-out,color .2s ease-out, border-color .2s, background .2s;
+  position:relative;
+  white-space:nowrap;
+  box-sizing:border-box;
+  border-radius:4px;
+  box-shadow:0 2px 6px rgba(0,0,0,.5);
+}
+.btn:hover{
+  background:linear-gradient(180deg, #3a2c1c, #251810);
+  border-color:var(--curr-gold, #d4a84a);
+  color:#fff;
+}
+.btn:active{
+  background:linear-gradient(180deg, #1a0f08, #0a0510);
+  transform:scale(.97);
+}
+.btn:disabled,.btn.disabled{
+  background:#1a1410;
+  border-color:#3a2a1c;
+  cursor:not-allowed;
+  color:var(--text-3);
+  filter:grayscale(.5) brightness(.7);
+}
+.btn:disabled:hover,.btn.disabled:hover{transform:none;}
+.btn-s{padding:8px 20px;font-size:.85rem;min-width:100px;min-height:40px;}
+/* 색상 변형 — 텍스트 컬러만 (배경은 stone 유지) */
+.btn-blue   {color:var(--el-water);}
+.btn-blue:hover   {color:#cce6ff;}
+.btn-red    {color:var(--danger);}
+.btn-red:hover    {color:#ffcccc;}
+.btn-green  {color:var(--success);}
+.btn-green:hover  {color:#ccffdd;}
+.btn-purple {color:var(--el-dark-glow);}
+.btn-purple:hover {color:#e0ccff;}
+
+/* ═══ .btn-banner — 주요 결정 배너형 버튼 (2026-04-12 FATES 레퍼런스) ═══
+   팔각 금속 프레임 + 좌우 화살표 + 2배 크기 + 상시 맥동 glow.
+   사용처: "⚔️ 도전자 찾기", "⚔️ 출전!", "✅ 확정" 같은 세션 결정 버튼. */
+/* 2026-05-02: btn-banner 도 stone PNG 폐기 → 단색 + border + glow */
+.btn-banner{
+  padding:14px 40px;
+  font-size:1.2rem;
+  font-weight:900;
+  letter-spacing:2px;
+  border:2px solid var(--curr-gold, #d4a84a);
+  background:linear-gradient(180deg, #2a1f14, #1a0f08);
+  color:#fff;
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.95),
+    0 0 14px rgba(120,180,255,.6);
+  filter:drop-shadow(0 0 20px rgba(120,180,255,.45));
+  position:relative;
+  clip-path:none;
+  animation:btnBannerPulse 2.4s ease-in-out infinite;
+  box-sizing:border-box;
+  border-radius:4px;
+}
+.btn-banner::before,
+.btn-banner::after{content:none;}
+.btn-banner:hover{
+  background:linear-gradient(180deg, #3a2c1c, #251810);
+  border-color:#fff;
+  color:#fff;
+  filter:drop-shadow(0 0 28px rgba(150,200,255,.75));
+  animation-play-state:paused;
+}
+.btn-banner:active{
+  background:linear-gradient(180deg, #1a0f08, #0a0510);
+  transform:scale(.97);
+}
+.btn-banner:disabled,
+.btn-banner.disabled{
+  background:#1a1410;
+  border-color:#3a2a1c;
+  cursor:not-allowed;
+  animation:none;
+  filter:grayscale(.6) brightness(.7);
+  color:var(--text-3);
+}
+@keyframes btnBannerPulse{
+  0%,100%{filter:drop-shadow(0 0 18px rgba(120,180,255,.4));}
+  50%    {filter:drop-shadow(0 0 32px rgba(150,200,255,.7));}
+}
+.auth-box{background:linear-gradient(180deg,rgba(25,20,10,.9),rgba(10,8,5,.95));border:2px solid var(--amber-plate);border-radius:8px;padding:30px 40px;min-width:320px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5);}
+.auth-box h2{color:var(--curr-gold);margin-bottom:20px;font-size:1.5rem;}
+.auth-box input{width:100%;padding:10px 14px;margin-bottom:12px;background:rgba(0,0,0,.4);border:1px solid var(--border-2);border-radius:6px;color:var(--text-1);font-size:1rem;outline:none;}
+.auth-box input:focus{border-color:var(--curr-gold);}
+.auth-box input::placeholder{color:var(--text-placeholder);font-weight:400;}
+.auth-input{width:100%;padding:10px 14px;margin-bottom:12px;background:rgba(0,0,0,.4);border:1px solid var(--border-2);border-radius:6px;color:var(--text-1);font-size:1rem;outline:none;box-sizing:border-box;}
+.auth-input:focus{border-color:var(--curr-gold);}
+.auth-input::placeholder{color:var(--text-placeholder);font-weight:400;}
+.auth-msg{font-size:.85rem;margin-bottom:10px;min-height:20px;}
+.auth-msg.error{color:var(--danger);}.auth-msg.success{color:var(--success);}
+.auth-back{margin-top:12px;font-size:.8rem;color:var(--text-3);cursor:pointer;}.auth-back:hover{color:var(--text-2);}
+.hud{width:100%;padding:8px 15px;background:linear-gradient(180deg,rgba(15,12,8,.95),rgba(15,12,8,.5),transparent);border-bottom:1px solid rgba(139,105,20,.3);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:4px;z-index:5;}
+.hud-left,.hud-right{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.hud-stat{font-size:.8rem;color:var(--text-1);}.hud-stat span{color:var(--curr-gold);font-weight:bold;}
+.hud-name{font-size:.8rem;color:var(--curr-gold);font-weight:bold;}
+/* ============ 카드 — 고딕 판타지 프레임 통일 ============ */
+/* 카드 고정 크기 4:7 비율 */
+.card{width:280px;height:490px;border-radius:14px;position:relative;cursor:pointer;transition:all .3s;flex-shrink:0;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8));background:transparent;overflow:hidden;}
+.card:hover{transform:translateY(-5px) scale(1.02);filter:drop-shadow(0 8px 24px rgba(0,0,0,.9));}
+.card-inner{width:100%;height:100%;border-radius:14px;padding:0;position:relative;overflow:hidden;border:none!important;background:#0a0a0a!important;box-shadow:none!important;}
+/* 프레임 PNG 오버레이 제거 (2026-04-20) — 일러스트가 프레임까지 통합된 PNG. 시스템은 풀카드 표시만. */
+.card-inner::before,.card-inner::after{display:none;}
+/* 일러스트 — 카드 전체를 contain 으로 표시 (잘림 방지, 통합 PNG 풀카드) */
+.card-portrait{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;border:none;margin:0;padding:0;border-radius:14px;}
+.card-portrait::before,.card-portrait::after{display:none;}
+.card-icon{width:100%;height:100%;margin:0;padding:0;font-size:4rem;display:flex;align-items:center;justify-content:center;}
+.card-icon img{width:100%;height:100%;object-fit:contain;border-radius:14px;display:block;background:#0a0a0a;}
+/* 이름 바 (상단) — 프레임 이름 배너 위치 */
+.card-name-bar{position:absolute;top:0;left:0;right:0;z-index:11;background:transparent;padding:10px 35px 2px 35px;}
+/* 종족/원소 태그 */
+.card-tags{position:absolute;top:32px;left:35px;z-index:11;padding:0;background:transparent;font-size:.45rem;}
+/* HP — 프레임 우상단 하트 위치 */
+.card-hp{position:absolute;top:8px;right:18px;z-index:11;text-shadow:0 0 6px rgba(255,68,68,.5);font-size:.8rem;font-weight:bold;}
+/* 좌측 스탯 — 프레임 빨/파/초 박스 위치 */
+.card-stats-left{position:absolute;left:5px;top:38%;z-index:11;display:flex;flex-direction:column;gap:8px;}
+.card-stats-left span{background:transparent;padding:2px 4px;border:none;font-weight:bold;font-size:.6rem;text-shadow:0 1px 3px rgba(0,0,0,.8);}
+/* 능력 텍스트 — 프레임 하단 텍스트 박스 */
+.card-ability{position:absolute;bottom:50px;left:15%;right:15%;z-index:11;font-size:.5rem;text-align:center;color:#bbb;}
+/* 하단 바 (장비+NRG) */
+.card-bottom{position:absolute;bottom:10px;left:10px;right:10px;z-index:11;display:flex;justify-content:space-between;align-items:center;background:transparent;}
+/* NRG — 프레임 우하단 다이아몬드 */
+.card-nrg{text-shadow:0 0 6px rgba(68,136,255,.5);font-size:.65rem;font-weight:bold;}
+/* 보호막 */
+.card-shield{position:absolute;top:8px;left:12px;z-index:11;text-shadow:0 0 4px rgba(68,170,255,.5);}
+/* 등급별 — 프레임 PNG가 대체하므로 border만 */
+.card.bronze .card-inner,.card.silver .card-inner,.card.gold .card-inner,.card.legendary .card-inner,.card.divine .card-inner{border:none!important;background:#0a0a0a!important;box-shadow:none!important;}
+.card[data-type="전사"] .card-portrait{background:linear-gradient(180deg,#2a1508 0%,#1a0e04 50%,#0d0602 100%);}
+.card[data-type="사수"] .card-portrait{background:linear-gradient(180deg,#0a1a0a 0%,#081408 50%,#040a04 100%);}
+.card[data-type="마법사"] .card-portrait{background:linear-gradient(180deg,#0a0a2a 0%,#08081a 50%,#04040d 100%);}
+.card[data-type="야수"] .card-portrait{background:linear-gradient(180deg,#1a1a08 0%,#121208 50%,#0a0a04 100%);}
+.card-cost{position:absolute;top:-2px;left:-2px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--el-water),#1a3366);color:var(--text-0);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1rem;border:2px solid #6699dd;z-index:2;box-shadow:0 0 6px rgba(68,136,255,.4),inset 0 -2px 4px rgba(0,0,0,.3);}
+.card-rarity-tag{position:absolute;top:4px;right:4px;font-size:.55rem;padding:2px 8px;border-radius:10px;font-weight:bold;letter-spacing:.5px;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+.card.bronze .card-rarity-tag{background:linear-gradient(180deg,var(--curr-gold-dark),var(--amber-stop-3));color:var(--amber-mid);border:1px solid #aa8830;}
+.card.silver .card-rarity-tag{background:linear-gradient(180deg,var(--gray-4),var(--gray-6));color:#ddd;border:1px solid var(--gray-3);}
+.card.gold .card-rarity-tag{background:linear-gradient(180deg,var(--curr-gold-mid),var(--curr-gold-dark));color:var(--text-0);border:1px solid var(--curr-gold);box-shadow:0 0 4px rgba(255,215,0,.3);}
+.card.legendary .card-rarity-tag{background:linear-gradient(180deg,var(--el-dark),#6a1faa);color:#e6b8ff;border:1px solid #bb55ff;box-shadow:0 0 4px rgba(163,53,238,.4);}
+.card.divine .card-rarity-tag{background:linear-gradient(180deg,var(--curr-gold-pale),#aa8833);color:var(--text-0);border:1px solid #ffe066;box-shadow:0 0 8px rgba(230,204,128,.5);}
+.card-kind-tag{position:absolute;top:22px;right:4px;font-size:.5rem;padding:1px 4px;border-radius:2px;background:rgba(0,0,0,.6);color:#999;z-index:2;}
+.card-icon{text-align:center;font-size:4.5rem;filter:drop-shadow(0 3px 8px rgba(0,0,0,.7));margin:0;}
+.card-icon img{width:100%;height:100%;object-fit:contain;border-radius:0;filter:none;display:block;position:absolute;top:0;left:0;background:#0a0a0a;}
+.card-name{text-align:center;font-size:1rem;font-weight:700;color:var(--amber-bright);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.7);font-family:var(--font-title);}
+.card-type{text-align:center;font-size:.6rem;color:#8899aa;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;}
+.card-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;font-size:.6rem;margin-top:auto;padding:3px;background:rgba(0,0,0,.3);border-radius:4px;border:1px solid rgba(255,255,255,.05);}
+.card-stats .st{padding:2px 4px;border-radius:2px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.05);}
+.st-atk{color:#ff4422;}.st-hp{color:#22cc44;}.st-def{color:var(--el-water);}.st-spd{color:#22aaff;}
+/* .st-rage 2026-04-22 제거 (rage 스탯 폐기). */
+.st-nrg{color:#ffaa00;}.st-luk{color:#ffdd22;}.st-eva{color:#66ddff;}
+.card-ability{text-align:center;font-size:.55rem;color:#bbb;background:rgba(0,0,0,.4);padding:3px 5px;border-radius:3px;margin-top:3px;border:1px solid rgba(255,255,255,.05);font-style:italic;}
+.card-skill-icons{position:absolute;top:6px;left:34px;display:flex;gap:1px;z-index:2;}
+.deck-mini{width:56px;height:72px;border-radius:5px;padding:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;font-size:.5rem;position:relative;cursor:pointer;transition:all .2s;}
+.deck-mini:hover{transform:scale(1.1);}
+.deck-mini.bronze{border:1px solid var(--curr-gold-dark);background:linear-gradient(180deg,#1a1508,var(--rar-bronze-deep));}
+.deck-mini.silver{border:1px solid var(--rar-silver-mid);background:linear-gradient(180deg,var(--bg-3),var(--rar-silver-deep));}
+.deck-mini.gold{border:1px solid var(--curr-gold-mid);background:linear-gradient(180deg,#2a1e00,var(--rar-gold-deep));box-shadow:0 0 4px rgba(218,165,32,.2);}
+.deck-mini.legendary{border:1px solid var(--el-dark);background:linear-gradient(180deg,#1e0a2e,var(--rar-legendary-deep));box-shadow:0 0 4px rgba(163,53,238,.2);}
+.deck-mini.divine{border:2px solid var(--curr-gold-pale);background:linear-gradient(180deg,var(--warn-bg),var(--bg-magic));box-shadow:0 0 6px rgba(230,204,128,.3);}
+.deck-mini .dm-icon{font-size:1.3rem;}
+.deck-mini .dm-name{font-size:.35rem;color:var(--text-1);max-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.deck-mini .dm-equips{position:absolute;top:0;left:1px;display:flex;gap:1px;}
+.deck-mini .dm-equips span{font-size:.4rem;}
+.deck-mini .dm-lvl{position:absolute;top:0;right:2px;font-size:.4rem;color:var(--curr-gold);}
+.equip-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:200;justify-content:center;align-items:center;}
+.equip-modal.active{display:flex;}
+.equip-modal-box{background:var(--bg-2);border:1px solid var(--curr-gold);border-radius:12px;padding:20px;max-width:600px;width:90%;text-align:center;max-height:80%;overflow-y:auto;}
+.equip-modal-box h3{color:var(--curr-gold);margin-bottom:10px;}
+.equip-targets{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:var(--z-modal,200);justify-content:center;align-items:center;}
+.modal-overlay.active{display:flex;}
+.modal-box{background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;padding:25px 30px;text-align:center;min-width:280px;}
+.modal-box h3{color:var(--curr-gold);margin-bottom:12px;}.modal-box p{color:var(--text-2);margin-bottom:16px;font-size:.9rem;}
+.modal-buttons{display:flex;gap:10px;justify-content:center;}
+/* 2026-04-27: 호버 펼침 폐기 — 톱니 단일 버튼만. 클릭 시 설정 모달이 열리고 거기서 볼륨 조절.
+   이전엔 호버 시 width:240px 로 펼쳐지고 슬라이더 노출. 사용자 피드백: 호버 펼침이 거슬림 +
+   설정창에 통합하는 게 일관됨. 볼륨/음소거/풀스크린 컨트롤은 #settings-modal 의 .set-vol-row + .sp-fs 로 이동. */
+.sound-panel{
+  position:fixed;top:8px;right:8px;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(15,12,8,.88);
+  border:1px solid var(--curr-gold-dark);
+  border-radius:22px;
+  height:44px;width:44px;padding:0;
+  transition:border-color .2s, box-shadow .2s;
+  box-shadow:0 2px 8px rgba(0,0,0,.6);
+}
+.sound-panel:hover{
+  border-color:var(--curr-gold);
+  box-shadow:0 4px 14px rgba(0,0,0,.7),0 0 20px rgba(255,215,0,.2);
+}
+.sound-panel .sp-settings{
+  display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;
+  font-size:1.2rem;
+  cursor:pointer;
+}
+
+/* 설정 모달 내부 볼륨 슬라이더 행 (2026-04-27 신규) */
+.set-vol-row{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 8px;margin:6px 0 8px;
+  background:rgba(20,14,8,.5);
+  border:1px solid var(--curr-gold-dark);
+  border-radius:6px;
+}
+.set-vol-row .sp-btn{cursor:pointer;font-size:1.2rem;color:var(--amber-pale);transition:color .2s;flex-shrink:0;line-height:1;}
+.set-vol-row .sp-btn:hover{color:var(--curr-gold);}
+.set-vol-row input[type=range]{flex:1;height:4px;-webkit-appearance:none;appearance:none;background:var(--gray-7);border-radius:2px;outline:none;cursor:pointer;}
+.set-vol-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--curr-gold);cursor:pointer;}
+.set-vol-row .sp-vol{font-size:.78rem;color:var(--curr-gold-pale);width:30px;text-align:center;flex-shrink:0;font-weight:600;}
+
+/* ===================================================================
+   NPC Dialog Overlay (2026-04-21) — 건물 첫 방문 시 일러스트 + 대화
+   구조: 전체 화면 어둡게 + 좌측 하프바디 일러스트 + 우측 대사창 + footer 버튼
+   display:none 기본, .active 클래스로 활성화.
+   =================================================================== */
+.npc-dialog-overlay{
+  position:absolute;inset:0;width:100%;height:100%;
+  display:none;
+  background:rgba(0,0,0,.72);
+  z-index:400;
+  align-items:flex-end;
+  justify-content:flex-start;
+  pointer-events:auto;
+}
+body.game-mode .npc-dialog-overlay.active{display:flex;}
+.npc-dialog-art{
+  position:absolute;bottom:0;left:60px;
+  width:500px;height:100%;max-height:720px;
+  object-fit:contain;object-position:bottom center;
+  pointer-events:none;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.6));
+  /* 2026-04-24: height 800→100% — 1280×720 뷰포트에서 상단 80px 잘리던 문제 해결.
+     object-fit:contain + object-position:bottom center 로 이미지 aspect 유지. */
+}
+.npc-dialog-art.hidden{display:none;}
+/* 2026-04-24: art 이미지 부재 fallback — 큰 emoji placeholder. art .hidden 시에만 표시.
+   temple/inn 같이 NPC PNG 미공급 케이스에서 검은 화면 대신 NPC 정체성을 emoji 로 노출. */
+.npc-dialog-fallback{
+  position:absolute; bottom:0; left:60px;
+  width:500px; height:100%; max-height:720px;
+  display:none;
+  align-items:flex-end; justify-content:center;
+  padding-bottom:80px; box-sizing:border-box;
+  font-size:240px; line-height:1;
+  pointer-events:none;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.6));
+  user-select:none;
+}
+/* DOM 순서가 art → box → fallback (insertAdjacentElement 가 box 앞에 삽입되지 않음) 이므로
+   인접(+) 대신 일반(~) sibling 셀렉터로 매칭. */
+.npc-dialog-art.hidden ~ .npc-dialog-fallback,
+.npc-dialog-fallback.show{ display:flex; }
+.npc-dialog-box{
+  position:relative;
+  margin:0 40px 40px auto;
+  width:620px;min-height:180px;
+  background:linear-gradient(180deg,rgba(30,22,14,.96),rgba(18,12,6,.94));
+  border:2px solid var(--border-1,#6e4a2a);
+  border-radius:8px;
+  padding:22px 26px 18px;
+  box-shadow:0 14px 36px rgba(0,0,0,.7),inset 0 0 0 1px rgba(212,168,74,.15);
+  z-index:2;
+}
+.npc-dialog-name{
+  font:900 18px/1 var(--font-title,'Cinzel Decorative'),'Noto Serif KR',serif;
+  color:var(--curr-gold);letter-spacing:.04em;
+  margin-bottom:12px;padding-bottom:10px;
+  border-bottom:1px solid rgba(212,168,74,.3);
+}
+.npc-dialog-text{
+  font:400 15px/1.7 'Noto Serif KR',serif;
+  color:var(--amber-pale,#f1e4c3);min-height:52px;
+  margin-bottom:14px;
+}
+/* 2026-04-24 재설계: 시퀀스 [다음/건너뛰기] (.npc-dialog-foot) 폐기. 선택지 버튼 그리드로. */
+.npc-dialog-choices{
+  display:flex; flex-direction:column; gap:8px;
+}
+.npc-choice-btn{
+  width:100%; text-align:left; padding:10px 16px;
+  font:600 14px/1.4 'Noto Serif KR',serif;
+  letter-spacing:.02em;
+  position:relative;
+  background:linear-gradient(180deg,rgba(60,42,22,.85),rgba(40,28,14,.92));
+  color:var(--amber-pale,#f1e4c3);
+  border:1px solid rgba(212,168,74,.4);
+  border-radius:6px;
+  cursor:pointer;
+  transition:background .15s, border-color .15s, transform .1s;
+}
+.npc-choice-btn:hover{
+  background:linear-gradient(180deg,rgba(80,56,30,.92),rgba(50,36,18,.95));
+  border-color:var(--curr-gold);
+  color:var(--curr-gold);
+}
+.npc-choice-btn:active{ transform:translateY(1px); }
+.npc-choice-back{
+  margin-top:4px;
+  background:linear-gradient(180deg,rgba(50,30,30,.85),rgba(30,18,18,.92));
+  border-color:rgba(160,80,80,.5);
+}
+.npc-choice-back:hover{
+  background:linear-gradient(180deg,rgba(70,42,42,.92),rgba(50,30,30,.95));
+  border-color:#ff8a8a;
+  color:#ffd0d0;
+}
+.npc-choice-soon{
+  font-size:.78em; color:rgba(255,200,80,.6); margin-left:6px;
+  font-weight:400;
+}
+/* 2026-04-24: 원형 클립(56×56) → 세로 반신 포트레이트 전환.
+   원본 이미지 500×750 (~500×799, ~500×624) 을 object-position:50% 12% 로 얼굴부터 어깨/가슴까지 노출.
+   ⚠️ 기존 4화면 Type A 래퍼 좌표 토큰이 바 ~99px 높이를 전제로 쌓여있어,
+      반신 "큰 720×400" 까지 확장하면 하위 컨텐츠 겹침. 먼저 컴팩트 80×110 + min-height 130 으로 안전 진입. */
+.npc-bar{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 15px;
+  background:linear-gradient(180deg,rgba(30,25,15,.8),rgba(15,12,8,.9));
+  border:1px solid rgba(139,105,20,.3); border-radius:10px;
+  margin:0 auto 8px; max-width:560px; width:92%;
+  min-height:130px;
+}
+.npc-icon{flex-shrink:0; display:flex; align-items:center; font-size:2.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));}
+.npc-portrait{
+  width:80px; height:110px;
+  border-radius:8px;
+  border:2px solid #8b6914;
+  object-fit:cover;
+  object-position:50% 12%;   /* 얼굴 상단 기준, 어깨까지 안정적 노출 */
+  display:block;
+  background:#0a0a0a;
+  box-shadow:0 3px 8px rgba(0,0,0,.6);
+}
+.npc-emoji{font-size:3rem; display:flex; align-items:center; justify-content:center; width:80px; height:110px;}
+.npc-speech{flex:1; display:flex; flex-direction:column; justify-content:center;}
+.npc-name{font-size:.88rem; color:var(--curr-gold); font-weight:bold; margin-bottom:4px;}
+.npc-text{font-size:.82rem; color:var(--amber-pale); line-height:1.45; font-style:italic;}
+.timer-bar{width:100%;height:6px;background:var(--gray-8);border-radius:3px;margin:8px 0;overflow:hidden;}
+.timer-bar-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--el-lightning),var(--danger));border-radius:3px;transition:width .5s linear;}
+.timer-text{font-size:.75rem;color:var(--warn);text-align:center;}
+/* P0-1 (2026-04-15): fullscreen dim 제거 + 우상단 힌트 박스로 이동.
+   리워드/전투 중에는 NPC 다이얼로그처럼 구석에 떠 있고 중앙 콘텐츠(배너·전리품 상자·확인 버튼)를 가리지 않음.
+   pointer-events: none 으로 클릭 패스스루, .tut-box 만 pointer-events: auto */
+.tut-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;z-index:300;display:flex;justify-content:flex-end;align-items:flex-end;padding:16px;pointer-events:none;}
+.tut-box{pointer-events:auto;background:linear-gradient(180deg,var(--bg-magic),var(--bg-0));border:2px solid var(--curr-gold-dark);border-radius:10px;padding:12px 18px;max-width:320px;width:88%;text-align:left;box-shadow:0 8px 40px rgba(0,0,0,.92),0 0 24px rgba(139,105,20,.45);backdrop-filter:blur(2px);}
+.tut-box .tut-text{color:var(--amber-pale);font-size:.9rem;line-height:1.7;margin-bottom:14px;}
+.tut-box .tut-speaker{color:var(--curr-gold);font-size:.8rem;margin-bottom:8px;font-weight:bold;}
+.tut-highlight{animation:tutPulse 1s infinite alternate;position:relative;z-index:301;}
+
+/* 2026-04-27: 토스트 — 자원 부족·짧은 안내. 화면 하단 중앙에 누적. */
+#toast-stage{position:fixed;left:50%;bottom:14%;transform:translateX(-50%);display:flex;flex-direction:column-reverse;gap:6px;align-items:center;z-index:400;pointer-events:none;}
+.ui-toast{background:linear-gradient(180deg,rgba(20,12,8,.95),rgba(8,5,3,.95));border:1px solid var(--curr-gold-dark);border-radius:6px;padding:8px 16px;color:var(--amber-pale);font-size:.85rem;font-weight:600;letter-spacing:.02em;box-shadow:0 4px 18px rgba(0,0,0,.7),0 0 12px rgba(139,105,20,.35);text-shadow:0 1px 2px rgba(0,0,0,.8);animation:toastIn .18s ease-out;max-width:80vw;text-align:center;}
+.ui-toast.toast-warn{border-color:#c66a3a;color:#ffd9a8;box-shadow:0 4px 18px rgba(0,0,0,.7),0 0 12px rgba(198,106,58,.5);}
+.ui-toast.toast-error{border-color:#c43a3a;color:#ffb0b0;box-shadow:0 4px 18px rgba(0,0,0,.7),0 0 12px rgba(196,58,58,.55);}
+.ui-toast.fade-out{animation:toastOut .35s ease-in forwards;}
+@keyframes toastIn{0%{opacity:0;transform:translateY(8px) scale(.94);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes toastOut{0%{opacity:1;}100%{opacity:0;transform:translateY(-6px);}}
+
+/* 2026-05-14 사용자 컨펌 — 프로필 프레임 overlay (silver 호박금 톤).
+   design-confirmed: 2026-05-14 사유: 시안 mockup/profile_two_modals/ 컨펌 + "원본 적용".
+   parent 에 .has-profile-frame.frame-silver 부여하면 가상 element 로 frame PNG overlay. */
+.profile-frame-overlay{
+  position:absolute; inset:-8px;
+  /* design-confirmed: 2026-05-27 사유: v2 자산 폴더 마이그레이션 stale path fix (디자인 동일, profiles→ui/frames) */
+  background-image:url('../img/ui/frames/profile_frame_silver.png');
+  background-size:contain; background-repeat:no-repeat; background-position:center;
+  pointer-events:none;
+  filter: sepia(.4) saturate(1.4) brightness(.65) hue-rotate(-8deg);
+}
+/* 팝오버 (얼굴 클릭 → 2 메뉴) */
+.profile-popover{
+  position:absolute;
+  background:rgba(15,12,8,.98);
+  border:2px solid #c89030;
+  border-radius:6px;
+  padding:6px 0;
+  min-width:170px;
+  box-shadow:0 8px 24px rgba(0,0,0,.8), 0 0 16px rgba(243,214,118,.3);
+  z-index:300;
+  display:none;
+}
+.profile-popover.is-open{ display:block; }
+.profile-popover::before{
+  /* 2026-05-14 사용자 컨펌 — 팝오버 좌측에 화살표 (왼쪽 가리킴, 배지/얼굴 영역 방향) */
+  content:''; position:absolute; left:-8px; top:24px;
+  width:0; height:0;
+  border-top:8px solid transparent;
+  border-bottom:8px solid transparent;
+  border-right:8px solid #c89030;
+}
+.profile-popover .pp-item{
+  padding:10px 16px;
+  font:700 13px 'Noto Sans KR',sans-serif;
+  color:#e8d5a3;
+  cursor:pointer;
+  transition:background .15s, color .15s;
+}
+.profile-popover .pp-item:hover{ background:rgba(243,214,118,.1); color:#f3d676; }

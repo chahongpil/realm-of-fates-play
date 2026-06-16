@@ -1,0 +1,392 @@
+/* ============================================================
+   카드 시스템 CSS — 고딕 판타지 프레임
+   원칙: 컬렉션=풀사이즈, 전장=미니타일, 손패=중간
+   저작권 안전: 하스스톤과 다른 고딕 석재 디자인
+   ============================================================ */
+
+/* ── 1. 풀사이즈 카드 (컬렉션/덱뷰/선술집/뽑기) ── */
+.card {
+  width: 280px;
+  height: 490px;
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: all .3s;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,.8));
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-5px) scale(1.03);
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,.9));
+}
+.card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* design-confirmed: 2026-05-27 사유: dead asset 정리 (card_frame.png 미공급 + .card-inner selector JS/HTML 미사용, 2026-04-20 폐기 명시 line 277~280 와 일치) */
+/* 옛 frame PNG 오버레이 (.card-inner::after) — 폐기 */
+
+/* 일러스트 — 카드 전체를 꽉 채움 */
+.card-portrait {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.card-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: var(--text-4);
+}
+.card-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 이름 — 프레임 상단 배너 위치 */
+.card-name {
+  position: absolute;
+  top: 6px;
+  left: 20%;
+  right: 20%;
+  z-index: 6;
+  text-align: center;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--amber-bright);
+  text-shadow: 0 1px 4px rgba(0,0,0,.9);
+  font-family: var(--font-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 좌측 스탯 박스 (ATK/DEF/SPD) — 프레임 빨/파/초 위치 */
+.card-stats {
+  position: absolute;
+  left: 4px;
+  top: 36%;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card-stats .st {
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: .65rem;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0,0,0,.8);
+  background: rgba(0,0,0,.3);
+}
+.st-atk { color: #ff4422; }
+.st-hp { color: #22cc44; }
+.st-def { color: var(--el-water); }
+.st-spd { color: #22aaff; }
+
+/* HP — 프레임 우상단 하트 */
+.card-hp-badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 6;
+  color: var(--danger);
+  font-size: .8rem;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(255,68,68,.5), 0 1px 3px rgba(0,0,0,.9);
+}
+
+/* NRG — 프레임 우하단 다이아몬드 */
+.card-nrg-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 10px;
+  z-index: 6;
+  color: var(--el-water);
+  font-size: .7rem;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(68,136,255,.5), 0 1px 3px rgba(0,0,0,.9);
+}
+
+/* 능력 텍스트 — 프레임 하단 박스 */
+.card-ability {
+  position: absolute;
+  bottom: 35px;
+  left: 12%;
+  right: 12%;
+  z-index: 6;
+  text-align: center;
+  font-size: .5rem;
+  color: #bbb;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0,0,0,.8);
+}
+
+/* 타입/원소 태그 */
+.card-type {
+  position: absolute;
+  top: 26px;
+  left: 20%;
+  right: 20%;
+  z-index: 6;
+  text-align: center;
+  font-size: .45rem;
+  color: #8899aa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 레벨 코스트 (좌상단) */
+.card-cost {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--el-water), #1a3366);
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: .85rem;
+  border: 2px solid #6699dd;
+  z-index: 6;
+  box-shadow: 0 0 6px rgba(68,136,255,.4);
+}
+
+/* 등급 태그 */
+.card-rarity-tag {
+  position: absolute;
+  top: 30px;
+  right: 6px;
+  font-size: .5rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: bold;
+  z-index: 6;
+}
+
+/* 스킬 아이콘 */
+.card-skill-icons {
+  position: absolute;
+  top: 6px;
+  left: 32px;
+  display: flex;
+  gap: 1px;
+  z-index: 6;
+}
+
+/* 등급별 카드 테두리 (프레임과 별개) */
+.card.bronze .card-inner { border: 2px solid var(--amber-plate); }
+.card.silver .card-inner { border: 2px solid #6a7a8a; }
+.card.gold .card-inner { border: 3px solid #c8a820; box-shadow: 0 0 8px rgba(255,215,0,.15); }
+.card.legendary .card-inner { border: 3px solid #8a2be2; box-shadow: 0 0 10px rgba(138,43,226,.2); }
+.card.divine .card-inner { border: 3px solid #cc3333; box-shadow: 0 0 12px rgba(255,50,50,.15); animation: divineGlow 2s infinite alternate; }
+
+/* 등급 태그 색상 */
+.card.bronze .card-rarity-tag { background: linear-gradient(180deg,var(--el-earth),var(--amber-stop-3)); color: var(--amber-mid); border: 1px solid #aa8830; }
+.card.silver .card-rarity-tag { background: linear-gradient(180deg,var(--gray-4),var(--gray-6)); color: #ddd; border: 1px solid var(--gray-3); }
+.card.gold .card-rarity-tag { background: linear-gradient(180deg,var(--curr-gold-mid),var(--el-earth)); color: var(--text-0); border: 1px solid var(--curr-gold); }
+.card.legendary .card-rarity-tag { background: linear-gradient(180deg,var(--el-dark),#6a1faa); color: #e6b8ff; border: 1px solid #bb55ff; }
+.card.divine .card-rarity-tag { background: linear-gradient(180deg,var(--curr-gold-pale),#aa8833); color: var(--text-0); border: 1px solid #ffe066; }
+
+/* XP 바 */
+.card-xp { position: absolute; bottom: 4px; left: 10%; right: 10%; z-index: 6; }
+
+/* ── 2. 미니 카드 (전장/편성 슬롯) ── */
+/* 전장 카드는 .td-slot .td-card 로 렌더링됨 — 40_battle.css에서 관리 */
+/* 편성 슬롯은 .form-slot 으로 — 41_formation.css에서 관리 */
+/* 미니 덱 카드는 .deck-mini 로 — 아래에서 관리 */
+
+.deck-mini {
+  width: 56px;
+  height: 72px;
+  border-radius: 5px;
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: .5rem;
+  position: relative;
+  cursor: pointer;
+  transition: all .2s;
+}
+.deck-mini:hover { transform: scale(1.1); }
+.deck-mini.bronze { border: 1px solid var(--el-earth); background: linear-gradient(180deg,#1a1508,var(--rar-bronze-deep)); }
+.deck-mini.silver { border: 1px solid var(--rar-silver-mid); background: linear-gradient(180deg,var(--bg-3),var(--rar-silver-deep)); }
+.deck-mini.gold { border: 1px solid var(--curr-gold-mid); background: linear-gradient(180deg,#2a1e00,var(--rar-gold-deep)); box-shadow: 0 0 4px rgba(218,165,32,.2); }
+.deck-mini.legendary { border: 1px solid var(--el-dark); background: linear-gradient(180deg,#1e0a2e,var(--rar-legendary-deep)); box-shadow: 0 0 4px rgba(163,53,238,.2); }
+.deck-mini.divine { border: 2px solid var(--curr-gold-pale); background: linear-gradient(180deg,var(--warn-bg),var(--bg-magic)); box-shadow: 0 0 6px rgba(230,204,128,.3); }
+.deck-mini .dm-icon { font-size: 1.3rem; }
+.deck-mini .dm-icon img { width: 40px; height: 40px; border-radius: 3px; object-fit: cover; }
+.deck-mini .dm-name { font-size: .35rem; color: var(--gray-1); max-width: 42px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deck-mini .dm-equips { position: absolute; top: 0; left: 1px; display: flex; gap: 1px; }
+.deck-mini .dm-equips span { font-size: .4rem; }
+.deck-mini .dm-lvl { position: absolute; top: 0; right: 2px; font-size: .4rem; color: var(--curr-gold); }
+
+/* ── 3. 반응형 (모바일) ── */
+@media(max-width: 700px) {
+  .card { width: 42vw; height: 73.5vw; } /* 4:7 비율 유지 */
+  .card-name { font-size: .7rem; }
+  .card-stats .st { font-size: .55rem; padding: 2px 4px; }
+  .card-ability { font-size: .45rem; }
+}
+
+/* ── 4. PC 대형 화면 ── */
+@media(min-width: 1024px) {
+  .card { width: 300px; height: 525px; }
+  .card-name { font-size: 1rem; }
+  .card-stats .st { font-size: .75rem; }
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* ══ CARD V2 — 다크 석재 고딕 아치 프레임 (2026-04-12) ══ */
+/* ═══════════════════════════════════════════════════════ */
+.card-v2{position:relative;width:320px;aspect-ratio:1024/1536;user-select:none;cursor:pointer;transition:transform .2s,filter .2s;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));flex-shrink:0;}
+.card-v2:hover{transform:translateY(-6px) scale(1.03);filter:drop-shadow(0 10px 20px rgba(0,0,0,.85));}
+/* ── 일러스트 풀카드 (2026-04-20) ──
+   대표님이 프레임+유닛 통합 PNG 를 제공. 시스템은 잘림 없이 풀카드 표시.
+   contain 으로 종횡비 유지, 빈 공간은 검정 배경. */
+.card-v2 .cv-illust{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#0a0a0a;}
+/* ── 시스템 외곽 프레임 PNG 제거 (2026-04-20) ──
+   기존 frame_*_tank.png 25장 + card_frame.png 폐기 (trash/img_frames_2026-04-20/).
+   일러스트 자체에 프레임이 통합돼 있어 이중 프레임 해체. */
+.card-v2 .cv-frame{display:none;}
+/* ── 카드 슬롯 — 좌표는 11_frame_coords.css의 --gem-*-x/y 변수 사용 (PNG에서 자동 추출) ── */
+.card-v2 .cv-slot{
+  position:absolute;
+  font-weight:800;
+  text-shadow:0 1px 3px var(--gray-9),0 0 6px var(--gray-9);
+  color:var(--text-0);
+  font-family:var(--font-title);
+  pointer-events:none;
+  z-index:3;
+  /* 중심점 정렬: 변수의 x/y는 보석 중심, translate(-50%,-50%)로 박스 중심 맞춤 */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform:translate(-50%,-50%);
+  width:13%;height:6.5%;
+}
+.card-v2 .cv-hp { left:var(--gem-hp-x);  top:var(--gem-hp-y);  font-size:1.4rem; }
+.card-v2 .cv-nrg{ left:var(--gem-nrg-x); top:var(--gem-nrg-y); font-size:1.15rem; }
+.card-v2 .cv-atk{ left:var(--gem-atk-x); top:var(--gem-atk-y); font-size:1.1rem; width:9%; }
+.card-v2 .cv-def{ left:var(--gem-def-x); top:var(--gem-def-y); font-size:1.1rem; width:9%; }
+.card-v2 .cv-spd{ left:var(--gem-spd-x); top:var(--gem-spd-y); font-size:1.1rem; width:9%; }
+.card-v2 .cv-luck{ left:var(--gem-luck-x); top:var(--gem-luck-y); font-size:1.1rem; width:9%; color:#ffe066; text-shadow:0 1px 3px var(--gray-9),0 0 6px rgba(255,224,102,.5); }
+/* ── 영웅 선택 모드 (2026-04-24) — "카드 고르기" 단계에서는 전투 수치 숨김.
+   HP/NRG 는 바 같은 인상이라 특히 혼잡. shield/status/상태 modifier 도 전투 전용. */
+.card-v2.cv-mode-select .cv-hp,
+.card-v2.cv-mode-select .cv-nrg,
+.card-v2.cv-mode-select .cv-shield,
+.card-v2.cv-mode-select .cv-status,
+.card-v2.cv-mode-select .cv-atk-mod,
+.card-v2.cv-mode-select .cv-def-mod,
+.card-v2.cv-mode-select .cv-spd-mod{ display:none !important; }
+/* ── 박스 타입 슬롯 공통 — 좌상단 기준, 변환 없음 (숫자 슬롯의 translate 와 다름) ── */
+.card-v2 .cv-box{
+  position:absolute;
+  transform:none;
+  pointer-events:none;
+  box-sizing:border-box;
+}
+/* name/tags/desc 좌표는 11_frame_coords.css 의 --box-*-x/y/w/h 변수 사용 (드래그 편집기로 설정) */
+.card-v2 .cv-name{left:var(--box-name-x);top:var(--box-name-y);width:var(--box-name-w);height:var(--box-name-h);text-align:center;font-size:.74rem;letter-spacing:0;color:var(--rar-color,#fff4c8);font-weight:800;text-shadow:0 1px 2px var(--gray-9),0 0 5px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1;padding:0 4px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.25));border-radius:3px;position:absolute;z-index:3;pointer-events:none;}
+/* ── 등급별 이름 색 (03-terminology.md 새 팔레트, 2026-04-19) ── */
+.card-v2.bronze    { --rar-color: var(--rar-bronze-glow);    }
+.card-v2.silver    { --rar-color: var(--rar-silver-glow);    }
+.card-v2.gold      { --rar-color: var(--rar-gold-glow);      }
+.card-v2.legendary { --rar-color: var(--rar-legendary-glow); }
+.card-v2.divine    { --rar-color: var(--rar-divine-glow);    }
+.card-v2 .cv-tags{left:var(--box-tags-x);top:var(--box-tags-y);width:var(--box-tags-w);height:var(--box-tags-h);display:flex;align-items:center;justify-content:center;gap:4px;font-size:.78rem;color:var(--amber-bright);text-shadow:0 1px 2px var(--gray-9),0 0 4px rgba(0,0,0,.9);line-height:1;pointer-events:none;z-index:3;letter-spacing:1px;position:absolute;}
+.card-v2 .cv-desc{left:var(--box-desc-x);top:var(--box-desc-y);width:var(--box-desc-w);height:var(--box-desc-h);text-align:center;font-size:.72rem;line-height:1.3;color:#f0e8d0;text-shadow:0 1px 2px var(--gray-9),0 0 4px rgba(0,0,0,.9);font-family:var(--font-body);font-weight:500;display:flex;align-items:center;justify-content:center;padding:0 6px;pointer-events:none;z-index:3;position:absolute;}
+/* ── 신(divine) 등급 — 조용한 흰색 글로우 + 간헐 샤인 스윕 (2026-04-19, 05-design-direction.md 스펙) ──
+   원칙: "평상시 조용, 특정 순간만 샤인" — 전투 중 시선 과점유 방지.
+   상시 펄스/무지개/파티클 금지. 원소별 안쪽 실선은 프레임 PNG 가 이미 반영 중이라 CSS 생략. */
+.card-v2.divine{
+  filter:
+    drop-shadow(0 0 6px rgba(255,255,255,.85))
+    drop-shadow(0 0 14px rgba(255,255,255,.45))
+    drop-shadow(0 6px 12px rgba(0,0,0,.6));
+}
+.card-v2.divine::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);
+  background-size:220% 100%;
+  background-position:-220% 0;
+  animation:divineShine 7s ease-in-out infinite;
+  pointer-events:none;
+  z-index:4;
+  mix-blend-mode:screen;
+  border-radius:inherit;
+}
+/* 여러 신 카드 동시 노출 시 phase 차등 — 동기화 방지 */
+.card-v2.divine:nth-of-type(2n)::after{animation-duration:8s;animation-delay:-2.5s;}
+.card-v2.divine:nth-of-type(3n)::after{animation-duration:9s;animation-delay:-5s;}
+.card-v2.divine:nth-of-type(5n)::after{animation-duration:7.5s;animation-delay:-3.5s;}
+@keyframes divineShine{
+  0%, 85% { background-position:-220% 0; opacity:0; }
+  90%     { opacity:.35; }
+  95%     { background-position:0% 0; opacity:.35; }
+  100%    { background-position:220% 0; opacity:0; }
+}
+
+/* 선택 상태 — 박스섀도 사각 테두리 ❌ / drop-shadow 황금 오라 ✅ (2026-04-12 A안) */
+.card-v2.selected{
+  transform:translateY(-8px);
+  filter:drop-shadow(0 0 18px var(--curr-gold)) drop-shadow(0 0 32px rgba(255,215,0,.5)) drop-shadow(0 10px 18px rgba(0,0,0,.8));
+  animation:selectedPulse 1.6s ease-in-out infinite;
+}
+.card-v2.selected:hover{transform:translateY(-12px) scale(1.03);}
+@keyframes selectedPulse{
+  0%,100%{filter:drop-shadow(0 0 14px var(--curr-gold)) drop-shadow(0 0 28px rgba(255,215,0,.4)) drop-shadow(0 10px 18px rgba(0,0,0,.8));}
+  50%    {filter:drop-shadow(0 0 22px var(--curr-gold-glow)) drop-shadow(0 0 40px rgba(255,215,0,.6)) drop-shadow(0 10px 18px rgba(0,0,0,.8));}
+}
+
+/* Per-rarity 좌표는 전부 11_frame_coords.css에 자동 생성됨 — 감으로 찍지 말 것 */
+
+/* 유물 발동/획득 피드백 — 2026-04-12 · 토큰 참조 */
+@keyframes relic-burst{
+  0%  {box-shadow:0 0 0 0 var(--glow),0 0 0 0 var(--glow) inset;transform:scale(1);}
+  30% {box-shadow:0 0 36px 12px var(--glow),0 0 24px 4px var(--glow) inset;transform:scale(1.04);}
+  100%{box-shadow:0 0 0 0 transparent,0 0 0 0 transparent inset;transform:scale(1);}
+}
+.relic-burst{animation:relic-burst var(--dur-slow) var(--ease-out);border-radius:var(--r-lg);--glow:var(--rar-gold);}
+.relic-burst.bronze   {--glow:var(--rar-bronze);}
+.relic-burst.silver   {--glow:var(--rar-silver);}
+.relic-burst.gold     {--glow:var(--rar-gold);}
+.relic-burst.legendary{--glow:var(--rar-legendary);}
+.relic-burst.divine   {--glow:var(--rar-divine);}
+
+/* 지속 은은한 glow — 획득 직후 수 초간 */
+@keyframes relic-idle-pulse{
+  0%,100%{box-shadow:0 0 6px 1px var(--glow);}
+  50%    {box-shadow:0 0 14px 3px var(--glow);}
+}
+.relic-idle{animation:relic-idle-pulse var(--dur-epic) var(--ease-in-out) infinite;border-radius:var(--r-lg);--glow:var(--rar-gold);}
+.relic-idle.bronze   {--glow:var(--rar-bronze);}
+.relic-idle.silver   {--glow:var(--rar-silver);}
+.relic-idle.gold     {--glow:var(--rar-gold);}
+.relic-idle.legendary{--glow:var(--rar-legendary);}
+.relic-idle.divine   {--glow:var(--rar-divine);}

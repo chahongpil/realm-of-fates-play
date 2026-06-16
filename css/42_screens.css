@@ -1,0 +1,2267 @@
+/* Non-battle screens: title, auth IDs, char-select, town, upgrade, choice, pick, reward, gameover, upgrade effects, tavern, loot, matchmaking, prologue + responsive @media queries. */
+
+/* 2026-04-21: 타이틀 화면 배경 — angel/demon 랜덤 분기 (JS 에서 클래스 부여)
+   #title-screen 은 default 로 angel, .bg-demon 클래스 시 demon.
+   body:has() 는 game-root 외곽 pillarbox 영역까지 동일 이미지 연속.
+   2026-05-02 fix: angel 은 video 가 풀화면 cover 하므로 body bg jpg 제거 — video 와 jpg 의
+     cover 크롭 비율 차이로 정중앙에 좌우 톤 분할 경계가 보였음. demon 은 jpg 단독 유지. */
+body.game-mode:has(#title-screen.active){
+  background: #000;
+}
+body.game-mode:has(#title-screen.active.bg-demon){
+  background:url('../img/backgrounds/bg_title_demon.jpg') center/cover no-repeat, #000;
+}
+/* 2026-04-24: 대표님 지시 — 마을 바깥(body 영역)은 검정 유지. 이미지 확장 제거. */
+/* 2026-04-27: angel 분기는 영상 노출, demon 분기만 png. radial-gradient 도 영상 가리므로 제거. */
+#title-screen{justify-content:center;background:transparent;position:relative;overflow:hidden;}
+#title-screen.bg-demon{background:url('../img/backgrounds/bg_title_demon.jpg') center/cover no-repeat,radial-gradient(ellipse at center,#251525 0%,#0a0510 60%,#080408 100%);}
+/* 2026-04-27: 타이틀 배경 영상 — game-root 외부 (body 직계) 로 이동되어 letterbox 영역까지 cover.
+   99_bootstrap.js viewportBoot 가 wrap 직후 video 를 body 로 끌어올림. demon 분기에서는 png 노출. */
+body.game-mode > .title-bg-video{
+  position:fixed;
+  top:0;left:0;
+  width:100vw;height:100vh;
+  object-fit:cover;
+  pointer-events:none;
+  background:#000;
+  z-index:0;
+  display:none;
+}
+body.game-mode:has(.game-root > #title-screen.active:not(.bg-demon)) > .title-bg-video{display:block;}
+body.game-mode > .game-root{position:relative;z-index:1;}/* video 위에 떠야 */
+/* 타이틀 angel 활성 시 game-root 자체도 투명 — 정중앙 영역까지 영상 노출. demon 분기는 dark 유지. */
+body.game-mode:has(.game-root > #title-screen.active:not(.bg-demon)) > .game-root{background:transparent !important;}
+/* 2026-04-27: ::before 어둠 그라디언트 제거 — game-root 영역만 어두워져 letterbox 와 brightness 경계선 생기던 문제. 영상 자체로 충분히 어두움.
+   ::after 번개 이펙트 제거 (사용자 결정) — JS 캔버스 bolts 와 함께 폐기. */
+.title-fire{position:absolute;bottom:0;left:0;width:100%;height:30%;background:linear-gradient(0deg,rgba(255,60,0,.08),transparent);pointer-events:none;animation:titleFire 3s infinite alternate;}
+
+/* 2026-05-02: title-fx canvas 가 game-root 안에 있어 ultra-wide letterbox 영역 cover 못함.
+   → fixed + viewport 풀로 강제. video(z:0) 위, game-root(z:1) 아래. */
+body.game-mode #title-fx{
+  position:fixed !important;
+  top:0 !important; left:0 !important;
+  width:100vw !important; height:100vh !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+}
+#title-screen h1{font-size:var(--title-logo-size);color:var(--curr-gold-pale);text-shadow:0 0 40px rgba(230,204,128,.6),0 0 80px rgba(255,215,0,.3),0 3px 6px rgba(0,0,0,.9);margin-bottom:.5rem;letter-spacing:var(--title-logo-spacing);font-family:var(--font-title);font-weight:700;animation:titleGlow 3s infinite alternate;}
+#title-screen .subtitle{color:var(--text-2);font-size:var(--title-subtitle-size);margin-bottom:var(--title-subtitle-mb);}
+.title-buttons{display:flex;gap:var(--title-buttons-gap);flex-wrap:wrap;justify-content:center;}
+#login-screen,#signup-screen,#char-element-screen,#char-hero-screen{justify-content:center;background:radial-gradient(ellipse at center,var(--bg-magic) 0%,var(--bg-0) 70%);}
+.char-select-title{font-size:2rem;color:var(--curr-gold);margin-bottom:10px;animation:titleGlowGold 3s ease-in-out infinite alternate;}
+/* 공용 제목 맥동 glow (2026-04-12 — FATES 레퍼런스) */
+@keyframes titleGlowGold{
+  0%  {text-shadow:0 0 12px rgba(255,215,0,.35),0 2px 4px rgba(0,0,0,.8);}
+  100%{text-shadow:0 0 24px rgba(255,215,0,.65),0 0 40px rgba(255,180,50,.3),0 2px 4px rgba(0,0,0,.8);}
+}
+/* 섹션 제목 전반에 적용 */
+.form-title,
+.upgrade-title,
+.choice-title,
+.reward-title,
+.auth-box h2{animation:titleGlowGold 3s ease-in-out infinite alternate;}
+.char-select-sub{color:var(--text-2);font-size:1rem;margin-bottom:25px;}
+.char-select-grid{display:flex;gap:var(--charselect-gap);flex-wrap:wrap;justify-content:center;padding:var(--charselect-padding);max-width:100%;width:100%;}
+.char-option{width:90%;max-width:350px;border-radius:12px;padding:20px 15px;text-align:center;cursor:pointer;transition:all .3s;border:2px solid var(--border-1);background:rgba(255,255,255,.03);}
+.char-option:hover{border-color:var(--curr-gold);transform:translateY(-4px);}
+.char-option.selected{border-color:var(--curr-gold);background:rgba(255,215,0,.1);box-shadow:0 0 20px rgba(255,215,0,.3);}
+.char-option .co-icon{font-size:3.5rem;margin-bottom:8px;}
+.char-option .co-icon img{width:120px;height:120px;border-radius:10px;object-fit:cover;}
+.char-option .co-name{font-size:1.2rem;font-weight:bold;color:var(--text-0);margin-bottom:5px;}
+.char-option .co-desc{font-size:.8rem;color:var(--text-3);margin-bottom:8px;}
+.char-option .co-stats{font-size:.7rem;display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
+/* 영웅 선택 — CardComponent 이주 (2026-04-12) */
+.char-option-v2{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;padding:var(--charselect-item-pad);border-radius:12px;transition:transform .25s cubic-bezier(.25,.9,.3,1.2),box-shadow .2s,z-index 0s;position:relative;transform-origin:center center;}
+.char-option-v2 .card-v2{cursor:pointer;}
+/* 2026-05-09 — 호버 진동 fix (손패 카드 hover flicker 와 동일 패턴): 자식 pointer-events:none.
+   mouse hit 는 항상 wrap 의 layout box 만. transform 영향 X. mouseenter/leave 진동 0. */
+.char-option-v2 > *{pointer-events:none;}
+/* 2026-05-09 v2 — 6 카드 한 화면 (3×2 grid).
+   width/height 강제 X (내부 atk-icon/hp-icon/cost 절대 px 들이 비율 깨짐).
+   zoom 으로 카드 전체 통째 축소 → 내부 element 모두 동일 비율 유지.
+   240×336 native × zoom 0.696 = 167×234 (가로 167 사용자 결정). */
+/* 2026-05-10 zone 편집기 적용 — 모든 자식 absolute, 좌표는 layout-vars 변수.
+   .screen.active 의 flex column 은 무시되고 변수 좌표대로 배치됨. */
+#char-hero-screen{position:relative;}
+#char-hero-screen .card-v4{
+  zoom: 0.696;
+}
+#char-hero-screen #char-hero-title,
+#char-hero-screen #char-hero-msg,
+#char-hero-screen #char-hero-preview,
+#char-hero-screen #char-hero-grid,
+#char-hero-screen #btn-hero-back,
+#char-hero-screen #btn-confirm-hero{
+  position:absolute !important;
+  margin:0 !important;
+}
+#char-hero-screen #char-hero-title  {left:var(--chr-title-x);  top:var(--chr-title-y);  width:var(--chr-title-w);  height:var(--chr-title-h);}
+#char-hero-screen #char-hero-msg    {left:var(--chr-msg-x);    top:var(--chr-msg-y);    width:var(--chr-msg-w);    height:var(--chr-msg-h);}
+#char-hero-screen #char-hero-preview{left:var(--chr-preview-x);top:var(--chr-preview-y);width:var(--chr-preview-w);height:var(--chr-preview-h);}
+#char-hero-screen #char-hero-grid   {left:var(--chr-grid-x);   top:var(--chr-grid-y);   width:var(--chr-grid-w);   height:var(--chr-grid-h);}
+#char-hero-screen #btn-hero-back    {left:var(--chr-back-x);   top:var(--chr-back-y);   width:var(--chr-back-w);   height:var(--chr-back-h);}
+#char-hero-screen #btn-confirm-hero {left:var(--chr-confirm-x);top:var(--chr-confirm-y);width:var(--chr-confirm-w);height:var(--chr-confirm-h);}
+#char-hero-screen .char-option-v2{padding:0;gap:4px;}
+#char-hero-screen .char-role-path{font-size:.78rem;}
+#char-hero-screen .char-select-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  grid-template-rows:repeat(2, auto);
+  gap:8px 24px;
+  max-width:780px;
+  margin:0 auto;
+  padding:0;
+}
+/* 2026-05-10 — 호버 진동 fix: wrap.transform 자체 X (layout 안 변형). 자식 .card-v4 + .char-role-path 만 transform.
+   transition 도 자식에 부여 (wrap 은 layout 고정). is-hover 는 wrap 에 부여 → z-index 위로. */
+#char-hero-screen .char-option-v2 .card-v4,
+#char-hero-screen .char-option-v2 .char-role-path{
+  transition: transform .25s cubic-bezier(.25,.9,.3,1.2);
+  transform-origin: center center;
+}
+#char-hero-screen .char-option-v2.is-hover{
+  z-index:100;
+}
+#char-hero-screen .char-option-v2.is-hover .card-v4{
+  box-shadow:0 16px 48px rgba(255,215,0,.55),0 0 32px rgba(255,215,0,.35);
+}
+#char-hero-screen .char-option-v2.selected .card-v4{
+  box-shadow:0 8px 20px rgba(255,215,0,.5),0 0 16px rgba(255,215,0,.4);
+}
+
+/* 2026-04-21 P6: 성별 토글 — 역할 선택 화면 상단 */
+#char-hero-screen .gender-toggle{display:flex;gap:10px;justify-content:center;margin:8px 0 12px;}
+#char-hero-screen .gender-toggle .gt-btn{padding:8px 18px;background:rgba(255,255,255,.04);border:2px solid var(--border-1);border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;font-size:.9rem;color:var(--text-2);}
+#char-hero-screen .gender-toggle .gt-btn:hover{border-color:var(--curr-gold);transform:translateY(-1px);}
+#char-hero-screen .gender-toggle .gt-btn.sel{border-color:var(--curr-gold);background:rgba(255,215,0,.12);box-shadow:0 0 12px rgba(255,215,0,.25);color:var(--curr-gold);}
+#char-hero-screen .gender-toggle .gt-ic{font-size:1.4rem;line-height:1;}
+#char-hero-screen .gender-toggle .gt-lbl{font-weight:700;letter-spacing:.08em;}
+/* 성별 토글 시 카드 그리드 fade — 전환 신호 강화 (minor_bugs #3 Option B, 2026-04-26) */
+#char-hero-grid{transition:opacity .18s ease, transform .18s ease;}
+#char-hero-grid.is-switching{opacity:.25;transform:scale(.97);}
+
+/* char-element-screen: 원소 6개를 3×2 그리드 고정 (2026-04-13 지시반영) */
+#char-element-screen .char-select-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  grid-template-rows:repeat(2, auto);
+  gap:24px;
+  max-width:900px;
+  margin:0 auto;
+  padding:0;
+}
+#char-element-screen .char-option{width:auto;max-width:none;padding:16px 12px;}
+#char-element-screen .char-option .co-icon{font-size:2.2rem;margin-bottom:4px;}
+#char-element-screen .char-option .co-name{font-size:1.05rem;margin-bottom:3px;}
+#char-element-screen .char-option .co-desc{font-size:.72rem;margin-bottom:0;}
+.char-option-v2 .char-role-path{font-family:var(--font-title);font-size:.95rem;color:var(--amber-bright);text-align:center;letter-spacing:1px;text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.7);max-width:260px;line-height:1.4;}
+.char-option-v2 .char-role-icon{display:inline-block;margin-right:6px;font-size:1.1rem;}
+.char-option-v2.selected .char-role-path{color:var(--curr-gold);text-shadow:0 0 12px rgba(255,215,0,.6),0 1px 2px rgba(0,0,0,.9);}
+.char-id-preview{margin:12px 0;font-size:.9rem;color:var(--text-2);} .char-id-preview strong{color:var(--curr-gold);}
+#menu-screen{justify-content:flex-start;background:linear-gradient(180deg,#0a0820 0%,#0d1230 30%,var(--bg-magic) 60%,var(--bg-0) 100%);overflow:hidden;position:relative;}
+/* 2026-04-12: design 폴더의 새 마을 맵으로 교체 (848×1264 세로). town-sky 는 장식 배경에서 → town-container 가 본체 맵을 렌더 */
+.town-sky{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at top,#1a1530 0%,#05061a 60%,#000 100%);pointer-events:none;z-index:0;}
+.town-sky .star{position:absolute;width:2px;height:2px;background:var(--text-0);border-radius:50%;opacity:.6;animation:twinkle 3s infinite alternate;}
+/* 2026-04-24: 대표님 지시 — HUD 투명 바(어두운 그라디언트 배경 + border-bottom) 제거. 텍스트는 그림자로 가독성 유지. */
+.town-hud{width:100%;padding:8px 15px;background:transparent;border:none;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px;z-index:10;position:relative;}
+.town-hud .th-stat,.town-hud .th-profile-name,.town-hud .th-profile-lv,.town-hud #town-league{text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.7);}
+
+/* 2026-05-03: 프로필 슬롯 — 영웅 카드 미니 일러스트 + 닉/Lv.
+   2026-05-10: 사용자 결정 — 아바타 100px + 세로 배치 (아바타 위, 닉/Lv 아래). */
+.town-hud .th-profile{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:6px 8px;
+  background:rgba(0,0,0,.62);
+  border:1px solid rgba(255,200,80,.35);
+  border-radius:10px;
+  cursor:pointer;
+  transition:border-color .15s, background .15s, transform .15s;
+  align-self:flex-start; /* HUD 한 줄 유지 — 다른 stats 와 상단 정렬 */
+}
+.town-hud .th-profile:hover{
+  border-color:rgba(255,215,0,.85);
+  background:rgba(0,0,0,.78);
+  transform:translateY(-1px);
+}
+.town-hud .th-profile-img{
+  /* 2026-05-13 사용자 명시 — 프레임 + 얼굴 합성된 자체 PNG 사용. */
+  width:100px; height:100px;
+  border-radius:0;
+  border:none;
+  background:transparent center/contain no-repeat;
+  flex-shrink:0;
+}
+.town-hud .th-profile-img.is-empty{
+  background:#333;
+}
+.town-hud .th-profile-img.is-empty::before{
+  content:'⭐';
+  display:flex; align-items:center; justify-content:center;
+  width:100%; height:100%;
+  font-size:24px;
+  color:#ffd700;
+}
+.town-hud .th-profile-text{
+  display:flex; flex-direction:column; gap:2px;
+  line-height:1.1;
+  align-items:center; /* 2026-05-10 — 아바타 아래 중앙 정렬 */
+  text-align:center;
+}
+.town-hud .th-profile-name{
+  color:#ffd700;
+  font-weight:700;
+  font-size:.95rem;
+}
+.town-hud .th-profile-lv{
+  color:#ffeaa7;
+  font-size:.78rem;
+  opacity:.85;
+}
+
+/* 2026-05-03: 편성 슬롯 모달 (3 고정 슬롯 + 이름 편집) */
+#formation-slots-modal .fs-modal-box{
+  min-width:580px; max-width:760px;
+  max-height:600px; overflow-y:auto;
+}
+#formation-slots-modal h3{ margin:0 0 8px; text-align:center; }
+#formation-slots-modal .fs-modal-info{
+  text-align:center;
+  color:var(--text-3);
+  font-size:.82rem;
+  line-height:1.5;
+  margin-bottom:16px;
+  padding:0 10px;
+}
+#formation-slots-modal .fs-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+.fs-slot{
+  display:flex; flex-direction:column;
+  background:rgba(0,0,0,.45);
+  border:2px solid rgba(255,200,80,.35);
+  border-radius:10px;
+  padding:10px 10px 12px;
+  gap:8px;
+  min-height:140px;
+  transition:border-color .15s, background .15s;
+}
+.fs-slot:hover{
+  border-color:rgba(255,215,0,.8);
+  background:rgba(0,0,0,.6);
+}
+.fs-slot.is-empty{
+  border-style:dashed;
+  border-color:rgba(255,255,255,.18);
+}
+.fs-slot.is-empty:hover{
+  border-color:rgba(255,255,255,.4);
+}
+.fs-slot-head{
+  display:flex; align-items:center; gap:8px;
+}
+.fs-slot-num{
+  width:24px; height:24px;
+  background:linear-gradient(135deg, #f59e0b, #b45309);
+  color:#fff;
+  font-size:.78rem;
+  font-weight:700;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+}
+.fs-slot.is-empty .fs-slot-num{
+  background:linear-gradient(135deg, #6b7280, #4b5563);
+}
+.fs-slot-name{
+  flex:1;
+  color:#ffd700;
+  font-size:.95rem;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.fs-slot.is-empty .fs-slot-name{
+  color:var(--text-3);
+}
+.fs-slot-rename,
+.fs-slot-clear{
+  background:transparent;
+  border:none;
+  color:#9ca3af;
+  font-size:1rem;
+  cursor:pointer;
+  padding:2px 4px;
+  transition:color .15s;
+}
+.fs-slot-rename:hover{
+  color:#ffd700;
+}
+.fs-slot-clear:hover{
+  color:#ef4444;
+}
+.fs-slot-info{
+  flex:1;
+  display:flex; align-items:center; justify-content:center;
+  padding:8px 4px;
+}
+.fs-slot-meta{
+  color:var(--text-2);
+  font-size:.85rem;
+  text-align:center;
+}
+.fs-slot-meta b{
+  color:#ffd700;
+  font-size:1rem;
+}
+.fs-slot-empty-hint{
+  color:var(--text-3);
+  font-size:.78rem;
+  font-style:italic;
+}
+.fs-slot-actions{
+  display:flex; gap:6px;
+  justify-content:center;
+}
+.fs-slot-actions .btn{
+  font-size:.78rem;
+  padding:6px 10px;
+  flex:1;
+  min-width:0;
+}
+
+/* 2026-05-03: 프로필 카드 선택 모달 */
+#profile-modal .profile-modal-box, #profile-frame-modal .profile-modal-box{
+  /* 2026-05-13 사용자 결정 — 200×200 카드 3장 + gap + padding 수용 */
+  min-width:800px; max-width:900px;
+  max-height:90vh; overflow-y:auto;
+}
+#profile-modal h3, #profile-frame-modal h3{ margin:0 0 8px; text-align:center; }
+#profile-modal .profile-modal-info, #profile-frame-modal .profile-modal-info{
+  text-align:center;
+  color:var(--text-3);
+  font-size:.85rem;
+  margin-bottom:14px;
+}
+#profile-modal .profile-grid, #profile-frame-modal .profile-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:16px;
+  padding:10px 6px;
+  margin-bottom:14px;
+}
+#profile-modal .profile-empty, #profile-frame-modal .profile-empty{
+  grid-column:1/-1;
+  text-align:center;
+  color:var(--text-3);
+  padding:30px 10px;
+  font-size:.9rem;
+}
+#profile-modal .profile-card-mini, #profile-frame-modal .profile-card-mini{
+  display:flex; flex-direction:column; align-items:center;
+  gap:4px;
+  padding:8px 6px;
+  background:rgba(0,0,0,.35);
+  border:2px solid rgba(255,255,255,.12);
+  border-radius:10px;
+  cursor:pointer;
+  transition:border-color .15s, background .15s, transform .15s;
+}
+#profile-modal .profile-card-mini:hover, #profile-frame-modal .profile-card-mini:hover{
+  border-color:rgba(255,215,0,.7);
+  background:rgba(0,0,0,.55);
+  transform:translateY(-2px);
+}
+#profile-modal .profile-card-mini.is-current, #profile-frame-modal .profile-card-mini.is-current{
+  border-color:rgba(255,215,0,.95);
+  background:rgba(255,215,0,.12);
+  box-shadow:0 0 12px rgba(255,215,0,.35);
+}
+#profile-modal .profile-card-mini.is-hero .pcm-img, #profile-frame-modal .profile-card-mini.is-hero .pcm-img{
+  border-color:rgba(255,215,0,.7);
+}
+#profile-modal .pcm-img, #profile-frame-modal .pcm-img{
+  /* 2026-05-13 사용자 명시 — 프로필 선택은 200×200 크게. */
+  position:relative;
+  width:200px; height:200px;
+  border-radius:0;
+  border:none;
+  background:transparent center/contain no-repeat;
+  display:flex; align-items:center; justify-content:center;
+  font-size:48px; color:#ffd700;
+  flex-shrink:0;
+}
+/* custom: 사용자 명시 자체 UX (잠금 회색 처리) — 외부 차용 X. 단순 disabled state.
+   2026-05-14 fix: sed 잘못된 콤마 위치 fix — is-locked 만 grayscale/opacity 적용. */
+#profile-modal .profile-card-mini.is-locked, #profile-frame-modal .profile-card-mini.is-locked{
+  cursor:pointer;  /* 2026-05-14 사용자 — 클릭 가능 (해금 안내 표시) */
+  opacity:0.5;
+}
+#profile-modal .profile-card-mini.is-locked .pcm-img, #profile-frame-modal .profile-card-mini.is-locked .pcm-img{
+  filter:grayscale(1) brightness(0.55);
+}
+#profile-modal .profile-card-mini.is-locked:hover, #profile-frame-modal .profile-card-mini.is-locked:hover{
+  background:rgba(20,12,6,.5);
+  border-color:rgba(255,215,0,.4);
+  opacity:0.65;
+}
+#profile-modal .pcm-locked-badge, #profile-frame-modal .pcm-locked-badge{
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%, -50%);
+  font-size:1.8rem;
+  z-index:3;
+}
+#profile-modal .pcm-hero-badge, #profile-frame-modal .pcm-hero-badge{
+  position:absolute;
+  top:-6px; right:-6px;
+  background:rgba(255,215,0,.95);
+  color:#000;
+  font-size:.65rem;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:6px;
+  text-shadow:none;
+}
+#profile-modal .pcm-current-badge, #profile-frame-modal .pcm-current-badge{
+  position:absolute;
+  bottom:-6px; left:-6px;
+  background:#22c55e;
+  color:#fff;
+  width:20px; height:20px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem;
+  font-weight:700;
+}
+#profile-modal .pcm-name, #profile-frame-modal .pcm-name{
+  color:#ffeaa7;
+  font-size:.78rem;
+  font-weight:600;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+#profile-modal .pcm-lv, #profile-frame-modal .pcm-lv{
+  color:var(--text-3);
+  font-size:.7rem;
+}
+.town-hud-left,.town-hud-right{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+.town-hud .th-stat{font-size:.8rem;color:var(--text-1);}.town-hud .th-stat span{color:var(--curr-gold);font-weight:bold;}
+/* 마을 맵 (2026-04-23 밤): 마을전경.png (1536×1024, 3:2) 10건물 체제.
+   기존 1376×768 + cutout 오버레이 방식 → 3:2 + 건물은 배경에 그려진 방식으로 전환.
+   aspect-ratio: 3/2 로 container 와 image 정합. cover 로 letterbox 제거 (상하 crop 없음 — aspect 같으므로).
+   건물 cutout 이미지는 전부 숨김(아래 tb-icon img display:none) — 클릭 영역만 투명하게 유지.
+*/
+.town-container{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  /* 2026-04-24: 1280×720 container. video 가 메인 배경, PNG 는 poster 로 video 태그가 처리.
+     container 자체 배경은 video 로드 실패시 폴백용. */
+  background:#000;
+}
+/* 2026-04-24: 마을 배경 영상 — 건물 클릭 방해 안 되도록 pointer-events:none, z-index 바닥. */
+.town-bg-video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  pointer-events:none;
+  z-index:0;
+}
+/* 2026-04-23: height:100% + flex-shrink:0 제거 — town-footer/menu-deck 가
+   뷰포트 밖으로 밀려나던 문제 해결. flex:1 1 auto + min-height:0 으로 남는 공간만 차지. */
+/* 2026-04-23 밤: 새 마을전경.png 은 건물이 배경에 전부 그려져 있음.
+   cutout 이미지는 사용 안 함 (전부 숨김). 클릭 영역만 투명하게 유지.
+   호버 시 tb-label 만 나타나게 하고, 실루엣 강조는 배경 이미지 자체로 충분.
+*/
+.town-container .town-building .tb-icon{
+  width:100%;height:100%;border:none!important;background:transparent!important;
+  cursor:pointer;
+  display:block;
+}
+.town-container .town-building .tb-icon img{
+  display:none;
+}
+/* 호버 시 클릭 영역에 살짝 앰버 glow (디버그 겸 UX 피드백) */
+.town-container .town-building:hover .tb-icon{
+  background:radial-gradient(circle,rgba(255,200,80,.18) 0%,rgba(255,200,80,0) 70%)!important;
+}
+/* hover glow — 앰버 hotspot (2026-04-12 FATES 레퍼런스 반영) */
+/* 네모난 box glow 제거 — 건물 실루엣 자체의 drop-shadow 로만 강조 (위 tb-icon:hover 참조) */
+.town-container .town-building .tb-label{
+  position:absolute;left:50%;top:100%;transform:translate(-50%,4px);
+  background:rgba(10,14,20,.92);
+  border:1px solid rgba(255,200,80,.7);
+  border-radius:4px;
+  padding:3px 10px;
+  font-size:.72rem;
+  white-space:nowrap;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,.6);
+  z-index:10;
+}
+.town-container .town-building:hover .tb-label{
+  opacity:1;visibility:visible;transform:translate(-50%,8px);
+}
+.town-building{position:absolute;text-align:center;cursor:pointer;transition:transform .25s;z-index:2;padding:0;background:none!important;border:none!important;}
+/* 2026-04-24: 증축·Lv 시스템 폐기 — `.unbuilt` / `.ruins` / `.tb-empty-*` / `unbuiltPulse` 규칙 일괄 제거.
+   모든 건물은 영구 활성. 시각 차등은 hover/selected 만. */
+.town-building:hover{z-index:3;}
+.town-building:hover .tb-icon img{transform:scale(1.08);filter:drop-shadow(0 0 24px rgba(255,200,80,.8)) drop-shadow(0 0 40px rgba(255,170,40,.4)) brightness(1.15);}
+.tb-icon img{transition:transform .25s, filter .25s;border-radius:0;}
+.town-building.selected .tb-icon img{filter:brightness(1.15) drop-shadow(0 0 12px rgba(255,215,0,.6));}
+.tb-icon{filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));transition:filter .25s;}
+.town-building.built .tb-icon{filter:drop-shadow(0 0 10px rgba(255,215,0,.25)) drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+.town-building.built .tb-icon img{border:none;border-radius:0;}
+.town-building.built:hover .tb-icon{filter:drop-shadow(0 0 18px rgba(255,215,0,.5)) drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+.town-building.built .tb-icon::after{content:none;}
+.town-npc{position:absolute;font-size:.7rem;z-index:1;pointer-events:none;opacity:.6;}
+.town-npc.walk-right{animation:walkRight 20s linear infinite;}
+.town-npc.walk-left{animation:walkLeft 25s linear infinite;}
+.town-npc.walk-up{animation:walkUp 18s linear infinite;}
+.town-building.building .tb-icon{animation:buildPulse 1s ease-out;}
+.town-footer{position:relative;z-index:10;padding:6px 10px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;align-items:center;}
+.menu-deck{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;position:relative;z-index:10;padding:0 10px 8px;margin-top:auto;}
+#upgrade-screen{background:var(--bg-0);}
+.upgrade-title{font-size:1.3rem;color:var(--curr-gold);margin:10px 0 5px;}
+.upgrade-info{color:var(--text-2);font-size:.85rem;margin-bottom:10px;}
+.upgrade-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:10px;flex:1;align-items:flex-start;align-content:flex-start;}
+#choice-screen{background:var(--bg-0);justify-content:center;}
+.choice-title{font-size:1.3rem;color:var(--curr-gold);margin-bottom:5px;}
+.choice-sub{color:var(--text-2);font-size:.85rem;margin-bottom:20px;}
+.choice-options{display:flex;gap:15px;flex-wrap:wrap;justify-content:center;}
+.choice-box{width:200px;border:2px solid var(--amber-plate);border-radius:8px;padding:20px 15px;text-align:center;cursor:pointer;transition:all .3s;background:linear-gradient(180deg,rgba(30,25,15,.6),rgba(10,8,5,.8));}
+.choice-box:hover{border-color:var(--curr-gold-mid);transform:translateY(-4px);box-shadow:0 0 15px rgba(218,165,32,.2);background:linear-gradient(180deg,rgba(50,40,20,.6),rgba(20,15,8,.8));}
+.choice-box .cb-icon{font-size:2rem;margin-bottom:8px;}
+.choice-box .cb-title{font-size:1rem;color:var(--text-0);margin-bottom:4px;}
+.choice-box .cb-desc{font-size:.7rem;color:var(--text-3);}
+.pick-area{padding:15px;max-width:900px;width:100%;}
+.pick-title{font-size:1.1rem;color:var(--curr-gold);margin-bottom:5px;text-align:center;}
+.pick-sub{font-size:.8rem;color:var(--text-2);text-align:center;margin-bottom:10px;}
+.pick-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+#reward-screen{background:var(--bg-0);justify-content:center;}
+.reward-title{font-size:1.6rem;margin-bottom:8px;}.reward-title.victory{color:var(--curr-gold);}.reward-title.defeat{color:var(--danger);}
+.reward-subtitle{color:var(--text-2);margin-bottom:10px;text-align:center;font-size:.85rem;}
+.reward-stats{color:var(--text-1);font-size:.75rem;text-align:center;margin-bottom:8px;line-height:1.5;}
+#gameover-screen{justify-content:center;background:radial-gradient(ellipse at center,#1a0a0a 0%,var(--bg-0) 70%);}
+#gameover-screen h1{font-size:2.5rem;color:var(--danger);margin-bottom:10px;}
+.final-stats{color:var(--text-2);margin-bottom:20px;text-align:center;line-height:1.8;}
+.upgrade-flash{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;animation:upgFlash .6s ease-out forwards;}
+.upgrade-particles{position:absolute;top:50%;left:50%;pointer-events:none;z-index:10;}
+.upgrade-particle{position:absolute;width:6px;height:6px;border-radius:50%;animation:upgPart .8s ease-out forwards;pointer-events:none;}
+.rarity-burst{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;animation:rarBurst 1s ease-out forwards;}
+.upgrade-card-glow{animation:upgGlow .6s ease-out;}
+
+/* ── 2026-05-02: 훈련장 (training-screen) 레이아웃 ───────────────── */
+#training-screen .training-area{
+  flex:1;
+  display:flex;
+  gap:12px;
+  padding:8px 12px;
+  min-height:0;          /* flex 자식 overflow 처리 */
+}
+#training-screen .training-grid{
+  flex:1;
+  display:flex;flex-wrap:wrap;
+  gap:8px;
+  align-items:flex-start;align-content:flex-start;
+  overflow-y:auto;
+  padding:6px;
+  background:rgba(10,7,3,.4);
+  border:1px solid rgba(212,168,74,.2);
+  border-radius:6px;
+}
+#training-screen .training-detail{
+  width:320px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  gap:6px;
+  padding:8px;
+  background:rgba(14,9,4,.6);
+  border:1px solid rgba(212,168,74,.3);
+  border-radius:6px;
+  overflow-y:auto;
+}
+/* grid 카드 — 풀사이즈(280×490) → 미디엄 컴팩트로 축소 (한 줄 6장 이상) */
+#training-screen .training-grid .card-v4{
+  width:140px;
+}
+#training-screen .training-grid .card-v4 .parch{
+  height:65px;
+}
+/* detail 카드 — viewport 720 안에서 단련 버튼 + freePoints 분배 모두 첫 화면 노출되도록 thumbnail.
+   width 90 + parch 30 → height ≈ 156. 패널 합계 (card 156 + xp 47 + train 1행 ~40 + fp 126 + gap 6×3 ≈ 387)
+   → 패널 effective height (viewport - HUD - tab - footer - npc bar - padding ≈ 400~470) 안에 fit. */
+#training-screen .training-detail .card-v4{
+  width:90px;
+  margin:0 auto;
+}
+#training-screen .training-detail .card-v4 .parch{
+  height:30px;
+}
+/* 단련 버튼 column → row 로 가로 배치 (3개 가로 균등 분할) */
+#training-screen .training-detail .td-train-row{
+  flex-direction:row !important;
+  flex-wrap:wrap;
+}
+#training-screen .training-detail .td-train-row .btn{
+  flex:1 1 0;width:auto !important;
+  font-size:.65rem;padding:6px 4px;
+  white-space:nowrap;
+}
+#training-screen .tg-card{
+  position:relative;
+  cursor:pointer;
+  padding:3px;
+  border:2px solid transparent;
+  border-radius:4px;
+  transition:border-color .15s, transform .12s;
+}
+#training-screen .tg-card:hover{transform:translateY(-2px);}
+#training-screen .tg-card.selected{
+  border-color:var(--curr-gold);
+  box-shadow:0 0 12px rgba(255,215,0,.35);
+}
+#training-screen .tg-lv{
+  text-align:center;
+  font-size:.7rem;
+  margin-top:2px;
+  color:var(--amber-pale);
+}
+
+/* 디테일 패널 내부 */
+.training-detail .td-empty{
+  color:#888;text-align:center;padding:30px 10px;font-size:.8rem;
+}
+.training-detail .td-card{
+  display:flex;justify-content:center;
+  position:relative;
+}
+.training-detail .td-xp{
+  text-align:center;
+}
+.training-detail .td-lv{
+  font:600 .85rem/1.3 'Noto Sans KR', sans-serif;
+  color:var(--amber-pale);margin-bottom:4px;
+}
+.training-detail .td-bar{
+  height:10px;
+  background:rgba(0,0,0,.5);
+  border:1px solid rgba(212,168,74,.4);
+  border-radius:5px;
+  overflow:hidden;
+}
+.training-detail .td-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg, #ffd700, #ffaa00);
+  transition:width .4s ease-out;
+}
+.training-detail .td-xp-num{
+  font:500 .7rem/1 ui-monospace, monospace;
+  color:var(--amber-pale);opacity:.85;margin-top:4px;
+}
+.training-detail .td-train-row{
+  display:flex;flex-direction:column;gap:6px;
+}
+.training-detail .td-train-row .btn{width:100%;}
+.training-detail .td-fp{
+  border-top:1px solid rgba(212,168,74,.2);
+  padding-top:8px;
+}
+.training-detail .td-fp-head{
+  font:600 .8rem/1.3 'Noto Sans KR', sans-serif;
+  color:var(--curr-gold);margin-bottom:6px;text-align:center;
+}
+.training-detail .td-fp-grid{
+  display:grid;grid-template-columns:repeat(3, 1fr);gap:3px;
+}
+.training-detail .td-fp-btn{
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:2px;
+  background:rgba(0,0,0,.4);
+  border:1px solid currentColor;
+  border-radius:3px;
+  font:500 .58rem/1 'Noto Sans KR', sans-serif;
+  cursor:pointer;
+  transition:background .12s;
+  min-height:28px;
+  gap:1px;
+}
+.training-detail .td-fp-btn:hover:not(:disabled){
+  background:rgba(212,168,74,.18);
+}
+.training-detail .td-fp-btn:disabled{opacity:.4;cursor:not-allowed;}
+.training-detail .td-fp-lbl{font-weight:700;font-size:.62rem;}
+.training-detail .td-fp-cur{opacity:.7;font-size:.55rem;}
+.training-detail .td-fp-plus{font-weight:700;font-size:.62rem;}
+
+/* 레벨업 라벨 — 카드 위에 큰 골든 텍스트 (사용자 강조 요청 이펙트) */
+.lv-up-label{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%, -50%);
+  font:900 2.6rem/1 'Cinzel', 'Noto Sans KR', serif;
+  color:#ffd700;
+  text-shadow:0 0 10px #ffd700, 0 0 20px rgba(255,215,0,.7), 0 0 36px rgba(255,180,40,.4), 0 3px 6px rgba(0,0,0,.95);
+  letter-spacing:.04em;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:300;        /* rarity-burst(z-index 200) 위로 */
+  animation:lvUp 1.2s ease-out forwards;
+}
+@keyframes lvUp{
+  0%   { transform:translate(-50%, -50%) scale(0.3); opacity:0; }
+  18%  { transform:translate(-50%, -80%) scale(1.35); opacity:1; }
+  60%  { transform:translate(-50%, -120%) scale(1.05); opacity:1; }
+  100% { transform:translate(-50%, -190%) scale(0.95); opacity:0; }
+}
+
+/* freePoints 카운트 펄스 */
+.fp-pulse{
+  animation:fpPulse .4s ease-out;
+}
+@keyframes fpPulse{
+  0%   { transform:scale(1); color:var(--curr-gold); }
+  50%  { transform:scale(1.5); color:#fff8e1; text-shadow:0 0 10px #ffd700; }
+  100% { transform:scale(1); color:var(--curr-gold); }
+}
+.tavern-card-wrap{perspective:600px;}
+.tavern-card-inner{transition:transform .6s;transform-style:preserve-3d;}
+.tavern-card-inner.flipping{animation:cardFlip .6s ease-out;}
+/* 선술집 풀사이즈 카드 — 06-card-ui-principles: 컬렉션/덱뷰/선술집 280×490 */
+#tavern-screen .card-v2{width:var(--tavern-card-w);}
+.tavern-grid{display:flex;gap:var(--tavern-grid-gap);padding:var(--tavern-grid-pad);flex-wrap:wrap;justify-content:center;}
+.deckview-grid{display:flex;gap:var(--deckview-grid-gap);padding:var(--deckview-grid-pad);flex-wrap:wrap;justify-content:center;}
+#deckview-screen .card-v2{width:var(--deckview-card-w);}
+
+/* ═══════════════════════════════════════════════════════
+   cardselect-screen 절대위치 zone 레이아웃 (2026-04-12)
+   1280×720 안에서 각 섹션을 자유 배치. 드래그 편집기로 조정.
+   라벨 div (▼ 출전 동료 ▼ 등) 은 숨김 — 시각적 혼란 제거
+   ═══════════════════════════════════════════════════════ */
+body.game-mode #cardselect-screen{position:relative;}
+body.game-mode #cardselect-screen.active{display:block;flex-direction:unset;align-items:unset;}
+/* 라벨 div 숨김 — index.html 의 inline 스타일 텍스트 div 4개 */
+body.game-mode #cardselect-screen > div[style*="color:#ffd700;text-align:center"],
+body.game-mode #cardselect-screen > div[style*="color:#aa66ff;text-align:center"],
+body.game-mode #cardselect-screen > div[style*="color:#888;text-align:center"]{display:none!important;}
+/* zone 1: 타이틀 + info (첫 번째 text-align center 자식) */
+body.game-mode #cardselect-screen > div[style*="text-align:center;padding:8px"]{
+  position:absolute;
+  left:var(--cs-title-x);top:var(--cs-title-y);
+  width:var(--cs-title-w);height:var(--cs-title-h);
+  padding:0;margin:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+/* zone 2: 선택된 동료 */
+body.game-mode #cardselect-screen > #cs-selected{
+  position:absolute;
+  left:var(--cs-selected-x);top:var(--cs-selected-y);
+  width:var(--cs-selected-w);height:var(--cs-selected-h);
+  margin:0;
+  overflow:auto;
+}
+/* zone 3: 버튼 행 — 래퍼는 투명 풀 컨테이너, 각 버튼 독립 절대 위치 (2026-04-12 심야 분리) */
+body.game-mode #cardselect-screen > div[style*="display:flex"][style*="gap:8px"]{
+  position:absolute;
+  left:0;top:0;
+  width:100%;height:100%;
+  padding:0;margin:0;
+  display:block !important;
+  background:none !important;
+  filter:none !important;
+  pointer-events:none;  /* 빈 영역 클릭 차단 */
+}
+/* 래퍼 내부 버튼들은 다시 pointer-events 복구 + 개별 position */
+body.game-mode #cardselect-screen > div[style*="display:flex"][style*="gap:8px"] > button{
+  pointer-events:auto;
+  position:absolute;
+  margin:0 !important;
+}
+/* 버튼별 위치 */
+body.game-mode #cardselect-screen > div[style*="display:flex"][style*="gap:8px"] > button[data-action="game.showMenu"]{
+  left:var(--cs-btn-back-x);top:var(--cs-btn-back-y);
+  width:var(--cs-btn-back-w);height:var(--cs-btn-back-h);
+}
+body.game-mode #cardselect-screen > div[style*="display:flex"][style*="gap:8px"] > button[data-action="game.saveFormation"]{
+  left:var(--cs-btn-save-x);top:var(--cs-btn-save-y);
+  width:var(--cs-btn-save-w);height:var(--cs-btn-save-h);
+}
+body.game-mode #cardselect-screen > div[style*="display:flex"][style*="gap:8px"] > button[data-action="game.loadFormation"]{
+  left:var(--cs-btn-load-x);top:var(--cs-btn-load-y);
+  width:var(--cs-btn-load-w);height:var(--cs-btn-load-h);
+}
+body.game-mode #cardselect-screen > div[style*="display:flex"][style*="gap:8px"] > button#cs-go-btn{
+  left:var(--cs-btn-confirm-x);top:var(--cs-btn-confirm-y);
+  width:var(--cs-btn-confirm-w);height:var(--cs-btn-confirm-h);
+}
+/* zone 4: 선택된 유물 */
+body.game-mode #cardselect-screen > #cs-relics-selected{
+  position:absolute;
+  left:var(--cs-relics-selected-x);top:var(--cs-relics-selected-y);
+  width:var(--cs-relics-selected-w);height:var(--cs-relics-selected-h);
+  margin:0;
+  overflow:auto;
+}
+/* zone 5: 보유 동료 그리드 (큰 카드 여러 장, 스크롤) */
+body.game-mode #cardselect-screen > #cs-grid{
+  position:absolute;
+  left:var(--cs-grid-x);top:var(--cs-grid-y);
+  width:var(--cs-grid-w);height:var(--cs-grid-h);
+  padding:8px;
+  overflow-y:auto;overflow-x:hidden;
+  align-content:flex-start;
+}
+/* cs-grid 카드 축소 — 기본 320×480 → 160×280 로 4×2 가시 (V4는 4:7) */
+body.game-mode #cardselect-screen > #cs-grid .card-v2{width:160px;}
+body.game-mode #cardselect-screen > #cs-grid{--card-v4-w:160px;}
+body.game-mode #cardselect-screen > #cs-grid .cs-card-wrap{display:flex;flex-direction:column;align-items:center;}
+/* zone 6: 보유 유물 그리드 */
+body.game-mode #cardselect-screen > #cs-relics-grid{
+  position:absolute;
+  left:var(--cs-relics-grid-x);top:var(--cs-relics-grid-y);
+  width:var(--cs-relics-grid-w);height:var(--cs-relics-grid-h);
+  padding:8px;
+  overflow-y:auto;
+}
+
+/* ═══ TAVERN zones ═══ */
+body.game-mode #tavern-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #tavern-screen{position:relative;}
+/* Type A 래퍼: 전면(inset:0) 으로 고정. 자식 좌표는 스테이지 절대값.
+   과거 부분 absolute(top:60) 로 자식 좌표가 부모 기준 해석되던 사고 해소 — rules/08-garbage-lessons.md 참조. */
+body.game-mode #tavern-screen > div[style*="text-align:center;padding:8px"]{
+  position:absolute;inset:0;width:100%;height:100%;
+  padding:0;margin:0;pointer-events:none;
+}
+body.game-mode #tavern-screen > div[style*="text-align:center;padding:8px"] > *{pointer-events:auto;}
+body.game-mode #tavern-screen > #tav-grid{
+  position:absolute;left:var(--tav-grid-x);top:var(--tav-grid-y);
+  width:var(--tav-grid-w);height:var(--tav-grid-h);
+  overflow-y:auto;padding:8px;margin:0;
+  /* V4 5-col grid — 설계 260 대비 ~90% 축소로 1240 stage 에 5장 한 줄
+     (2026-04-20 Step 4B, 2026-04-21 B1 토큰화). 카드 폭은 --card-v4-w 토큰으로 override. */
+  --card-v4-w: 235px;
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill, var(--card-v4-w)) !important;
+  gap:10px !important;
+  justify-content:center !important;
+  align-content:flex-start;
+}
+body.game-mode #tav-grid .tavern-card-wrap{ width:var(--card-v4-w); }
+body.game-mode #tavern-screen > div[style*="padding:10px"][style*="gap:8px"]{
+  position:absolute;left:var(--tav-buttons-x);top:var(--tav-buttons-y);
+  width:var(--tav-buttons-w);height:var(--tav-buttons-h);
+  display:flex;align-items:center;justify-content:center;padding:0;margin:0;
+}
+
+/* ═══ DECKVIEW zones ═══ */
+body.game-mode #deckview-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #deckview-screen{position:relative;}
+/* Type A 래퍼: 전면. 자식 좌표는 스테이지 절대값. */
+body.game-mode #deckview-screen > div[style*="text-align:center;padding:6px"]{
+  position:absolute;inset:0;width:100%;height:100%;
+  padding:0;margin:0;pointer-events:none;
+}
+body.game-mode #deckview-screen > div[style*="text-align:center;padding:6px"] > *{pointer-events:auto;}
+body.game-mode #deckview-screen > #deck-tab{
+  position:absolute;left:var(--dv-grid-x);top:var(--dv-grid-y);
+  width:var(--dv-grid-w);height:var(--dv-grid-h);
+  overflow-y:auto;padding:0 8px;box-sizing:border-box;
+  /* Step 5A-1: V4 카드 폭 Tavern 과 동일 235 (1240 stage 5-col 기준, 2026-04-21) */
+  --card-v4-w: 235px;
+}
+body.game-mode #deckview-screen > #deck-tab #dv-grid{
+  padding:0;margin-bottom:4px;
+  /* Step 5A-1: Tavern 과 동일한 5-col grid (inline style flex 무효화). */
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill, var(--card-v4-w)) !important;
+  gap:10px !important;
+  justify-content:center !important;
+}
+/* Codex (혈통) 탭 도 V4 */
+body.game-mode #deckview-screen > #codex-tab{
+  --card-v4-w: 235px;
+}
+body.game-mode #deckview-screen > #codex-tab #codex-grid{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill, var(--card-v4-w)) !important;
+  gap:10px !important;
+  justify-content:center !important;
+}
+body.game-mode #deckview-screen > #deck-tab #dv-skills{padding:0;margin-bottom:4px;}
+body.game-mode #deckview-screen > #deck-tab #dv-relics{padding:0;}
+/* 도서관 NPC 대화 바 — 탭 바로 아래 고정 위치 */
+body.game-mode #deckview-screen > #lib-npc{
+  position:absolute;left:var(--dv-lib-npc-x);top:var(--dv-lib-npc-y);
+  width:var(--dv-lib-npc-w);height:var(--dv-lib-npc-h);
+  margin:0;padding:0;z-index:2;
+}
+body.game-mode #deckview-screen > #lib-npc .npc-bar{
+  width:100%;max-width:none;margin:0;height:100%;
+}
+/* 2026-04-24: 도서관은 --dv-lib-npc-h:99 고정 (탭/그리드 토큰 다 이걸 기준으로 쌓임).
+   그래서 다른 화면(80×110) 과 완전 통일은 토큰 일괄 재배치가 필요. 절충: portrait 80×88 로
+   너비는 다른 화면과 동일, 높이만 99 컨테이너에 맞춰 줄임. object-position:50% 8% 로 face 살림. */
+body.game-mode #lib-npc .npc-bar{ min-height:0; padding:6px 14px; align-items:center; }
+body.game-mode #lib-npc .npc-portrait{ width:80px; height:88px; border-radius:6px; object-position:50% 8%; }
+body.game-mode #lib-npc .npc-emoji{ width:80px; height:88px; font-size:2.6rem; }
+body.game-mode #deckview-screen > #codex-tab{
+  position:absolute;left:var(--dv-codex-x);top:var(--dv-codex-y);
+  width:var(--dv-codex-w);height:var(--dv-codex-h);
+  /* 2026-04-21 Step 5C 후속: 40장 로드 시 세로 스크롤바(16px)가 4-col 로 깎던 이슈.
+     padding 0 + scrollbar-gutter stable. 1240-16=1224 여유 → 5×235+4×10=1215 수용. */
+  overflow-y:auto;padding:0;box-sizing:border-box;
+  scrollbar-gutter:stable;
+}
+body.game-mode #deckview-screen > div[style*="padding:8px;text-align:center"]:last-child{
+  position:absolute;left:var(--dv-back-x);top:var(--dv-back-y);
+  width:var(--dv-back-w);height:var(--dv-back-h);
+  padding:0;margin:0;
+}
+
+/* ═══ CASTLE zones ═══ */
+body.game-mode #castle-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #castle-screen{position:relative;}
+/* Type A 래퍼: 전면. 자식 좌표는 스테이지 절대값. */
+/* 2026-05-02: castle-upgrade-area / -grid CSS 제거 — 단련은 훈련장(training-screen)으로 이전됨.
+   castle-screen 의 탭 wrapper(`text-align:center;padding:6px`) 도 삭제됨 (DOM 에서). */
+body.game-mode #church-screen > #church-grid{--card-v4-w:235px;}
+
+/* Church NPC 대화 바 — V4 카드(church-grid) 위로 노출 (2026-04-21 Step 5C 후속).
+   npc-bar 는 church-info div 의 afterend 로 삽입되어 title 박스 안 flow 에 있는데,
+   형제인 church-grid(absolute, document order 뒤)가 기본 stacking 에서 위에 떠서
+   부상자 카드 상단과 겹칠 때 npc 박스가 뒤로 묻혔다. position:relative + z-index 로 승격. */
+body.game-mode #church-npc { position: relative; z-index: 20; margin-top: 10px; }
+/* design-confirmed: 2026-06-01 사유: 옛 zone-editor 좌표 잔재 제거 (사용자 "게임적용 하자" 컨펌 + rof-ui-inspector 검수).
+   #castle-quest-area 는 퀘스트 게시판(css/55_quest_board.css)이 inset:0 전체화면으로 채움.
+   옛 --castle-grid / --castle-back 좌표(단련 그리드 시절 잔재)가 명시도(ID 2개)로 새 inset:0(ID 1개)를 이겨
+   게시판을 박스에 가두던 충돌 해소. 옛 .hud / 돌아가기 div 도 index.html 에서 제거. */
+
+/* ═══ CHURCH zones ═══ */
+body.game-mode #church-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #church-screen{position:relative;}
+body.game-mode #church-screen > div[style*="text-align:center;padding:8px"]{
+  position:absolute;left:var(--church-title-x);top:var(--church-title-y);
+  width:var(--church-title-w);height:var(--church-title-h);
+  padding:0;margin:0;
+}
+body.game-mode #church-screen > #church-grid{
+  position:absolute;left:var(--church-grid-x);top:var(--church-grid-y);
+  width:var(--church-grid-w);height:var(--church-grid-h);
+  overflow-y:auto;padding:8px;margin:0;
+}
+body.game-mode #church-screen > div[style*="padding:8px;text-align:center"]{
+  position:absolute;left:var(--church-back-x);top:var(--church-back-y);
+  width:var(--church-back-w);height:var(--church-back-h);
+  padding:0;margin:0;
+}
+
+/* ═══ REWARD zones ═══ */
+body.game-mode #reward-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #reward-screen{position:relative;}
+body.game-mode #reward-screen > div[style*="flex:1"]{
+  position:absolute;inset:0;
+  display:block;max-width:none;width:auto;padding:0;
+}
+body.game-mode #reward-screen #rew-title{
+  position:absolute;left:var(--rew-title-x);top:var(--rew-title-y);
+  width:var(--rew-title-w);height:var(--rew-title-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #reward-screen > div > div[style*="background:rgba(255,255,255"]{
+  position:absolute;left:var(--rew-box-x);top:var(--rew-box-y);
+  width:var(--rew-box-w);height:var(--rew-box-h);
+}
+body.game-mode #reward-screen #reward-cards{
+  position:absolute;left:var(--rew-cards-x);top:var(--rew-cards-y);
+  width:var(--rew-cards-w);height:var(--rew-cards-h);
+  overflow:auto;padding:8px;margin:0;
+}
+body.game-mode #reward-screen > div > div[style*="padding:15px"]:last-child{
+  position:absolute;left:var(--rew-btn-x);top:var(--rew-btn-y);
+  width:var(--rew-btn-w);height:var(--rew-btn-h);
+  padding:0;margin:0;display:flex;align-items:center;justify-content:center;
+}
+
+/* ═══════════════════════════════════════════════════════
+   추가 화면 zone 레이아웃 (2026-04-13)
+   pick / choice / formation / upgrade / gameover / match / battle
+   ═══════════════════════════════════════════════════════ */
+
+/* ═══ PICK (라운드 간 뽑기) ═══ */
+body.game-mode #pick-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #pick-screen{position:relative;}
+body.game-mode #pick-screen > .pick-area{position:absolute;inset:0;max-width:none;width:auto;padding:0;}
+body.game-mode #pick-screen #pick-title{
+  position:absolute;left:var(--pick-title-x);top:var(--pick-title-y);
+  width:var(--pick-title-w);height:var(--pick-title-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #pick-screen #pick-sub{
+  position:absolute;left:var(--pick-sub-x);top:var(--pick-sub-y);
+  width:var(--pick-sub-w);height:var(--pick-sub-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #pick-screen #pick-grid{
+  position:absolute;left:var(--pick-grid-x);top:var(--pick-grid-y);
+  width:var(--pick-grid-w);height:var(--pick-grid-h);
+  padding:8px;margin:0;overflow-y:auto;
+  --card-v4-w:260px;
+}
+body.game-mode #pick-screen #pick-grid .pick-card-wrap{display:flex;flex-direction:column;align-items:center;}
+body.game-mode #pick-screen .pick-area > div[style*="margin-top:12px"]{
+  position:absolute;left:var(--pick-btns-x);top:var(--pick-btns-y);
+  width:var(--pick-btns-w);height:var(--pick-btns-h);
+  margin:0;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+
+/* ═══ CHOICE (라운드 선택지) ═══ */
+body.game-mode #choice-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #choice-screen{position:relative;}
+body.game-mode #choice-screen #ch-title{
+  position:absolute;left:var(--ch-title-x);top:var(--ch-title-y);
+  width:var(--ch-title-w);height:var(--ch-title-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+/* 매치메이킹 카드 사이즈 — V4 native 280×392 (1:1.4). 2026-05-10 검수관 권장 (1254×690 박스에 양측 카드+VS+버튼 호흡 적정). */
+body.game-mode #match-screen .match-card{width:280px;height:392px;max-width:280px;}
+body.game-mode #match-screen .match-card > .card-v4{width:280px;height:392px;}
+body.game-mode #match-screen{--card-v4-w:280px;}
+body.game-mode #choice-screen #ch-sub{
+  position:absolute;left:var(--ch-sub-x);top:var(--ch-sub-y);
+  width:var(--ch-sub-w);height:var(--ch-sub-h);
+  margin:0;padding:0 80px;box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;
+  text-align:center;line-height:1.5;
+}
+body.game-mode #choice-screen #ch-sub .timer-bar{width:min(640px,80%);height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin:4px 0;}
+body.game-mode #choice-screen #ch-sub .timer-bar-fill{height:100%;background:linear-gradient(90deg,#4f8,#fa4,#f44);transition:width .5s linear;}
+body.game-mode #choice-screen #ch-sub .timer-text{font-size:.85rem;color:var(--text-2);}
+body.game-mode #choice-screen #ch-options{
+  position:absolute;left:var(--ch-options-x);top:var(--ch-options-y);
+  width:var(--ch-options-w);height:var(--ch-options-h);
+  margin:0;overflow-y:auto;display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;
+}
+
+/* ═══ FORMATION (진형 배치) ═══ */
+body.game-mode #formation-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #formation-screen{position:relative;}
+body.game-mode #formation-screen > .form-title{
+  position:absolute;left:var(--form-title-x);top:var(--form-title-y);
+  width:var(--form-title-w);height:var(--form-title-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #formation-screen > .form-sub{
+  position:absolute;left:var(--form-sub-x);top:var(--form-sub-y);
+  width:var(--form-sub-w);height:var(--form-sub-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #formation-screen > #form-resonance{
+  position:absolute;left:var(--form-reso-x);top:var(--form-reso-y);
+  width:var(--form-reso-w);height:var(--form-reso-h);
+  margin:0;padding:0;
+}
+body.game-mode #formation-screen > #form-diamond{
+  position:absolute;left:var(--form-diamond-x);top:var(--form-diamond-y);
+  width:var(--form-diamond-w);height:var(--form-diamond-h);
+  margin:0;padding:0;
+  --card-v4-w: 190px;
+  display:flex;gap:8px;justify-content:center;align-items:flex-start;
+}
+body.game-mode #formation-screen > .form-bench-label{
+  position:absolute;left:var(--form-bench-label-x);top:var(--form-bench-label-y);
+  width:var(--form-bench-label-w);height:var(--form-bench-label-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #formation-screen > #form-bench{
+  position:absolute;left:var(--form-bench-x);top:var(--form-bench-y);
+  width:var(--form-bench-w);height:var(--form-bench-h);
+  margin:0;padding:0;overflow-y:auto;
+}
+body.game-mode #formation-screen > div[style*="padding:10px"][style*="display:flex"]{
+  position:absolute;left:var(--form-buttons-x);top:var(--form-buttons-y);
+  width:var(--form-buttons-w);height:var(--form-buttons-h);
+  margin:0;padding:0;display:flex;align-items:center;justify-content:center;gap:10px;
+}
+
+/* ═══ UPGRADE (동료 단련) ═══ */
+body.game-mode #upgrade-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #upgrade-screen{position:relative;}
+body.game-mode #upgrade-screen > .upgrade-title{
+  position:absolute;left:var(--upg-title-x);top:var(--upg-title-y);
+  width:var(--upg-title-w);height:var(--upg-title-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #upgrade-screen > .upgrade-info{
+  position:absolute;left:var(--upg-info-x);top:var(--upg-info-y);
+  width:var(--upg-info-w);height:var(--upg-info-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #upgrade-screen > .upgrade-grid{
+  position:absolute;left:var(--upg-grid-x);top:var(--upg-grid-y);
+  width:var(--upg-grid-w);height:var(--upg-grid-h);
+  margin:0;padding:8px;overflow-y:auto;
+}
+body.game-mode #upgrade-screen > div[style*="padding:10px"]:last-child{
+  position:absolute;left:var(--upg-back-x);top:var(--upg-back-y);
+  width:var(--upg-back-w);height:var(--upg-back-h);
+  margin:0;padding:0;
+}
+
+/* ═══ GAMEOVER ═══ */
+body.game-mode #gameover-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #gameover-screen{position:relative;}
+body.game-mode #gameover-screen > h1{
+  position:absolute;left:var(--go-title-x);top:var(--go-title-y);
+  width:var(--go-title-w);height:var(--go-title-h);
+  margin:0;display:flex;align-items:center;justify-content:center;
+}
+body.game-mode #gameover-screen > .final-stats{
+  position:absolute;left:var(--go-stats-x);top:var(--go-stats-y);
+  width:var(--go-stats-w);height:var(--go-stats-h);
+  margin:0;overflow-y:auto;
+}
+body.game-mode #gameover-screen > div[style*="display:flex"][style*="gap:10px"]{
+  position:absolute;left:var(--go-btns-x);top:var(--go-btns-y);
+  width:var(--go-btns-w);height:var(--go-btns-h);
+  margin:0;display:flex;gap:10px;align-items:center;justify-content:center;
+}
+
+/* ═══ MATCH ═══ */
+body.game-mode #match-screen.active{display:block;flex-direction:unset;align-items:unset;}
+body.game-mode #match-screen{position:relative;}
+body.game-mode #match-screen > .match-box{
+  position:absolute;left:var(--match-box-x);top:var(--match-box-y);
+  width:var(--match-box-w);height:var(--match-box-h);
+  max-width:none;padding:20px;margin:0;overflow-y:auto;
+}
+
+/* ═══ BATTLE (PHASE 3 #battle-screen — 2026-05-27 trash) ═══ */
+@media(max-width:700px){#tavern-screen .card-v2{width:45vw;}}
+.tavern-reveal{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;}
+.tavern-reveal.legendary-reveal{animation:legendReveal 1s ease-out forwards;}
+.tavern-reveal.gold-reveal{animation:goldReveal .8s ease-out forwards;}
+.loot-boxes{display:flex;gap:20px;justify-content:center;margin:15px 0;}
+.loot-box{width:80px;height:100px;border-radius:8px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;border:2px solid var(--border-2);background:linear-gradient(180deg,var(--bg-2),var(--bg-0));}
+.loot-box:hover{transform:translateY(-5px) scale(1.05);border-color:var(--curr-gold);box-shadow:0 0 15px rgba(255,215,0,.3);}
+.loot-box.opened{pointer-events:none;animation:lootOpen .6s ease-out;}
+.loot-box.gold-loot{border-color:var(--curr-gold);box-shadow:0 0 20px rgba(255,215,0,.5);background:linear-gradient(180deg,var(--amber-stop-2),var(--rar-gold-deep));}
+.loot-box.silver-loot{border-color:#c0c0c0;box-shadow:0 0 15px rgba(192,192,192,.4);background:linear-gradient(180deg,var(--bg-3),var(--rar-silver-deep));}
+.loot-box.bronze-loot{border-color:#cd7f32;box-shadow:0 0 10px rgba(205,127,50,.3);background:linear-gradient(180deg,var(--amber-stop-1),var(--rar-bronze-deep));}
+.loot-result{font-size:.75rem;color:var(--text-1);text-align:center;margin-top:4px;animation:lootReveal .5s ease-out;}
+.loot-double-btn{margin-top:10px;font-size:.75rem;}
+
+/* ═══════════ 4지선다 보상 (P1) ═══════════ */
+.reward-loot{text-align:center;margin:8px 0;}
+.rew-defeat-msg{color:var(--text-2);font-size:.85rem;margin:10px 0;}
+.rew-pick-title{color:var(--curr-gold);font-size:.95rem;margin-bottom:10px;}
+.rew-pick-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.rew-pick-card{
+  width:130px;padding:12px 8px;border-radius:10px;cursor:pointer;
+  border:2px solid var(--border-2);
+  background:linear-gradient(180deg,rgba(20,16,10,.9),rgba(8,6,4,.95));
+  transition:all .3s;text-align:center;
+  animation:rewLootEnter .55s cubic-bezier(.2,1.2,.3,1) backwards;
+}
+.rew-pick-card:nth-child(1){animation-delay:.2s;}
+.rew-pick-card:nth-child(2){animation-delay:.32s;}
+.rew-pick-card:nth-child(3){animation-delay:.44s;}
+.rew-pick-card:nth-child(4){animation-delay:.56s;}
+.rew-pick-card:hover{transform:translateY(-5px) scale(1.04);border-color:var(--curr-gold);box-shadow:0 0 15px color-mix(in srgb,var(--curr-gold) 30%,transparent);}
+.rew-pick-card.bronze{border-color:var(--rar-bronze);}
+.rew-pick-card.silver{border-color:var(--rar-silver);}
+.rew-pick-card.gold{border-color:var(--rar-gold);}
+.rew-pick-card.legendary{border-color:var(--rar-legendary);box-shadow:0 0 12px color-mix(in srgb,var(--rar-legendary) 30%,transparent);}
+.rew-pick-card.picked{border-color:var(--success);box-shadow:0 0 20px color-mix(in srgb,var(--success) 40%,transparent);transform:scale(1.06);}
+.rew-pick-card.dimmed{opacity:.3;pointer-events:none;transform:scale(.95);}
+.rpc-icon{font-size:2rem;margin-bottom:4px;}
+.rpc-cat{font-size:.65rem;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;}
+.rpc-name{font-size:.85rem;color:var(--text-1);font-weight:bold;margin:4px 0;}
+.rpc-rarity{font-size:.65rem;margin-bottom:4px;color:var(--text-2);}
+.rpc-desc{font-size:.7rem;color:var(--text-2);line-height:1.4;}
+.rew-grace{margin-top:10px;text-align:center;}
+
+/* ═══════════════════════════════════════════════════
+   P0-2 (2026-04-15): 리워드 화면 시각 보상 패스
+   - 승리 스탬프 scale-in
+   - 전리품 상자 stagger entrance
+   - tween 숫자 펄스
+   - 확인 버튼 주기 하이라이트
+   ═══════════════════════════════════════════════════ */
+
+/* 승리 배너 스탬프 — 크게 회전하며 들어와서 착 박히는 느낌 (StS2/LoR 공식) */
+.reward-title.victory.is-stamping{
+  animation: rewVictoryStamp .9s cubic-bezier(.2,1.3,.3,1) both;
+}
+@keyframes rewVictoryStamp{
+  0%   { opacity: 0; transform: scale(3.6) rotate(-14deg); filter: brightness(2) drop-shadow(0 0 30px rgba(255,215,0,.9)); }
+  60%  { opacity: 1; transform: scale(.92) rotate(2deg);   filter: brightness(1.3) drop-shadow(0 0 18px rgba(255,215,0,.7)); }
+  80%  {             transform: scale(1.05) rotate(-1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0);        filter: brightness(1) drop-shadow(0 0 8px rgba(255,215,0,.35)); }
+}
+
+/* 전리품 상자 — 순차 등장 (3개 stagger 120ms) */
+.loot-boxes .loot-box{
+  animation: rewLootEnter .55s cubic-bezier(.2,1.2,.3,1) backwards;
+}
+.loot-boxes .loot-box:nth-child(1){ animation-delay: .25s; }
+.loot-boxes .loot-box:nth-child(2){ animation-delay: .37s; }
+.loot-boxes .loot-box:nth-child(3){ animation-delay: .49s; }
+@keyframes rewLootEnter{
+  0%   { opacity: 0; transform: translateY(40px) scale(.6); }
+  70%  { opacity: 1; transform: translateY(-4px) scale(1.08); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 카운트업 중 span 에 미세 금광 효과 */
+#rew-stats .rew-tween{
+  display: inline-block;
+  color: #ffd76a;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255,215,0,.45);
+  transition: transform .2s ease-out;
+}
+#rew-stats .rew-tween.rew-tween-done{
+  animation: rewTweenPop .3s ease-out;
+}
+@keyframes rewTweenPop{
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.18); text-shadow: 0 0 14px rgba(255,215,0,.85); }
+  100% { transform: scale(1); }
+}
+
+/* 확인 버튼 — 주기 펄스. 확인 후 어디 클릭할지 선명 */
+#reward-screen button[data-action="game.afterBattle"]{
+  animation: rewConfirmPulse 1.8s ease-in-out 1.2s infinite;
+  position: relative;
+}
+@keyframes rewConfirmPulse{
+  0%,100% { box-shadow: 0 0 0 0 rgba(120,255,140,0), 0 4px 12px rgba(0,0,0,.5); transform: translateY(0); }
+  50%     { box-shadow: 0 0 0 8px rgba(120,255,140,.25), 0 8px 22px rgba(0,0,0,.6); transform: translateY(-2px); }
+}
+#match-screen{justify-content:center;background:radial-gradient(ellipse at center,var(--bg-magic) 0%,var(--bg-0) 70%);}
+.match-box{text-align:center;max-width:600px;padding:30px;}
+.match-vs{font-size:2.5rem;color:var(--danger);margin:20px 0;font-family:var(--font-title);text-shadow:0 0 20px rgba(255,68,68,.5);}
+.match-player{display:inline-block;text-align:center;width:250px;vertical-align:top;}
+.match-player .mp-icon{font-size:3.5rem;}
+.match-player .mp-icon img{width:200px!important;height:200px!important;max-width:200px!important;}
+.match-player .mp-name{color:var(--text-0);font-size:1.3rem;font-weight:bold;margin-top:8px;}
+.match-player .mp-info{color:var(--text-2);font-size:.85rem;}
+.match-search{color:var(--text-3);font-size:.9rem;margin:20px 0;}
+.match-search .dots{animation:dotPulse 1.5s infinite;}
+.match-found{animation:matchFlash .5s ease-out;}
+/* design-confirmed: 2026-05-27 사유: dead asset 정리 (bg_prologue.png 미공급 — 자산 공급 시 별도 commit). fallback #050408 유지. */
+#prologue-screen{justify-content:center;align-items:center;background:#050408;text-align:center;position:relative;}
+#prologue-screen::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.7);pointer-events:none;}
+
+/* design-confirmed: 2026-05-17 트랙 5 시안 3 (몽환 디졸브) 정본 적용 — design/prologue_cutscene_spec.md
+   custom: CSS3 native @keyframes — 트랙 5 spec 그대로. */
+.pl-cut-stage{position:absolute;inset:0;z-index:1;pointer-events:none;}
+.pl-cut{position:absolute;inset:0;opacity:0;display:flex;align-items:center;justify-content:center;will-change:opacity,transform,filter;}
+.pl-cut img{max-width:95%;max-height:95%;object-fit:contain;mix-blend-mode:screen;filter:drop-shadow(0 0 24px rgba(244,213,125,.18));}
+.pl-cut.active{animation:plCutDreamy var(--pl-cut-dur,3000ms) ease-in-out forwards;}
+@keyframes plCutDreamy{
+  0%   {opacity:0;filter:blur(16px) saturate(.3) brightness(1.3);transform:scale(.98);}
+  22%  {opacity:.92;filter:blur(3px) saturate(.8) brightness(1.08);transform:scale(1.01);}
+  78%  {opacity:.98;filter:blur(0px) saturate(1.1) brightness(1.0);transform:scale(1.04);}
+  100% {opacity:0;filter:blur(12px) saturate(.5) brightness(.85);transform:scale(1.08);}
+}
+.pl-cut[data-cut="4"].active img{filter:drop-shadow(0 0 40px rgba(244,213,125,.6)) brightness(1.15);}
+.pl-cut-stage::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at center,transparent 40%,rgba(20,15,40,.55) 100%);}
+.pl-line{animation:plLineEthereal 5s ease-in-out infinite alternate;}
+@keyframes plLineEthereal{
+  0%   {text-shadow:0 0 18px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.9),0 0 28px rgba(244,213,125,.25);}
+  100% {text-shadow:0 0 26px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.9),0 0 44px rgba(244,213,125,.45),0 0 6px rgba(168,200,224,.35);}
+}
+
+.prologue-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:100%;text-align:center;}
+/* 프롤로그 텍스트 — 모든 줄 동일 스타일 (노랑 진한 굵은 글씨) */
+.pl-line,
+.pl-line.pl-normal,
+.pl-line.pl-gold,
+.pl-line.pl-dim,
+.pl-line.pl-bright{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:80%;max-width:720px;
+  text-align:center;
+  font-family:var(--font-title,'Cinzel','Noto Serif KR',serif);
+  font-size:1.5rem;
+  font-weight:900;
+  color:#ffd700;
+  letter-spacing:1px;
+  line-height:1.9;
+  word-break:keep-all;
+  opacity:0;
+  text-shadow:
+    0 0 18px rgba(255,215,0,.55),
+    0 2px 14px rgba(0,0,0,.98),
+    0 0 30px rgba(0,0,0,.85);
+}
+.pl-line.pl-show{animation:plCinIn .8s ease-out forwards;}
+.pl-line.pl-hide{animation:plCinOut .6s ease-in forwards;}
+/* 항상 보이는 건너뛰기 — 우상단 (설정 패널 아래) 고정 */
+.prologue-skip{
+  position:absolute!important;
+  top:64px;right:8px;
+  z-index:50;
+  padding:8px 22px!important;
+  font-size:.85rem!important;
+  min-width:0!important;min-height:0!important;
+  opacity:.85;
+  animation:none!important;
+}
+.prologue-skip:hover{opacity:1;}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * 2026-05-10 prologue v10 — 인터랙티브 6 스테이지
+ * (꿈 시네마틱 → 이름 입력 → 성별 → 직업 → 카드 등장 → 여신 만남 → 마무리)
+ * ───────────────────────────────────────────────────────────────────── */
+.pl-stage{
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  z-index:3;
+  text-align:center;
+  width:100%;
+  max-width:720px;
+  padding:0 20px;
+  box-sizing:border-box;
+}
+
+/* 이름 입력 폼 */
+.pl-name-input{
+  display:block;
+  width:80%;
+  max-width:420px;
+  margin:0 auto 14px;
+  background:rgba(20,18,30,.85);
+  border:1px solid rgba(255,215,128,.35);
+  color:#fff7d8;
+  font-family:var(--font-title,'Cinzel','Noto Serif KR',serif);
+  font-size:1.4rem;
+  text-align:center;
+  letter-spacing:6px;
+  padding:14px 20px;
+  border-radius:4px;
+  outline:none;
+  transition:border-color .3s,box-shadow .3s;
+}
+.pl-name-input:focus{
+  border-color:rgba(255,215,128,.85);
+  box-shadow:0 0 24px rgba(255,215,128,.3);
+}
+.pl-name-input::placeholder{color:rgba(200,200,200,.4);letter-spacing:4px;font-size:1.1rem;}
+.pl-name-msg{
+  min-height:1.4em;
+  color:#ff7878;
+  font-size:.85rem;
+  margin-bottom:12px;
+  letter-spacing:2px;
+}
+.pl-name-btn{
+  font-family:var(--font-title,'Cinzel','Noto Serif KR',serif);
+  letter-spacing:4px;
+}
+
+/* 선택지 그룹 */
+.pl-choices{
+  display:flex;
+  gap:36px;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.pl-choices-vert{flex-direction:column;gap:14px;}
+.pl-choice{
+  background:rgba(15,12,22,.7);
+  border:1px solid rgba(255,215,128,.3);
+  color:#f8efd0;
+  font-family:var(--font-title,'Cinzel','Noto Serif KR',serif);
+  font-size:1.15rem;
+  letter-spacing:8px;
+  padding:14px 36px;
+  cursor:pointer;
+  border-radius:2px;
+  transition:all .35s ease;
+  min-width:240px;
+  text-shadow:0 0 12px rgba(0,0,0,.6);
+}
+.pl-choice:hover{
+  border-color:rgba(255,215,128,.85);
+  color:#ffe79b;
+  background:rgba(40,28,15,.55);
+  box-shadow:0 0 24px rgba(255,215,128,.25),inset 0 0 18px rgba(255,215,128,.08);
+  letter-spacing:9px;
+}
+.pl-choice:active{transform:translateY(1px);}
+.pl-choice-back{
+  border-color:rgba(150,150,170,.25);
+  color:rgba(200,200,210,.55);
+  font-size:.95rem;
+  letter-spacing:4px;
+  margin-top:6px;
+  background:transparent;
+}
+.pl-choice-back:hover{
+  border-color:rgba(180,180,200,.5);
+  color:rgba(230,230,240,.85);
+  background:rgba(30,30,40,.4);
+  box-shadow:none;
+  letter-spacing:5px;
+}
+
+/* Stage 5(카드 등장) 위로, Stage 6(여신 만남) 카드 바로 아래로 — 둘이 동시 표시되는 단일 column */
+#prologue-card-reveal{ top:38%; }
+#prologue-meet{ top:74%; }
+.pl-meet-prompt{
+  font-family:var(--font-title,'Cinzel','Noto Serif KR',serif);
+  font-size:1.15rem;
+  color:#ffd700;
+  letter-spacing:4px;
+  margin-bottom:18px;
+  text-shadow:0 0 14px rgba(255,215,0,.55),0 2px 8px rgba(0,0,0,.9);
+  line-height:1.6;
+}
+
+/* 카드 등장 — 빛 번쩍 + 카드 떠오름 */
+.pl-card-flash{
+  position:absolute;
+  left:50%; top:50%;
+  width:1200px; height:1200px;
+  margin-left:-600px; margin-top:-600px;
+  background:radial-gradient(circle at center,rgba(255,255,235,1) 0%,rgba(255,215,128,.45) 18%,rgba(255,180,80,.15) 40%,transparent 65%);
+  opacity:0;
+  pointer-events:none;
+  z-index:2;
+}
+.pl-card-flash.is-flash{animation:plCardFlash 1.4s ease-out forwards;}
+@keyframes plCardFlash{
+  0%{opacity:0;transform:scale(.4);}
+  18%{opacity:1;transform:scale(1.0);}
+  60%{opacity:.55;transform:scale(1.15);}
+  100%{opacity:0;transform:scale(1.4);}
+}
+.pl-card-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  opacity:0;
+  transform:translateY(40px) scale(.6);
+  position:relative;
+  z-index:4;
+}
+.pl-card-wrap.is-show{animation:plCardRise 1.4s .35s cubic-bezier(.2,.8,.3,1) forwards;}
+@keyframes plCardRise{
+  0%  {opacity:0;transform:translateY(40px) scale(.6);filter:brightness(1.6);}
+  60% {opacity:1;transform:translateY(0)   scale(1.05);filter:brightness(1.2);}
+  100%{opacity:1;transform:translateY(0)   scale(1)   ;filter:brightness(1);}
+}
+
+/* 모바일 — 선택지 폭 좁게 */
+@media(max-width:700px){
+  .pl-choice{min-width:180px;font-size:1rem;letter-spacing:5px;padding:12px 22px;}
+  .pl-choice:hover{letter-spacing:6px;}
+  .pl-name-input{font-size:1.1rem;}
+}
+
+@media(max-width:700px){
+  .card{width:42vw;min-height:55vw;}.card-icon{font-size:2.5rem;}.card-name{font-size:.9rem;}.card-stats{font-size:.7rem;}
+  .card-stats .st{padding:3px 5px;}.card-ability{font-size:.65rem;padding:4px 6px;}
+  .char-option{width:42vw;padding:12px 8px;}.char-option .co-icon{font-size:2.5rem;}
+  .battle-card{width:31vw;height:60px;}.battle-card .bc-icon img{width:40px;height:40px;}.battle-card .bc-name{font-size:.5rem;}.battle-card .bc-stats{font-size:.45rem;}
+  #title-screen h1{font-size:2.2rem;}
+  .auth-box{min-width:unset;width:92%;padding:20px;}.auth-box input{font-size:1.1rem;padding:12px;}
+  .btn{padding:14px 30px;font-size:1.1rem;}.btn-s{padding:10px 20px;font-size:.95rem;}
+  .choice-box{width:42vw;padding:16px 10px;}.choice-box .cb-icon{font-size:2.2rem;}.choice-box .cb-title{font-size:1.1rem;}
+  .hud-stat{font-size:.9rem;}.hud-name{font-size:.9rem;}
+  .form-slot{width:70px;height:90px;}
+  .deck-mini{width:55px;height:72px;}.deck-mini .dm-icon{font-size:1.3rem;}
+}
+/* PC-scale 기본값 블록 (2026-04-12 재복원).
+   이전엔 @media(min-width:1024px) 로 감싸져 있었지만, 가로 1280×720 베이스로 전환되어
+   게임 캔버스가 항상 1280 너비이므로 이 규칙들은 무조건 적용돼야 한다. */
+body.game-mode{font-size:18px;}
+body.game-mode .screen-pc-scale h1{font-size:4rem;letter-spacing:8px;}
+body.game-mode #title-screen h1{font-size:4rem;letter-spacing:8px;}
+body.game-mode #title-screen .subtitle{font-size:1.3rem;}
+body.game-mode .btn{padding:16px 44px;font-size:1.2rem;}
+body.game-mode .btn-s{padding:10px 24px;font-size:1rem;}
+body.game-mode .auth-box{min-width:400px;padding:40px 50px;}
+body.game-mode .auth-box h2{font-size:1.8rem;}
+body.game-mode .auth-box input{padding:14px 18px;font-size:1.1rem;}
+body.game-mode .card{width:260px;min-height:370px;}
+body.game-mode .card-icon img{max-height:180px;}
+body.game-mode .card-portrait{min-height:140px;}
+body.game-mode .card-icon{font-size:4.5rem;}
+body.game-mode .card-name{font-size:1rem;}
+body.game-mode .card-type{font-size:.75rem;}
+body.game-mode .card-stats{font-size:.75rem;}
+body.game-mode .card-stats .st{padding:3px 6px;}
+body.game-mode .card-ability{font-size:.75rem;padding:6px 8px;}
+body.game-mode .card-cost{width:36px;height:36px;font-size:1.2rem;}
+body.game-mode .card-rarity-tag{font-size:.65rem;padding:3px 10px;}
+body.game-mode .battle-card{width:31%;max-width:280px;height:85px;}
+body.game-mode .battle-card .bc-icon img{width:65px;height:65px;}
+body.game-mode .battle-card .bc-name{font-size:.75rem;}
+body.game-mode .battle-card .bc-stats{font-size:.65rem;}
+body.game-mode .battle-card .bc-trait{font-size:.5rem;}
+body.game-mode .char-option{width:200px;padding:16px 12px;}
+body.game-mode .char-option .co-icon{font-size:3rem;}
+body.game-mode .char-option .co-name{font-size:1rem;}
+body.game-mode .choice-box{width:220px;padding:24px 18px;}
+body.game-mode .choice-box .cb-icon{font-size:2.5rem;}
+body.game-mode .choice-box .cb-title{font-size:1.1rem;}
+body.game-mode .choice-box .cb-desc{font-size:.8rem;}
+body.game-mode .hud,body.game-mode .town-hud{padding:12px 64px 12px 20px;}
+body.game-mode .hud-stat,body.game-mode .th-stat{font-size:.95rem;}
+body.game-mode .hud-name{font-size:.95rem;}
+body.game-mode .tb-icon{font-size:3.8rem;}
+body.game-mode .tb-label{font-size:.85rem;}
+body.game-mode .npc-bar{padding:14px 20px;max-width:600px;}
+body.game-mode .npc-icon{font-size:2.8rem;}
+body.game-mode .npc-name{font-size:.9rem;}
+body.game-mode .npc-text{font-size:.9rem;}
+body.game-mode .prologue-text{font-size:1.1rem;max-width:700px;line-height:2.2;}
+body.game-mode .reward-title{font-size:2rem;}
+body.game-mode .loot-box{width:100px;height:120px;font-size:3rem;}
+body.game-mode .match-player .mp-icon{font-size:3.5rem;}
+body.game-mode .match-player .mp-name{font-size:1.2rem;}
+body.game-mode .match-vs{font-size:2.5rem;}
+/* P0-1: 우상단 힌트 박스 크기 — 중앙 콘텐츠 가리지 않게 좁게 유지 */
+body.game-mode .tut-box{max-width:360px;padding:14px 20px;}
+body.game-mode .tut-box .tut-text{font-size:.92rem;line-height:1.55;}
+body.game-mode .deck-mini{width:55px;height:72px;}
+body.game-mode .modal-box{min-width:360px;padding:30px 35px;}
+body.game-mode .modal-box h3{font-size:1.2rem;}
+body.game-mode .modal-box p{font-size:1rem;}
+
+/* ═══════════════════════════════════════════════ */
+/* ══ Menu UI 가독성 개선 (2026-04-12 자율 작업) ═ */
+/* ═══════════════════════════════════════════════ */
+/* 2026-04-24: 대표님 지시 — HUD 상단 투명 바 제거. 배경·border·blur·shadow 전부 삭제.
+   개별 .th-stat 은 자체 pill 배경이 있어 가독성 유지됨. */
+.town-hud{
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:10px 18px;
+  z-index:10;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start; /* 2026-05-10 — 100px 프로필 카드와 작은 stats 상단 정렬 */
+  flex-wrap:wrap;
+  gap:8px;
+  font-family:var(--font-ui);
+}
+/* 모바일: HUD 2줄 분리 */
+@media(max-width:767px){
+  .town-hud{flex-direction:column;gap:6px;padding:8px 12px;}
+  .town-hud-left,.town-hud-right{width:100%;justify-content:space-between;flex-wrap:wrap;}
+}
+.town-hud .th-stat{
+  font-size:1.05rem;
+  background:rgba(0,0,0,.62);
+  padding:10px 14px;
+  min-height:44px;
+  border-radius:10px;
+  border:1px solid rgba(255,200,80,.25);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  line-height:1;
+  font-family:var(--font-ui);
+}
+.town-hud .th-stat span{
+  font-weight:800;
+  font-family:var(--font-ui);
+  font-size:1.15rem;
+  color:var(--curr-gold);
+}
+.town-hud-left,.town-hud-right{gap:8px;}
+/* 건물 아이콘 — 가시성 강화 */
+.tb-icon{font-size:3.3rem;}
+.tb-icon img{
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.9));
+}
+.town-building.built .tb-icon{
+  filter:drop-shadow(0 0 14px rgba(255,215,0,.4)) drop-shadow(0 4px 10px rgba(0,0,0,.8));
+}
+.tb-label{
+  font-size:.78rem;
+  font-weight:600;
+  color:#fff;
+  background:rgba(0,0,0,.85);
+  padding:2px 8px;
+  border-radius:4px;
+  opacity:1;
+  border:1px solid rgba(255,200,80,.45);
+  text-shadow:0 1px 2px #000, 0 0 6px rgba(0,0,0,.85);
+  box-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+.town-building.built .tb-label{
+  color:#ffe4a0;
+}
+/* 출전 버튼 — 크고 빛나게 */
+.town-footer .btn{
+  font-size:1.25rem;
+  padding:14px 36px;
+  background:linear-gradient(180deg,var(--danger),#aa1a1a);
+  border:2px solid #ff8080;
+  box-shadow:0 0 18px rgba(255,80,80,.5),0 6px 12px rgba(0,0,0,.6);
+  font-weight:700;
+  letter-spacing:2px;
+  text-shadow:0 1px 3px var(--gray-9);
+  animation:battleButtonPulse 2s ease-in-out infinite;
+}
+.town-footer .btn:hover{
+  transform:translateY(-3px) scale(1.05);
+  box-shadow:0 0 28px rgba(255,80,80,.8),0 10px 16px rgba(0,0,0,.7);
+}
+@keyframes battleButtonPulse{
+  0%,100%{box-shadow:0 0 18px rgba(255,80,80,.5),0 6px 12px rgba(0,0,0,.6);}
+  50%{box-shadow:0 0 26px rgba(255,80,80,.8),0 6px 12px rgba(0,0,0,.6);}
+}
+
+/* ── Deck view: empty slot, progress title, onboarding (2026-04-12) ── */
+.dv-title{text-align:center;font-size:.9rem;color:#f4e4a0;margin:8px 0 4px;font-weight:700;letter-spacing:1px;}
+.empty-slot{width:140px;aspect-ratio:1024/1536;border:2px dashed var(--border-1);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:2.5rem;color:var(--text-4);background:var(--bg-1);opacity:.5;cursor:help;transition:all .2s;text-align:center;padding:8px;}
+.empty-slot:hover{opacity:.85;border-color:var(--border-3);color:var(--text-2);}
+/* P0-2: 첫 N개 빈 슬롯을 "다음 행동 포인터"로 승격 — 펄스 + 힌트 텍스트 */
+.empty-slot.hint{opacity:.85;border-color:var(--curr-gold-dark);color:var(--curr-gold-pale);background:radial-gradient(ellipse at center,rgba(255,215,0,.08),var(--bg-1));animation:emptyHint 2.4s ease-in-out infinite;}
+.empty-slot.hint .es-icon{font-size:2.2rem;opacity:.7;filter:drop-shadow(0 0 8px rgba(255,215,0,.4));}
+.empty-slot.hint .es-label{font-size:.72rem;font-weight:600;letter-spacing:.5px;color:var(--curr-gold);font-family:var(--font-title);line-height:1.2;}
+.empty-slot.hint:hover{opacity:1;transform:translateY(-3px);box-shadow:0 4px 16px rgba(255,215,0,.2);}
+@keyframes emptyHint{
+  0%,100%{border-color:var(--curr-gold-dark);box-shadow:0 0 0 rgba(255,215,0,0);}
+  50%    {border-color:var(--curr-gold);box-shadow:0 0 16px rgba(255,215,0,.25);}
+}
+.dv-onboarding{margin:12px auto;max-width:520px;padding:14px 22px;background:linear-gradient(135deg,rgba(255,200,80,.15),rgba(255,100,30,.08));border:2px solid rgba(255,200,80,.4);border-radius:12px;text-align:center;color:#f4e4a0;font-size:.95rem;}
+.dv-onboarding span{display:block;font-size:.78rem;color:var(--text-2);margin-top:4px;}
+
+/* ── Title screen CTA buttons (2026-04-12 가독성 강화) ── */
+#title-screen .btn{
+  font-size:1.35rem;
+  font-weight:700;
+  padding:18px 38px;
+  letter-spacing:1px;
+  text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 12px rgba(0,0,0,.7);
+  box-shadow:0 6px 18px rgba(0,0,0,.7),inset 0 0 12px rgba(255,200,80,.15);
+  border-width:2px;
+  transition:all .25s;
+}
+#title-screen .btn:hover{
+  transform:translateY(-3px) scale(1.04);
+  box-shadow:0 10px 22px rgba(0,0,0,.8),inset 0 0 18px rgba(255,200,80,.25),0 0 30px rgba(255,215,0,.3);
+}
+
+/* ═════════════════════════════════════════════
+ * 버튼 그룹 분리 (2026-04-13 심야)
+ * — 5개 그룹 래퍼(title/tavern/formation/gameover/battle)를
+ *   투명 full-container 로 만들고, 각 버튼을 개별 절대 위치로.
+ *   cardselect 의 cs-btn-* 패턴 그대로 따름.
+ * ═════════════════════════════════════════════ */
+
+/* TITLE — .title-buttons
+ * ⚠️ title 은 DOM 구조가 다름: #title-screen > <div z-index:2> > .title-buttons > button
+ *    다른 화면(cs/tav/form/go/battle)은 래퍼가 screen 직계 자식이라
+ *    "wrapper 를 full-container 로 만들기" 트릭이 먹히지만,
+ *    title 은 중간 래퍼의 position:relative 인라인 스타일 때문에
+ *    버튼 positioning context 가 content-sized 박스로 잡혀 화면 밖으로 사라졌었음.
+ *
+ * 해결: 중간 래퍼 position:static 플랫 → positioning context 가 #title-screen(1280×720)
+ *       .title-buttons 는 display:contents 로 박스 트리에서 제거 */
+body.game-mode #title-screen > div[style*="z-index:2"]{
+  position: static !important;
+}
+body.game-mode #title-screen .title-buttons{
+  display: contents !important;
+}
+body.game-mode #title-screen .title-buttons > button{
+  position:absolute; margin:0 !important;
+}
+body.game-mode #title-screen .title-buttons > button[data-arg="login-screen"]{
+  left:var(--title-btn-back-x); top:var(--title-btn-back-y);
+  width:var(--title-btn-back-w); height:var(--title-btn-back-h);
+}
+body.game-mode #title-screen .title-buttons > button[data-arg="signup-screen"]{
+  left:var(--title-btn-new-x); top:var(--title-btn-new-y);
+  width:var(--title-btn-new-w); height:var(--title-btn-new-h);
+}
+/* title 텍스트 3종 — Type C 분해 (2026-04-13). 중간 래퍼는 이미 static.
+   2026-04-14: flex center 로 박스 내부 수평·수직 완전 중앙정렬. */
+body.game-mode #title-screen > div[style*="z-index:2"] > div:first-of-type{
+  position:absolute;
+  left:var(--title-league-x); top:var(--title-league-y);
+  width:var(--title-league-w); height:var(--title-league-h);
+  margin:0 !important;
+  display:flex !important;align-items:center;justify-content:center;
+  text-align:center !important;letter-spacing:8px;
+}
+body.game-mode #title-screen > div[style*="z-index:2"] > h1{
+  position:absolute;
+  left:var(--title-logo-x); top:var(--title-logo-y);
+  width:var(--title-logo-w); height:var(--title-logo-h);
+  margin:0 !important;
+  display:flex !important;align-items:center;justify-content:center;
+  text-align:center !important;
+}
+body.game-mode #title-screen > div[style*="z-index:2"] > .subtitle{
+  position:absolute;
+  left:var(--title-subtitle-x); top:var(--title-subtitle-y);
+  width:var(--title-subtitle-w); height:var(--title-subtitle-h);
+  margin:0 !important;
+  display:flex !important;align-items:center;justify-content:center;
+  text-align:center !important;
+}
+
+/* TAVERN — padding:10px;display:flex;gap:8px wrapper (맨 아래) */
+body.game-mode #tavern-screen > div[style*="padding:10px"][style*="gap:8px"]{
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  padding:0; margin:0; display:block !important;
+  background:none !important; filter:none !important;
+  pointer-events:none;
+}
+body.game-mode #tavern-screen > div[style*="padding:10px"][style*="gap:8px"] > button{
+  pointer-events:auto; position:absolute; margin:0 !important;
+}
+body.game-mode #tavern-screen > div[style*="padding:10px"][style*="gap:8px"] > button[data-action="game.refreshTavern"]{
+  left:var(--tav-btn-refresh-x); top:var(--tav-btn-refresh-y);
+  width:var(--tav-btn-refresh-w); height:var(--tav-btn-refresh-h);
+}
+body.game-mode #tavern-screen > div[style*="padding:10px"][style*="gap:8px"] > button[data-action="game.showMenu"]{
+  left:var(--tav-btn-back-x); top:var(--tav-btn-back-y);
+  width:var(--tav-btn-back-w); height:var(--tav-btn-back-h);
+}
+
+/* FORMATION 액션 영역 (2026-04-24 재설계) — 동적 버튼 수 (matched 2개 / free 5개) 모두 수용.
+   Type A `padding:10px+gap:10px` 인라인 매칭 + 자식 absolute 좌표 토큰 패턴 폐기.
+   #form-actions 직접 매칭으로 단일 flex 행. */
+body.game-mode #formation-screen > #form-actions{
+  position:absolute; left:0; right:0; bottom:20px;
+  display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  padding:0 16px;
+  pointer-events:none;
+}
+body.game-mode #formation-screen > #form-actions > button{
+  pointer-events:auto; position:static; margin:0;
+}
+
+/* GAMEOVER — display:flex;gap:10px wrapper */
+body.game-mode #gameover-screen > div[style*="display:flex"][style*="gap:10px"]{
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  padding:0; margin:0; display:block !important;
+  background:none !important; filter:none !important;
+  pointer-events:none;
+}
+body.game-mode #gameover-screen > div[style*="display:flex"][style*="gap:10px"] > button{
+  pointer-events:auto; position:absolute; margin:0 !important;
+}
+body.game-mode #gameover-screen > div[style*="display:flex"][style*="gap:10px"] > button[data-action="game.newRun"]{
+  left:var(--go-btn-restart-x); top:var(--go-btn-restart-y);
+  width:var(--go-btn-restart-w); height:var(--go-btn-restart-h);
+}
+body.game-mode #gameover-screen > div[style*="display:flex"][style*="gap:10px"] > button[data-action="game.logout"]{
+  left:var(--go-btn-rest-x); top:var(--go-btn-rest-y);
+  width:var(--go-btn-rest-w); height:var(--go-btn-rest-h);
+}
+
+
+/* ═════════════════════════════════════════════
+ * login/signup/prologue + tab wrappers 개별 분해
+ * (2026-04-13 심야 2차)
+ * ═════════════════════════════════════════════ */
+
+/* ── LOGIN ── */
+/* 2026-04-13 버그픽스: .active 스코프 없이 display:block 이면 비활성 상태에서도 화면에 보임.
+   타이틀 진입 시 login/signup 이 뒤에 겹쳐 보이던 사고의 원인. */
+body.game-mode #login-screen.active { display:block; }
+body.game-mode #login-screen .auth-box{
+  position:absolute;
+  left:var(--login-box-x); top:var(--login-box-y);
+  width:var(--login-box-w); height:var(--login-box-h);
+  padding:0; min-width:0;
+  margin:0;
+}
+body.game-mode #login-screen .auth-box > h2,
+body.game-mode #login-screen .auth-box > input,
+body.game-mode #login-screen .auth-box > .auth-msg,
+body.game-mode #login-screen .auth-box > button,
+body.game-mode #login-screen .auth-box > .auth-back{
+  position:absolute; margin:0 !important;
+}
+body.game-mode #login-screen .auth-box > h2{
+  left:var(--li-title-x); top:var(--li-title-y);
+  width:var(--li-title-w); height:var(--li-title-h);
+}
+body.game-mode #login-screen #login-id{
+  left:var(--li-id-x); top:var(--li-id-y);
+  width:var(--li-id-w); height:var(--li-id-h);
+}
+body.game-mode #login-screen #login-pw{
+  left:var(--li-pw-x); top:var(--li-pw-y);
+  width:var(--li-pw-w); height:var(--li-pw-h);
+}
+body.game-mode #login-screen #login-msg{
+  left:var(--li-msg-x); top:var(--li-msg-y);
+  width:var(--li-msg-w); height:var(--li-msg-h);
+}
+body.game-mode #login-screen .auth-box > button{
+  left:var(--li-btn-x); top:var(--li-btn-y);
+  width:var(--li-btn-w); height:var(--li-btn-h);
+}
+body.game-mode #login-screen .auth-box > .auth-back{
+  left:var(--li-back-x); top:var(--li-back-y);
+  width:var(--li-back-w); height:var(--li-back-h);
+}
+
+/* ── SIGNUP ── */
+body.game-mode #signup-screen.active { display:block; }
+body.game-mode #signup-screen .auth-box{
+  position:absolute;
+  left:var(--signup-box-x); top:var(--signup-box-y);
+  width:var(--signup-box-w); height:var(--signup-box-h);
+  padding:0; min-width:0; margin:0;
+}
+body.game-mode #signup-screen .auth-box > h2,
+body.game-mode #signup-screen .auth-box > input,
+body.game-mode #signup-screen .auth-box > .auth-msg,
+body.game-mode #signup-screen .auth-box > button,
+body.game-mode #signup-screen .auth-box > .auth-back{
+  position:absolute; margin:0 !important;
+}
+body.game-mode #signup-screen .auth-box > h2{
+  left:var(--su-title-x); top:var(--su-title-y);
+  width:var(--su-title-w); height:var(--su-title-h);
+}
+body.game-mode #signup-screen #signup-id{
+  left:var(--su-id-x); top:var(--su-id-y);
+  width:var(--su-id-w); height:var(--su-id-h);
+}
+body.game-mode #signup-screen #signup-pw{
+  left:var(--su-pw-x); top:var(--su-pw-y);
+  width:var(--su-pw-w); height:var(--su-pw-h);
+}
+body.game-mode #signup-screen #signup-pw2{
+  left:var(--su-pw2-x); top:var(--su-pw2-y);
+  width:var(--su-pw2-w); height:var(--su-pw2-h);
+}
+body.game-mode #signup-screen #signup-msg{
+  left:var(--su-msg-x); top:var(--su-msg-y);
+  width:var(--su-msg-w); height:var(--su-msg-h);
+}
+body.game-mode #signup-screen .auth-box > button{
+  left:var(--su-btn-x); top:var(--su-btn-y);
+  width:var(--su-btn-w); height:var(--su-btn-h);
+}
+body.game-mode #signup-screen .auth-box > .auth-back{
+  left:var(--su-back-x); top:var(--su-back-y);
+  width:var(--su-back-w); height:var(--su-back-h);
+}
+
+/* ── PROLOGUE buttons ── */
+body.game-mode #prologue-btns{
+  position:absolute !important;
+  left:0 !important; top:0 !important;
+  transform:none !important;
+  width:100% !important; height:100% !important;
+  pointer-events:none;
+}
+body.game-mode #prologue-btns > button,
+body.game-mode #prologue-btns .auth-back{
+  position:absolute; pointer-events:auto; margin:0 !important;
+}
+body.game-mode #prologue-btns > button[data-action="auth.endPrologue"]{
+  left:var(--prologue-btn-ok-x); top:var(--prologue-btn-ok-y);
+  width:var(--prologue-btn-ok-w); height:var(--prologue-btn-ok-h);
+}
+body.game-mode #prologue-btns .auth-back{
+  left:var(--prologue-btn-skip-x); top:var(--prologue-btn-skip-y);
+  width:var(--prologue-btn-skip-w); height:var(--prologue-btn-skip-h);
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  background:rgba(10,12,20,.72);
+  border:1px solid rgba(200,180,120,.55);
+  border-radius:6px;
+  color:#e8e0c4;
+  font-size:15px; font-weight:600;
+  letter-spacing:1px;
+  text-decoration:none;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.45);
+  transition:background .15s, border-color .15s, transform .1s;
+  z-index:50;
+}
+body.game-mode #prologue-btns .auth-back::after{
+  content:'»'; font-size:18px; opacity:.85;
+}
+body.game-mode #prologue-btns .auth-back:hover{
+  background:rgba(40,30,14,.92);
+  border-color:rgba(240,210,130,.9);
+  color:#fff7d6;
+}
+body.game-mode #prologue-btns .auth-back:active{
+  transform:scale(.97);
+}
+
+/* ── TAVERN tabs (wrapper was single zone, now individual) ── */
+body.game-mode #tav-tab-unit{
+  position:absolute !important;
+  left:var(--tav-tab-unit-x); top:var(--tav-tab-unit-y);
+  width:var(--tav-tab-unit-w); height:var(--tav-tab-unit-h);
+  margin:0 !important;
+}
+body.game-mode #tav-tab-hero{
+  position:absolute !important;
+  left:var(--tav-tab-hero-x); top:var(--tav-tab-hero-y);
+  width:var(--tav-tab-hero-w); height:var(--tav-tab-hero-h);
+  margin:0 !important;
+}
+/* 현재 선택된 탭은 "재클릭 필요 없음" 신호로 잠금 처리 — 짙은 회색 + 비활성 */
+body.game-mode #tav-tab-unit.tav-tab-current,
+body.game-mode #tav-tab-hero.tav-tab-current{
+  border-color:#3a3a3a !important;
+  color:#777 !important;
+  background:#1a1a1a !important;
+  opacity:.6;
+  cursor:default;
+  pointer-events:none;
+}
+body.game-mode #tav-info{
+  position:absolute !important;
+  left:var(--tav-info-x); top:var(--tav-info-y);
+  width:var(--tav-info-w); height:var(--tav-info-h);
+}
+
+/* ── DECKVIEW tabs ── */
+body.game-mode #tab-deck{
+  position:absolute !important;
+  left:var(--dv-tab-deck-x); top:var(--dv-tab-deck-y);
+  width:var(--dv-tab-deck-w); height:var(--dv-tab-deck-h);
+  margin:0 !important;
+}
+body.game-mode #tab-codex{
+  position:absolute !important;
+  left:var(--dv-tab-codex-x); top:var(--dv-tab-codex-y);
+  width:var(--dv-tab-codex-w); height:var(--dv-tab-codex-h);
+  margin:0 !important;
+}
+
+/* ── CASTLE tabs ── 2026-05-02: castle-tab-upgrade 제거 (단련은 훈련장으로 이전).
+   castle-tab-quest 만 남았는데 단독 탭이라 별도 absolute 좌표 불필요 → flow 로 복귀.
+   castle-screen 의 quest area 만 표시되므로 탭 자체도 사실상 dead. */
+
+/* ── CHURCH info ── */
+body.game-mode #church-info{
+  position:absolute !important;
+  left:var(--church-info-x); top:var(--church-info-y);
+  width:var(--church-info-w); height:var(--church-info-h);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ══ S2: ARENA (고스트 PvP) ════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════ */
+#arena-match-screen{
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(ellipse at center, #1a1020 0%, #0a0810 60%);
+}
+.arena-match-box{
+  text-align: center;
+  padding: var(--sp-7);
+  max-width: 600px;
+  width: 100%;
+}
+.arena-title{
+  font-size: var(--fs-2xl);
+  color: var(--bv2-accent, var(--curr-gold));
+  font-family: var(--font-title);
+  margin-bottom: var(--sp-6);
+  text-shadow: 0 0 20px rgba(255,215,0,.4);
+}
+.arena-vs-row{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-7);
+}
+.arena-player{
+  flex: 1;
+  padding: var(--sp-5);
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-lg);
+}
+.arena-player-name{
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--text-0);
+  margin-bottom: var(--sp-2);
+}
+.arena-player-lp{
+  font-size: var(--fs-lg);
+  color: var(--curr-gold);
+  font-weight: 600;
+}
+.arena-player-sub{
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  margin-top: var(--sp-1);
+}
+.arena-vs-badge{
+  font-size: var(--fs-2xl);
+  font-weight: 900;
+  color: var(--danger);
+  text-shadow: 0 0 16px rgba(255,68,68,.5);
+  letter-spacing: 4px;
+  flex-shrink: 0;
+}
+.arena-btn-row{
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: center;
+}
+.arena-btn-row .btn{
+  min-width: 140px;
+  padding: 14px 28px;
+  font-size: var(--fs-lg);
+}
+
+/* ── Settings Modal (2026-04-23 / 2026-04-24 확장) — 계정·진행·사운드·세션 섹션화 ─── */
+/* 2026-05-03: 게임 종료 버튼 추가로 섹션 콘텐츠 720 뷰포트 초과 → max-height + overflow-y 안전망. */
+#settings-modal .set-modal{
+  min-width:360px; max-width:420px;
+  max-height:700px; overflow-y:auto;
+}
+#settings-modal h3{ margin:0 0 14px; text-align:center; letter-spacing:.02em; }
+#settings-modal .set-account{
+  display:flex; flex-direction:column; gap:6px;
+  margin:0 0 12px; padding:10px 14px;
+  background:rgba(0,0,0,.38);
+  border:1px solid rgba(255,200,80,.15);
+  border-radius:8px;
+  font-size:.88rem; color:var(--text-2);
+}
+#settings-modal .set-account .set-row{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; line-height:1.4;
+  background:transparent !important;
+}
+#settings-modal .set-account .set-label{ color:var(--text-3); font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; background:transparent !important; }
+#settings-modal .set-account strong.set-user-name{
+  color:var(--curr-gold) !important; font-weight:700;
+  background:transparent !important;
+  padding:0 !important; border:none !important;
+}
+#settings-modal .set-cloud-status{ font-size:.9rem; font-weight:600; background:transparent !important; }
+#settings-modal .set-cloud-status.is-on{ color:var(--success); }
+#settings-modal .set-cloud-status.is-off{ color:var(--text-3); }
+#settings-modal .set-cloud-status.is-off::before{ content:'● '; color:var(--text-3); }
+#settings-modal .set-cloud-status.is-on::before{ content:'● '; color:var(--success); }
+
+/* 2026-04-27: 검수관 진단 — banner_modal_box.png 갈색 텍스처 위에서 text-3 색·.72rem 가
+   대비 4.5:1 미달이라 사용자가 "진행/세션 섹션이 안 보인다" 인지. 색·크기·그림자 강화. */
+#settings-modal .set-section-title{
+  margin:14px 2px 8px; padding:0 0 4px;
+  font-size:.82rem; font-weight:700; color:var(--curr-gold);
+  text-transform:uppercase; letter-spacing:.1em;
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+  border-bottom:1px solid rgba(255,200,80,.28);
+}
+#settings-modal .modal-buttons.set-vert{
+  display:flex; flex-direction:column; gap:6px; align-items:stretch;
+  margin:0;
+}
+/* 설정 모달 버튼은 text-align:center 유지 (돌 프레임 PNG 의 좌우 장식과 충돌 방지). */
+#settings-modal .modal-buttons.set-vert .btn{ width:100%; text-align:center; padding:10px 14px; text-shadow:0 1px 0 rgba(0,0,0,.7); }
+/* 로그아웃 버튼 — 돌 프레임 + color:var(--danger) 조합에서 글자 대비 부족. 밝은 빨강으로 강제. */
+#settings-modal .btn.btn-red{ color:#ff8a8a !important; text-shadow:0 1px 0 rgba(0,0,0,.6); }
+#settings-modal .btn.btn-red:hover{ color:#ffd0d0 !important; }
+#settings-modal .modal-buttons.set-close-row{
+  margin-top:10px;
+  display:flex; justify-content:center;
+}
+#settings-modal .modal-buttons.set-close-row .btn{ min-width:120px; }
+
+/* ═══ DECKVIEW CARD FOCUS (2026-04-27) ═══
+   카드 클릭 시 중앙 확대 + 보유 스킬카드 표시. 전투 char-focus 와 동형이지만 deckview 컨테이너 내부에서 동작.
+   기존 #detail-modal (텍스트 설명창) 폐기 → 시각 일관성 강화. */
+body.game-mode #deckview-screen #dv-focus.dv-focus-overlay{
+  display:none;
+  position:absolute;inset:0;width:100%;height:100%;
+  z-index:300;pointer-events:auto;
+}
+body.game-mode #deckview-screen #dv-focus.dv-focus-overlay.active{display:block;}
+.dvf-backdrop{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.78) 0%, rgba(0,0,0,.92) 70%);
+  pointer-events:auto;
+  animation:dvfBackdropIn .22s ease-out;
+}
+.dvf-main-card{
+  position:absolute;left:50%;top:48%;
+  transform:translate(-50%,-50%);
+  z-index:2;pointer-events:auto;
+  /* V4 카드 1.6배 확대 — 전투 focus(1.8x) 와 비슷하지만 약간 작게 (deckview 화면이 더 좁음) */
+  --card-v4-w:336px;
+  animation:dvfCardIn .26s cubic-bezier(.25,.9,.3,1);
+  filter:drop-shadow(0 12px 32px rgba(0,0,0,.85)) drop-shadow(0 0 28px rgba(255,200,80,.35));
+}
+.dvf-skill-row{
+  position:absolute;left:50%;bottom:8%;
+  transform:translateX(-50%);
+  display:flex;gap:10px;justify-content:center;
+  z-index:3;pointer-events:auto;
+  max-width:90%;flex-wrap:wrap;
+  animation:dvfSkillIn .3s ease-out .1s both;
+}
+.dvf-skill-card{
+  width:140px;height:200px;
+  border-radius:8px;
+  background:linear-gradient(180deg,#3a4a6e,#1a2240);
+  border:2px solid #88a8e0;
+  box-shadow:0 6px 18px rgba(0,0,0,.7),0 0 14px rgba(136,168,224,.25);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:8px;cursor:default;
+}
+.dvf-skill-card .bsc-card-img{position:absolute;inset:0;}
+.dvf-skill-card .bsc-card-img img{width:100%;height:100%;object-fit:cover;filter:brightness(.92);}
+.dvf-skill-card .bsc-cost{
+  position:absolute;top:6px;right:8px;
+  font-size:.85rem;font-weight:700;color:#ffe78a;
+  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.7);
+  z-index:2;
+}
+.dvf-skill-card .bsc-name{
+  position:relative;z-index:2;
+  color:#fff;font-size:.85rem;font-weight:700;text-align:center;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);margin-bottom:4px;
+}
+.dvf-skill-card .bsc-desc{
+  position:relative;z-index:2;
+  color:#e8eaf0;font-size:.7rem;line-height:1.35;text-align:center;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);
+  background:rgba(0,0,0,.4);padding:4px 6px;border-radius:4px;
+}
+.dvf-skill-empty{
+  color:#aaa;font-size:.85rem;padding:20px 30px;
+  background:rgba(0,0,0,.55);border:1px solid #555;border-radius:6px;
+}
+.dvf-close-row{
+  position:absolute;top:14px;right:18px;
+  z-index:4;pointer-events:auto;
+}
+@keyframes dvfBackdropIn{0%{opacity:0;}100%{opacity:1;}}
+@keyframes dvfCardIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.6);}100%{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+@keyframes dvfSkillIn{0%{opacity:0;transform:translateX(-50%) translateY(20px);}100%{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* ───── 매칭 화면 (Phase 1/2 — 2026-05-10 Plan 1 Task 2) ───── */
+/* 옛 PHASE 3 매칭 흐름을 PHASE 6 데이터로 복원. .match-box 는 절대 위치 유지(line 1127),
+ * 내부 컨텐츠만 styling. 280×490 V4 카드 양쪽 + VS + 카운트다운/버튼. */
+body.game-mode #match-screen{
+  --card-v4-w: 280px;
+  background: radial-gradient(ellipse at 50% 50%, #1a1420 0%, #0a0608 100%);
+}
+body.game-mode #match-screen .match-box{
+  text-align: center;
+}
+body.game-mode #match-screen .match-search{
+  font-size: 1.2rem;
+  color: #e6b85a;
+  margin-bottom: 30px;
+}
+body.game-mode #match-screen .match-search .dots{
+  display: inline-block;
+  animation: matchDots 1.5s infinite;
+}
+@keyframes matchDots{
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+body.game-mode #match-screen .match-found{
+  font-size: 1.3rem;
+  color: #44ff88;
+  margin-bottom: 20px;
+  animation: matchFoundFade 0.6s ease-out;
+}
+@keyframes matchFoundFade{
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+body.game-mode #match-screen .match-row{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+}
+body.game-mode #match-screen .match-side{
+  text-align: center;
+  min-width: 280px;
+}
+body.game-mode #match-screen .match-placeholder{
+  width: 280px;
+  height: 392px;
+  border-radius: 15px;
+  border: 3px dashed #444;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  opacity: .3;
+  animation: matchDotPulse 1s infinite;
+}
+@keyframes matchDotPulse{
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+body.game-mode #match-screen .match-vs{
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #ffd700;
+  font-family: 'Cinzel', serif;
+}
+body.game-mode #match-screen .match-vs-dim{ opacity: 0.3; }
+body.game-mode #match-screen .match-cap{
+  margin-top: 8px;
+}
+body.game-mode #match-screen .match-cap-name{
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+body.game-mode #match-screen .match-cap-meta{
+  color: #aaa;
+  font-size: .9rem;
+  margin-top: 4px;
+}
+body.game-mode #match-screen .match-cap-label{
+  color: #555;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+body.game-mode #match-screen .match-countdown{
+  color: #ffcc44;
+  font-size: 1rem;
+  margin-top: 25px;
+}
+body.game-mode #match-screen .match-actions{
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 15px;
+}
+body.game-mode #match-screen .match-btn-fight{ font-size: 1.2rem; }

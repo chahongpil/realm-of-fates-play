@@ -1,0 +1,435 @@
+/* ==============================================================
+   Realm of Fates — PHASE 5 Chat Panel
+   ==============================================================
+   - 우측 사이드 토글 패널 (320px) + 고정 토글 버튼
+   - 기존 parchment/ink/gilt 토큰 재사용. 새 색·프레임 만들지 않음.
+   - Step 2 (world 단일 채널). 3채널 탭은 Step 3 에서 확장.
+   ============================================================== */
+
+:root {
+  --chat-panel-w: 320px;
+  --chat-anim: 200ms ease-out;
+}
+
+/* ── 토글 버튼 (우측 하단 고정) ───────────────────────────── */
+body.game-mode #chat-toggle {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(30,22,14,.96), rgba(18,12,6,.98));
+  border: 2px solid var(--border-3);
+  color: var(--curr-gold);
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 380;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,.6);
+  transition: transform 150ms;
+}
+body.game-mode #chat-toggle:hover { transform: scale(1.06); }
+body.game-mode #chat-toggle:active { transform: scale(0.98); }
+
+/* 읽지 않은 배지 */
+body.game-mode #chat-toggle .cp-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font: 900 11px/18px 'Noto Sans KR', sans-serif;
+  text-align: center;
+  border: 1px solid rgba(0,0,0,.6);
+}
+body.game-mode #chat-toggle .cp-badge[hidden] { display: none; }
+
+/* ── 패널 본체 ────────────────────────────────────────────── */
+body.game-mode #chat-panel {
+  position: absolute;
+  top: 0; right: 0;
+  width: var(--chat-panel-w);
+  height: 100%;
+  background: linear-gradient(180deg, rgba(18,12,6,.97), rgba(10,7,3,.98));
+  z-index: 390;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform var(--chat-anim);
+  /* 2026-05-02: border-left + box-shadow 는 active 일 때만 — 평상시 ultra-wide letterbox 영역에
+     그림자/선 노출되어 우측 경계선처럼 보이던 문제 해결. */
+}
+body.game-mode #chat-panel.active {
+  transform: translateX(0);
+  border-left: 2px solid var(--border-3);
+  box-shadow: -8px 0 24px rgba(0,0,0,.55);
+}
+
+/* ── 헤더 (탭) ────────────────────────────────────────────── */
+#chat-panel .cp-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid rgba(212,168,74,.25);
+}
+#chat-panel .cp-title {
+  flex: 1;
+  font: 900 15px/1 'Cinzel Decorative', 'Noto Serif KR', serif;
+  color: var(--curr-gold);
+  letter-spacing: .04em;
+}
+#chat-panel .cp-close {
+  background: transparent;
+  border: 1px solid rgba(212,168,74,.3);
+  color: var(--amber-pale);
+  width: 28px; height: 28px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+#chat-panel .cp-close:hover { background: rgba(212,168,74,.15); }
+
+/* 탭 버튼 (Step 3 에서 활성화, 지금은 world 만 표시) */
+#chat-panel .cp-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 10px 8px;
+  border-bottom: 1px solid rgba(212,168,74,.15);
+}
+#chat-panel .cp-tab {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(212,168,74,.25);
+  background: transparent;
+  color: var(--amber-pale);
+  cursor: pointer;
+}
+#chat-panel .cp-tab.active {
+  background: linear-gradient(180deg, var(--curr-gold-pale), var(--gilt-deep));
+  color: var(--ink-0);
+  border-color: var(--curr-gold);
+}
+#chat-panel .cp-tab[disabled] { opacity: .4; cursor: not-allowed; }
+
+/* ── 상태 배너 (재연결 / 오프라인 / 뮤트) ─────────────────── */
+#chat-panel .cp-banner {
+  padding: 6px 10px;
+  font-size: 11px;
+  text-align: center;
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-bottom: 1px solid var(--warn);
+}
+#chat-panel .cp-banner.error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+#chat-panel .cp-banner[hidden] { display: none; }
+
+/* ── 메시지 목록 ──────────────────────────────────────────── */
+#chat-panel .cp-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
+}
+#chat-panel .cp-messages::-webkit-scrollbar { width: 6px; }
+#chat-panel .cp-messages::-webkit-scrollbar-thumb {
+  background: rgba(212,168,74,.25);
+  border-radius: 3px;
+}
+
+#chat-panel .cp-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(30,22,14,.55);
+  border-radius: 4px;
+  border-left: 2px solid rgba(212,168,74,.3);
+}
+#chat-panel .cp-msg.self {
+  border-left-color: var(--curr-gold);
+  background: rgba(139,105,20,.18);
+}
+#chat-panel .cp-msg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+#chat-panel .cp-msg-user {
+  font: 700 12px/1 'Cinzel', serif;
+  color: var(--curr-gold);
+}
+#chat-panel .cp-msg-lv {
+  font: 400 10px/1 ui-monospace, monospace;
+  color: var(--amber-pale);
+  opacity: .7;
+}
+#chat-panel .cp-msg-time {
+  font: 400 10px/1 ui-monospace, monospace;
+  color: var(--amber-pale);
+  opacity: .45;
+  margin-left: auto;
+}
+#chat-panel .cp-msg-text {
+  font: 400 13px/1.45 'Noto Sans KR', sans-serif;
+  color: var(--amber-pale);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+#chat-panel .cp-msg-text.overflow { color: var(--danger); }
+/* 2026-05-02 Step 4 v2 — 텍스트 내 카드 이름 자동 링크. 토큰 기반 (--el-water/--el-water-glow). */
+#chat-panel .cp-card-link {
+  color: var(--el-water);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--el-water);
+  text-underline-offset: 2px;
+  transition: color .15s, text-decoration-color .15s;
+}
+#chat-panel .cp-card-link:hover {
+  color: var(--el-water-glow);
+  text-decoration-color: var(--el-water-glow);
+}
+#chat-panel .cp-msg-card {
+  margin-top: 6px;
+  /* Step 4 에서 CardV4Component compact 카드 삽입 위치 */
+}
+
+/* 시스템 메시지 (안내/오프라인 등) */
+#chat-panel .cp-msg.system {
+  background: transparent;
+  border-left: none;
+  color: var(--amber-pale);
+  opacity: .5;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 8px;
+}
+
+/* ── 입력 영역 ────────────────────────────────────────────── */
+#chat-panel .cp-input-row {
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(212,168,74,.25);
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+#chat-panel .cp-attach {
+  width: 32px; height: 32px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid rgba(212,168,74,.3);
+  color: var(--curr-gold);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#chat-panel .cp-attach[disabled] { opacity: .4; cursor: not-allowed; }
+#chat-panel .cp-input {
+  flex: 1;
+  background: rgba(10,7,3,.7);
+  border: 1px solid rgba(212,168,74,.3);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font: 400 13px/1.4 'Noto Sans KR', sans-serif;
+  color: var(--amber-pale);
+  resize: none;
+  min-height: 32px;
+  max-height: 80px;
+  outline: none;
+}
+#chat-panel .cp-input:focus { border-color: var(--curr-gold); }
+#chat-panel .cp-input[disabled] { opacity: .4; }
+#chat-panel .cp-send {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--curr-gold-pale), var(--gilt-deep));
+  border: 1px solid var(--curr-gold);
+  color: var(--ink-0);
+  font: 700 12px/1 'Cinzel', serif;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#chat-panel .cp-send[disabled] {
+  opacity: .4;
+  cursor: not-allowed;
+  background: rgba(139,105,20,.3);
+}
+#chat-panel .cp-counter {
+  position: absolute;
+  right: 14px; bottom: 52px;  /* 보내기 버튼 위로 이동 (중첩 방지) */
+  font: 400 10px/1 ui-monospace, monospace;
+  color: var(--amber-pale);
+  opacity: .5;
+  pointer-events: none;
+}
+#chat-panel .cp-counter.warn { color: var(--warn); opacity: 1; }
+#chat-panel .cp-counter.over { color: var(--danger); opacity: 1; }
+
+/* ── PHASE 5 Step 4b: 카드 첨부 미리보기 (입력창 위) ────────── */
+#chat-panel .cp-attach-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(212,168,74,.08);
+  border-top: 1px solid rgba(212,168,74,.2);
+  font: 400 12px/1.3 'Noto Sans KR', sans-serif;
+  color: var(--amber-pale);
+}
+#chat-panel .cp-ap-icon { font-size: 13px; }
+#chat-panel .cp-ap-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#chat-panel .cp-ap-remove {
+  background: transparent;
+  border: none;
+  color: var(--amber-pale);
+  font-size: 13px;
+  cursor: pointer;
+  opacity: .7;
+  padding: 2px 4px;
+}
+#chat-panel .cp-ap-remove:hover { opacity: 1; color: var(--danger, #e74c3c); }
+
+/* ── PHASE 5 Step 4b: 카드 picker overlay (chat-panel 내부) ──── */
+#chat-panel .cp-card-picker {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,7,3,.92);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+#chat-panel .cp-cp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(212,168,74,.3);
+  margin-bottom: 8px;
+}
+#chat-panel .cp-cp-title {
+  font: 700 13px/1 'Cinzel', serif;
+  color: var(--curr-gold);
+}
+#chat-panel .cp-cp-close {
+  background: transparent;
+  border: 1px solid rgba(212,168,74,.3);
+  color: var(--amber-pale);
+  font-size: 14px;
+  cursor: pointer;
+  width: 24px; height: 24px;
+  border-radius: 3px;
+}
+#chat-panel .cp-cp-close:hover { background: rgba(212,168,74,.15); }
+#chat-panel .cp-cp-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+/* ── PHASE 5 Step 4 v2 / 2단계: @ 자동완성 dropdown ─────────── */
+#chat-panel .cp-mention-dropdown {
+  position: relative;
+  margin: 0 10px;
+  background: rgba(14,9,4,.96);
+  border: 1px solid rgba(212,168,74,.4);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  /* 2026-05-02 자율 폴리시: 220 → 270 으로 +50px. 8 항목 (33px×8 = 264) 모두 보임 (스크롤 없이). */
+  max-height: 270px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 -4px 12px rgba(0,0,0,.5);
+}
+#chat-panel .cp-mention-dropdown[hidden] { display: none; }
+#chat-panel .cp-mention-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(212,168,74,.1);
+  transition: background .12s;
+}
+#chat-panel .cp-mention-item:last-child { border-bottom: none; }
+#chat-panel .cp-mention-item:hover,
+#chat-panel .cp-mention-item.selected {
+  background: rgba(212,168,74,.15);
+}
+#chat-panel .cp-mention-item.selected {
+  /* 4단계: 키보드 nav 의 시각 신호 — hover bg + 좌측 amber 인디케이터 1열 */
+  box-shadow: inset 2px 0 0 var(--curr-gold);
+}
+#chat-panel .cp-mention-elem {
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+#chat-panel .cp-mention-name {
+  flex: 1;
+  font: 600 13px/1.2 'Noto Sans KR', sans-serif;
+  color: var(--amber-pale);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#chat-panel .cp-mention-rar {
+  font: 500 11px/1 'Noto Sans KR', sans-serif;
+  flex-shrink: 0;
+}
+
+/* ── PHASE 5 Step 4d: 미니카드 클릭 → 풀사이즈 카드 modal ──── */
+.cp-card-detail {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  cursor: pointer;
+}
+.cp-card-detail .card-v4 {
+  cursor: default;
+}
+.cp-card-detail .cp-cd-close {
+  position: absolute;
+  top: 20px; right: 24px;
+  width: 36px; height: 36px;
+  border-radius: 4px;
+  background: rgba(20,12,4,.85);
+  border: 1px solid rgba(212,168,74,.5);
+  color: var(--amber-pale);
+  font-size: 16px;
+  cursor: pointer;
+}
+.cp-card-detail .cp-cd-close:hover {
+  background: rgba(40,24,8,.95);
+  color: var(--curr-gold);
+}
+
+/* ── 모바일 대응 (풀스크린 전환) ─────────────────────────── */
+@media (max-width: 720px){
+  body.game-mode #chat-panel { width: 100%; }
+}

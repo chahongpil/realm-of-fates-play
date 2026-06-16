@@ -1,0 +1,190 @@
+/* design-confirmed: 2026-05-25 사유: mockup/hourglass_v3/v3_final.html 시안 사용자 컨펌 + "정본 적용" 키워드.
+   custom: 단순 SVG geometric / 시안 commit 43985b2 (Step 7) 재이식 + 사용자 결정 v3 크기 (1/4) + 좌표 (right:9 top:136) + 큐 바 통합 (12 cell). */
+/* ───────────────────────────────────────────────────────────────────
+   Hourglass HUD (모래시계) — v3 정본 (2026-05-25)
+   매치 화면 (#tcg-screen) 우상단 사이드 패널.
+   옛 turn-panel + end-turn + timer 통합 + 보드 큐 진행 바 (12 cells).
+
+   사용자 결정 잠금:
+   - SVG 크기: 45×70 (원본 180×280 의 1/4)
+   - 위치: right:9 top:136 (점선 outline 위 = 적 보드 top 130 정렬)
+   - 큐 바: cell 14×14 / gap 3 / nowrap / label 11px
+   ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  --hg-gold:       #f3d676;
+  --hg-gold-deep:  #c89030;
+  --hg-gold-dark:  #5a3a18;
+  --hg-border:     #3a2410;
+  --hg-border-lt:  #5a4020;
+  --hg-text-dim:   #a89478;
+  --hg-text-dark:  #7a6c52;
+  --hg-crimson:    #c83838;
+  --hg-ft:         'Cinzel', 'Noto Serif KR', serif;
+  --hg-fd:         'Cinzel Decorative', serif;
+  --hg-fb:         'Noto Sans KR', sans-serif;
+}
+
+/* ── 모래시계 HUD 컨테이너 (사용자 잠금 right:9 top:136) ── */
+body.game-mode #tcg-screen .tcg-hg-hud {
+  position: absolute;
+  right: 9px;
+  top: 136px;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--hg-text-dim);
+  font: 400 12px/1.4 var(--hg-fb);
+  z-index: 30;
+  pointer-events: auto;
+}
+
+body.game-mode #tcg-screen .tcg-hg-brand {
+  font: 900 13px/1 var(--hg-fd);
+  letter-spacing: .4em;
+  color: var(--hg-text-dim);
+  text-align: center;
+}
+
+body.game-mode #tcg-screen .tcg-hg-svg {
+  filter: drop-shadow(0 0 22px rgba(243, 214, 118, .55)) drop-shadow(0 8px 16px rgba(0, 0, 0, .85));
+}
+
+/* ── TURN / ROUND ── */
+body.game-mode #tcg-screen .tcg-hg-tr {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 6px;
+}
+body.game-mode #tcg-screen .tcg-hg-tr-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+body.game-mode #tcg-screen .tcg-hg-tr-label {
+  font: 700 12px/1 var(--hg-fb);
+  letter-spacing: .3em;
+  color: var(--hg-text-dim);
+}
+body.game-mode #tcg-screen .tcg-hg-tr-num {
+  font: 900 34px/1 var(--hg-fd);
+  color: var(--hg-gold);
+  text-shadow: 0 0 12px rgba(243, 214, 118, .7);
+  margin-top: 8px;
+}
+body.game-mode #tcg-screen .tcg-hg-tr-divider {
+  width: 1px;
+  height: 42px;
+  background: var(--hg-border-lt);
+}
+
+/* ── 보드 큐 진행 바 (12 cells, 사용자 시안 v3 정합 — cell 14×14 + label 11px + nowrap) ── */
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--hg-border-lt);
+  border-bottom: 1px solid var(--hg-border-lt);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-label {
+  font: 700 11px/1 var(--hg-fb);
+  letter-spacing: 2px;
+  color: var(--hg-text-dim);
+}
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-cells {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: nowrap;  /* 12 cells 한 row 강제 */
+}
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid #6a4a30;
+  flex: 0 0 14px;  /* shrink 방지 */
+}
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-cell.qb-p {
+  background: linear-gradient(180deg, #4a6a90, #2a4060);
+  border-color: #80a0c0;
+}
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-cell.qb-e {
+  background: linear-gradient(180deg, #8a4030, #4a2018);
+  border-color: #c06040;
+}
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-cell.qb-done { opacity: .3; }
+body.game-mode #tcg-screen .tcg-hg-hud .tcg-queue-bar .qb-cell.qb-active {
+  outline: 2px solid var(--hg-gold);
+  outline-offset: 1px;
+  animation: phase6-qb-pulse 1.2s ease-in-out infinite;
+}
+/* design-confirmed: 2026-05-25 사용자 명시 "end turn 자체를 보드페이지 skip unit 버튼이랑 동일한 위치에 처음부터 박아버리자" — card phase 도 큐 바 자리 reserve (visibility 만 hide, 공간 유지) → END TURN 위치 phase 무관 고정. */
+body.game-mode #tcg-screen[data-phase="card"] .tcg-hg-hud .tcg-queue-bar { visibility: hidden; }
+
+/* ── Countdown timer (옛 #tcg-timer id 보존) ── */
+body.game-mode #tcg-screen .tcg-hg-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px;
+  background: rgba(8, 4, 2, .78);
+  border: 1px solid var(--hg-border-lt);
+  border-radius: 4px;
+  font: 700 18px/1 var(--hg-ft);
+  color: var(--hg-gold);
+  text-shadow: 0 0 8px rgba(243, 214, 118, .55);
+}
+body.game-mode #tcg-screen .tcg-hg-timer .tcg-hg-timer-icon {
+  font-size: 16px;
+  color: var(--hg-gold-deep);
+}
+body.game-mode #tcg-screen .tcg-hg-timer.is-low {
+  color: var(--hg-crimson);
+  text-shadow: 0 0 12px rgba(200, 56, 56, .85);
+  animation: hgLowPulse 0.6s steps(2) infinite;
+}
+@keyframes hgLowPulse {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.4; }
+}
+
+/* ── END TURN 버튼 (옛 #tcg-end-turn-btn id 보존) ── */
+/* design-confirmed: 2026-05-25 사용자 명시 "예전 파일 가져와봐" — 옛 css/43_match.css 의 .tcg-end-turn-v3 디자인 그대로 재이식 (어두운 갈색 + 황금 글자 + sharp border). 신 디자인 흐림 fix. */
+body.game-mode #tcg-screen .tcg-hg-end-turn {
+  position: static !important;     /* 옛 .tcg-end-turn-v3 absolute 강제 해제 → flex 흐름 안 자연 배치 */
+  right: auto !important;
+  bottom: auto !important;
+  padding: 14px 22px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #5a3a18 0%, #2a1a08 100%);
+  border: 2px solid #c89030;
+  color: #f3d676;
+  font: 900 0/1 'Cinzel Decorative', serif;   /* size:0 = 자기 text 숨김. ::after phase 라벨만 표시. */
+  letter-spacing: .3em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(243, 214, 118, .3);
+  text-shadow: 0 2px 3px #000;
+  text-transform: uppercase;
+  transition: filter .15s;
+}
+body.game-mode #tcg-screen .tcg-hg-end-turn:hover {
+  filter: brightness(1.15);
+}
+/* ::after phase 라벨 ("⟶ END TURN" / "⤼ SKIP UNIT" / "⋯ ENEMY TURN") — 옛 css 정합 */
+body.game-mode #tcg-screen .tcg-hg-end-turn::after {
+  font: 900 12px/1 'Cinzel Decorative', serif;
+  color: #f3d676;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+}
+
+/* 옛 turn-panel / end-turn-v3 / timer 별도 div 폐기 — 모래시계 HUD 통합 (회귀 호환 위해 markup 자체 남기되 hide) */
+body.game-mode #tcg-screen .tcg-turn-panel { display: none !important; }
+body.game-mode #tcg-screen .tcg-end-turn-v3:not(.tcg-hg-end-turn) { display: none !important; }
+body.game-mode #tcg-screen > .tcg-timer { display: none !important; }

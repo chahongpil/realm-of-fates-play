@@ -1,0 +1,449 @@
+{
+  "_source": "visual editor 2026-04-12 11:30",
+  "_note": "드래그 편집기로 보석 중심 직접 찍음. tools/coord_editor.html",
+  "bronze": {
+    "W": 1024,
+    "H": 1536,
+    "slots": {
+      "atk": {
+        "xPct": 12.74,
+        "yPct": 35.84
+      },
+      "def": {
+        "xPct": 12.58,
+        "yPct": 43.81
+      },
+      "spd": {
+        "xPct": 12.58,
+        "yPct": 52.4
+      },
+      "hp": {
+        "xPct": 84.12,
+        "yPct": 24.73
+      },
+      "nrg": {
+        "xPct": 85.22,
+        "yPct": 68.02
+      },
+      "luck": {
+        "xPct": 12.58,
+        "yPct": 59.4
+      }
+    },
+    "boxes": {
+      "name": {
+        "xPct": 30.26,
+        "yPct": 9.58,
+        "wPct": 39.56,
+        "hPct": 6.23
+      },
+      "tags": {
+        "xPct": 41.79,
+        "yPct": 88.05,
+        "wPct": 15.34,
+        "hPct": 6.67
+      },
+      "desc": {
+        "xPct": 12.99,
+        "yPct": 73.41,
+        "wPct": 74.75,
+        "hPct": 9.16
+      }
+    }
+  },
+  "silver": {
+    "W": 1024,
+    "H": 1536,
+    "slots": {
+      "atk": {
+        "xPct": 10.38,
+        "yPct": 40.02
+      },
+      "def": {
+        "xPct": 10.53,
+        "yPct": 48.82
+      },
+      "spd": {
+        "xPct": 10.69,
+        "yPct": 57.42
+      },
+      "hp": {
+        "xPct": 84.12,
+        "yPct": 19.79
+      },
+      "nrg": {
+        "xPct": 86.79,
+        "yPct": 68.97
+      },
+      "luck": {
+        "xPct": 10.69,
+        "yPct": 64.42
+      }
+    },
+    "boxes": {
+      "name": {
+        "xPct": 28.2,
+        "yPct": 11.04,
+        "wPct": 42.87,
+        "hPct": 5.6
+      },
+      "tags": {
+        "xPct": 41.32,
+        "yPct": 86.01,
+        "wPct": 16.38,
+        "hPct": 6.36
+      },
+      "desc": {
+        "xPct": 18.02,
+        "yPct": 71.74,
+        "wPct": 63.27,
+        "hPct": 11.15
+      }
+    }
+  },
+  "gold": {
+    "W": 1024,
+    "H": 1536,
+    "slots": {
+      "atk": {
+        "xPct": 12.11,
+        "yPct": 39.39
+      },
+      "def": {
+        "xPct": 12.11,
+        "yPct": 46.31
+      },
+      "spd": {
+        "xPct": 12.42,
+        "yPct": 53.33
+      },
+      "hp": {
+        "xPct": 83.33,
+        "yPct": 24.21
+      },
+      "nrg": {
+        "xPct": 83.81,
+        "yPct": 67.71
+      },
+      "luck": {
+        "xPct": 12.42,
+        "yPct": 60.33
+      }
+    },
+    "boxes": {
+      "name": {
+        "xPct": 30.4,
+        "yPct": 12.19,
+        "wPct": 39.1,
+        "hPct": 5.07
+      },
+      "tags": {
+        "xPct": 43.51,
+        "yPct": 88.86,
+        "wPct": 14.93,
+        "hPct": 6.49
+      },
+      "desc": {
+        "xPct": 20.38,
+        "yPct": 73.21,
+        "wPct": 59.97,
+        "hPct": 11.77
+      }
+    }
+  },
+  "legendary": {
+    "W": 1024,
+    "H": 1536,
+    "slots": {
+      "atk": {
+        "xPct": 12.89,
+        "yPct": 38.99
+      },
+      "def": {
+        "xPct": 13.05,
+        "yPct": 48.42
+      },
+      "spd": {
+        "xPct": 13.05,
+        "yPct": 57.75
+      },
+      "hp": {
+        "xPct": 84.12,
+        "yPct": 17.27
+      },
+      "nrg": {
+        "xPct": 85.69,
+        "yPct": 69.39
+      },
+      "luck": {
+        "xPct": 13.05,
+        "yPct": 64.75
+      }
+    },
+    "boxes": {
+      "name": {
+        "xPct": 28.68,
+        "yPct": 10.31,
+        "wPct": 41.92,
+        "hPct": 6.54
+      },
+      "tags": {
+        "xPct": 41.8,
+        "yPct": 82.73,
+        "wPct": 16.89,
+        "hPct": 5.93
+      },
+      "desc": {
+        "xPct": 22.99,
+        "yPct": 72.37,
+        "wPct": 53.9,
+        "hPct": 11.15
+      }
+    }
+  },
+  "divine": {
+    "W": 1024,
+    "H": 1536,
+    "_note": "slots/boxes 는 data-element 속성 없을 때의 default (fallback). 원소별 좌표는 elements.{fire,lightning,holy,dark} 에 저장. 편집기에서 drag 하면 elements 쪽에 기록.",
+    "slots": {
+      "atk": {
+        "xPct": 12.58,
+        "yPct": 36.98
+      },
+      "def": {
+        "xPct": 12.74,
+        "yPct": 45.28
+      },
+      "spd": {
+        "xPct": 12.89,
+        "yPct": 53.12
+      },
+      "hp": {
+        "xPct": 82.23,
+        "yPct": 26.49
+      },
+      "nrg": {
+        "xPct": 84.43,
+        "yPct": 66.14
+      },
+      "luck": {
+        "xPct": 12.89,
+        "yPct": 60.12
+      }
+    },
+    "boxes": {
+      "name": {
+        "xPct": 27.43,
+        "yPct": 12.4,
+        "wPct": 42.07,
+        "hPct": 5.39
+      },
+      "tags": {
+        "xPct": 41.5,
+        "yPct": 86.02,
+        "wPct": 17.92,
+        "hPct": 6.46
+      },
+      "desc": {
+        "xPct": 22.26,
+        "yPct": 69.22,
+        "wPct": 52.74,
+        "hPct": 13.04
+      }
+    },
+    "elements": {
+      "fire": {
+        "slots": {
+          "atk": {
+            "xPct": 12.58,
+            "yPct": 36.98
+          },
+          "def": {
+            "xPct": 12.74,
+            "yPct": 45.28
+          },
+          "spd": {
+            "xPct": 12.89,
+            "yPct": 53.12
+          },
+          "hp": {
+            "xPct": 82.23,
+            "yPct": 26.49
+          },
+          "nrg": {
+            "xPct": 84.43,
+            "yPct": 66.14
+          },
+          "luck": {
+            "xPct": 12.89,
+            "yPct": 60.12
+          }
+        },
+        "boxes": {
+          "name": {
+            "xPct": 27.43,
+            "yPct": 12.4,
+            "wPct": 42.07,
+            "hPct": 5.39
+          },
+          "tags": {
+            "xPct": 41.5,
+            "yPct": 86.02,
+            "wPct": 17.92,
+            "hPct": 6.46
+          },
+          "desc": {
+            "xPct": 22.26,
+            "yPct": 69.22,
+            "wPct": 52.74,
+            "hPct": 13.04
+          }
+        }
+      },
+      "lightning": {
+        "slots": {
+          "atk": {
+            "xPct": 12.58,
+            "yPct": 36.98
+          },
+          "def": {
+            "xPct": 12.74,
+            "yPct": 45.28
+          },
+          "spd": {
+            "xPct": 12.89,
+            "yPct": 53.12
+          },
+          "hp": {
+            "xPct": 82.23,
+            "yPct": 26.49
+          },
+          "nrg": {
+            "xPct": 84.43,
+            "yPct": 66.14
+          },
+          "luck": {
+            "xPct": 12.89,
+            "yPct": 60.12
+          }
+        },
+        "boxes": {
+          "name": {
+            "xPct": 27.43,
+            "yPct": 12.4,
+            "wPct": 42.07,
+            "hPct": 5.39
+          },
+          "tags": {
+            "xPct": 41.5,
+            "yPct": 86.02,
+            "wPct": 17.92,
+            "hPct": 6.46
+          },
+          "desc": {
+            "xPct": 22.26,
+            "yPct": 69.22,
+            "wPct": 52.74,
+            "hPct": 13.04
+          }
+        }
+      },
+      "holy": {
+        "slots": {
+          "atk": {
+            "xPct": 12.58,
+            "yPct": 36.98
+          },
+          "def": {
+            "xPct": 12.74,
+            "yPct": 45.28
+          },
+          "spd": {
+            "xPct": 12.89,
+            "yPct": 53.12
+          },
+          "hp": {
+            "xPct": 82.23,
+            "yPct": 26.49
+          },
+          "nrg": {
+            "xPct": 84.43,
+            "yPct": 66.14
+          },
+          "luck": {
+            "xPct": 12.89,
+            "yPct": 60.12
+          }
+        },
+        "boxes": {
+          "name": {
+            "xPct": 27.43,
+            "yPct": 12.4,
+            "wPct": 42.07,
+            "hPct": 5.39
+          },
+          "tags": {
+            "xPct": 41.5,
+            "yPct": 86.02,
+            "wPct": 17.92,
+            "hPct": 6.46
+          },
+          "desc": {
+            "xPct": 22.26,
+            "yPct": 69.22,
+            "wPct": 52.74,
+            "hPct": 13.04
+          }
+        }
+      },
+      "dark": {
+        "slots": {
+          "atk": {
+            "xPct": 12.58,
+            "yPct": 36.98
+          },
+          "def": {
+            "xPct": 12.74,
+            "yPct": 45.28
+          },
+          "spd": {
+            "xPct": 12.89,
+            "yPct": 53.12
+          },
+          "hp": {
+            "xPct": 82.23,
+            "yPct": 26.49
+          },
+          "nrg": {
+            "xPct": 84.43,
+            "yPct": 66.14
+          },
+          "luck": {
+            "xPct": 12.89,
+            "yPct": 60.12
+          }
+        },
+        "boxes": {
+          "name": {
+            "xPct": 27.43,
+            "yPct": 12.4,
+            "wPct": 42.07,
+            "hPct": 5.39
+          },
+          "tags": {
+            "xPct": 41.5,
+            "yPct": 86.02,
+            "wPct": 17.92,
+            "hPct": 6.46
+          },
+          "desc": {
+            "xPct": 22.26,
+            "yPct": 69.22,
+            "wPct": 52.74,
+            "hPct": 13.04
+          }
+        }
+      }
+    }
+  }
+}

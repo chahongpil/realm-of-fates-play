@@ -1,0 +1,1174 @@
+/* design-confirmed: 2026-05-18 사유: 시안 result_victory.jsx vanilla 마이그레이션 — Step 4-A. custom: 시안 토큰 그대로 / BC X / IP 고유 X. */
+/* ───────────────────────────────────────────────────────────────────
+   Reward Screen v3 — 시안 result_victory.jsx / result_defeat.jsx 정합 (2026-05-18)
+   1280×720 고정. 2-column body + TopBar + ActionBar.
+   카드 일러스트: portrait img/{id}.png (시안 BC X).
+   승리/패배 분기: body 의 [data-result="victory"|"defeat"] 또는 [data-result="draw"]
+   ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  --rw-gold:       #f3d676;
+  --rw-gold-deep:  #c89030;
+  --rw-gold-dark:  #5a3a18;
+  --rw-border:     #3a2410;
+  --rw-border-lt:  #5a4020;
+  --rw-panel-bg:   rgba(20, 12, 6, .6);
+  --rw-panel-ins:  rgba(8, 4, 2, .78);
+  --rw-crimson:    #c83838;
+  --rw-crimson-dp: #7a2020;
+  --rw-text:       #e8d5a3;
+  --rw-text-dim:   #a89478;
+  --rw-text-dark:  #7a6c52;
+  --rw-ft:         'Cinzel', 'Noto Serif KR', serif;
+  --rw-fd:         'Cinzel Decorative', serif;
+  --rw-fb:         'Noto Sans KR', sans-serif;
+}
+
+body.game-mode #reward-screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: none;
+  overflow: hidden;
+}
+body.game-mode #reward-screen.active {
+  display: block;
+  background: radial-gradient(ellipse at 50% 0%, #2a2010 0%, transparent 45%),
+              linear-gradient(180deg, #0a0604 0%, #050302 100%);
+}
+
+body.game-mode #reward-screen .rw-stage {
+  width: 100%;
+  height: 100%;
+  color: var(--rw-text);
+  font: 400 12px/1.4 var(--rw-fb);
+  display: flex;
+  flex-direction: column;
+}
+
+/* defeat tint */
+body.game-mode #reward-screen .rw-stage[data-result="defeat"] {
+  background: radial-gradient(ellipse at 50% 0%, #2a1010 0%, transparent 45%),
+              linear-gradient(180deg, #0a0604 0%, #050302 100%);
+}
+
+/* ── TOP BAR ── */
+body.game-mode #reward-screen .rw-topbar {
+  height: 50px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(20, 14, 8, .95);
+  border-bottom: 1px solid var(--rw-gold-deep);
+  box-shadow: 0 2px 14px rgba(243, 214, 118, .32);
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+}
+body.game-mode #reward-screen .rw-stage[data-result="defeat"] .rw-topbar {
+  border-bottom-color: var(--rw-crimson-dp);
+  box-shadow: 0 2px 14px rgba(200, 56, 56, .32);
+  background: rgba(28, 14, 10, .95);
+}
+body.game-mode #reward-screen .rw-topbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+body.game-mode #reward-screen .rw-topbar-eyebrow {
+  font: 400 8px/1 var(--rw-fb);
+  letter-spacing: .5em;
+  color: var(--rw-text-dim);
+}
+body.game-mode #reward-screen .rw-topbar-title {
+  font: 900 22px/1 var(--rw-fd);
+  color: var(--rw-gold);
+  letter-spacing: .06em;
+  text-shadow: 0 0 12px rgba(243, 214, 118, .6);
+}
+body.game-mode #reward-screen .rw-stage[data-result="defeat"] .rw-topbar-title {
+  color: #ff8888;
+  text-shadow: 0 0 12px rgba(200, 56, 56, .6);
+}
+body.game-mode #reward-screen .rw-topbar-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--rw-border);
+}
+body.game-mode #reward-screen .rw-topbar-vs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 700 11px/1 var(--rw-ft);
+  color: var(--rw-text-dim);
+  letter-spacing: .15em;
+}
+body.game-mode #reward-screen .rw-topbar-vs-text {
+  color: var(--rw-text-dark);
+  font-size: 10px;
+  letter-spacing: .2em;
+}
+body.game-mode #reward-screen .rw-topbar-opp-name {
+  color: var(--rw-text);
+  font-weight: 900;
+}
+body.game-mode #reward-screen .rw-topbar-opp-lv {
+  color: var(--rw-text-dim);
+}
+body.game-mode #reward-screen .rw-topbar-vs .dim,
+body.game-mode #reward-screen .rw-topbar-rounds .dim,
+body.game-mode #reward-screen .rw-actionbar-summary .dim {
+  color: var(--rw-border-lt);
+}
+body.game-mode #reward-screen .rw-topbar-spacer { flex: 1; }
+body.game-mode #reward-screen .rw-topbar-rounds {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px/1 var(--rw-ft);
+  letter-spacing: .15em;
+}
+body.game-mode #reward-screen .rw-topbar-rounds .gold {
+  color: var(--rw-gold);
+  font-weight: 900;
+}
+body.game-mode #reward-screen .rw-topbar-score {
+  padding: 7px 16px;
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+  border: 1.5px solid var(--rw-gold);
+  color: #1a0e04;
+  font: 900 14px/1 var(--rw-fd);
+  letter-spacing: .12em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+  box-shadow: 0 0 14px rgba(243, 214, 118, .5);
+}
+body.game-mode #reward-screen .rw-stage[data-result="defeat"] .rw-topbar-score {
+  background: linear-gradient(180deg, var(--rw-crimson), var(--rw-crimson-dp));
+  border-color: #ffaaaa;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(200, 56, 56, .5);
+}
+
+/* ── BODY 2-COLUMN ── */
+body.game-mode #reward-screen .rw-body {
+  flex: 1;
+  padding: 14px;
+  display: flex;
+  gap: 14px;
+  min-height: 0;
+}
+body.game-mode #reward-screen .rw-left {
+  flex: 0 0 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+body.game-mode #reward-screen .rw-right {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section label */
+body.game-mode #reward-screen .rw-section-label {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .34em;
+  color: var(--rw-text-dark);
+  margin-bottom: 8px;
+}
+
+/* ── DIALOG BOX (동료 portrait + 말풍선) ── */
+body.game-mode #reward-screen .rw-dialog {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: var(--rw-panel-bg);
+  border: 1px solid var(--rw-border);
+  align-items: stretch;
+}
+body.game-mode #reward-screen .rw-dialog-portrait {
+  flex: 0 0 200px;
+  height: 200px;
+  background-color: #1a0e04;
+  background-position: center 12%;
+  background-size: cover;
+  border: 2.5px solid var(--rw-gold-deep);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, .6), 0 2px 6px rgba(0, 0, 0, .7);
+  position: relative;
+}
+body.game-mode #reward-screen .rw-dialog-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 14px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border);
+  position: relative;
+}
+body.game-mode #reward-screen .rw-dialog-body::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 22px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid var(--rw-border);
+}
+body.game-mode #reward-screen .rw-dialog-speaker {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+body.game-mode #reward-screen .rw-dialog-role {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .32em;
+  color: var(--rw-text-dark);
+  padding: 3px 7px;
+  border: 1px solid var(--rw-border-lt);
+  background: rgba(8, 4, 2, .7);
+}
+body.game-mode #reward-screen .rw-dialog-name {
+  font: 900 16px/1 var(--rw-fd);
+  color: var(--rw-gold);
+  letter-spacing: .04em;
+  text-shadow: 0 0 8px rgba(243, 214, 118, .4);
+}
+body.game-mode #reward-screen .rw-dialog-text {
+  font: 400 12px/1.7 var(--rw-fb);
+  color: #d8c9a0;
+  letter-spacing: .02em;
+}
+
+/* ── HERO XP CARD ── */
+body.game-mode #reward-screen .rw-hero-xp {
+  padding: 14px;
+  background: var(--rw-panel-bg);
+  border: 1px solid var(--rw-border);
+}
+body.game-mode #reward-screen .rw-hero-xp-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+body.game-mode #reward-screen .rw-hero-xp-portrait {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  background-color: #1a0e04;
+  background-position: center 12%;
+  background-size: cover;
+  border: 2px solid var(--rw-gold-deep);
+}
+body.game-mode #reward-screen .rw-hero-xp-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body.game-mode #reward-screen .rw-hero-xp-name-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+body.game-mode #reward-screen .rw-hero-xp-name {
+  font: 900 16px/1 var(--rw-fd);
+  color: var(--rw-text);
+  letter-spacing: .03em;
+}
+body.game-mode #reward-screen .rw-hero-xp-lv {
+  font: 700 11px/1 var(--rw-ft);
+  color: var(--rw-gold);
+  letter-spacing: .15em;
+}
+body.game-mode #reward-screen .rw-hero-xp-numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font: 700 10px/1 var(--rw-ft);
+  letter-spacing: .12em;
+  color: var(--rw-text);
+}
+body.game-mode #reward-screen .rw-hero-xp-numbers .dim {
+  color: var(--rw-text-dark);
+}
+body.game-mode #reward-screen .rw-hero-xp-gain {
+  color: #9ae07a;
+  font-weight: 900;
+}
+
+/* ── BAR (XP / 시즌패스) ── */
+body.game-mode #reward-screen .rw-bar {
+  position: relative;
+  height: 10px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rw-border);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .7);
+  overflow: hidden;
+  margin: 4px 0;
+}
+body.game-mode #reward-screen .rw-bar-fill {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+}
+body.game-mode #reward-screen .rw-bar-fill-before {
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+body.game-mode #reward-screen .rw-bar-fill-gain {
+  background: linear-gradient(180deg, #9ae07a, #5a8a3a);
+  box-shadow: 0 0 8px rgba(154, 224, 122, .5), inset 0 1px 0 rgba(255, 255, 255, .3);
+  animation: rw-pulseGain 1.4s ease-in-out infinite;
+}
+body.game-mode #reward-screen .rw-bar-shimmer {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .25), transparent);
+  animation: rw-shimmer 2.4s linear infinite;
+}
+
+/* ── SPELL XP LIST ── */
+body.game-mode #reward-screen .rw-spell-xp {
+  padding: 14px;
+  background: var(--rw-panel-bg);
+  border: 1px solid var(--rw-border);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+body.game-mode #reward-screen .rw-spell-xp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+body.game-mode #reward-screen .rw-spell-xp-item {
+  display: flex;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border);
+  align-items: center;
+}
+body.game-mode #reward-screen .rw-spell-xp-portrait {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  background-color: #1a0e04;
+  background-position: center 12%;
+  background-size: cover;
+  border: 1.5px solid var(--rw-border-lt);
+}
+body.game-mode #reward-screen .rw-spell-xp-info {
+  flex: 1;
+  min-width: 0;
+}
+body.game-mode #reward-screen .rw-spell-xp-name {
+  font: 700 12px/1.2 var(--rw-ft);
+  color: var(--rw-text);
+  letter-spacing: .03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.game-mode #reward-screen .rw-spell-xp-meta {
+  font: 700 9px/1.2 var(--rw-ft);
+  color: var(--rw-text-dark);
+  letter-spacing: .12em;
+  margin-top: 2px;
+}
+body.game-mode #reward-screen .rw-spell-xp-gain {
+  flex: 0 0 auto;
+  font: 900 13px/1 var(--rw-fd);
+  color: #9ae07a;
+  text-shadow: 0 0 6px rgba(154, 224, 122, .4);
+}
+
+/* ── DAMAGE RANKING ── */
+body.game-mode #reward-screen .rw-damage {
+  padding: 14px;
+  background: var(--rw-panel-bg);
+  border: 1px solid var(--rw-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+body.game-mode #reward-screen .rw-damage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+body.game-mode #reward-screen .rw-damage-tabs {
+  display: flex;
+  gap: 4px;
+}
+body.game-mode #reward-screen .rw-damage-tab {
+  padding: 5px 12px;
+  cursor: pointer;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border-lt);
+  color: var(--rw-text-dim);
+  font: 700 9px/1 var(--rw-ft);
+  letter-spacing: .22em;
+}
+body.game-mode #reward-screen .rw-damage-tab.is-active {
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+  border-color: var(--rw-gold);
+  color: #1a0e04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .2);
+}
+body.game-mode #reward-screen .rw-damage-totals {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+body.game-mode #reward-screen .rw-damage-total {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border);
+  text-align: center;
+}
+body.game-mode #reward-screen .rw-damage-total-label {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .28em;
+  color: var(--rw-text-dark);
+  margin-bottom: 6px;
+}
+body.game-mode #reward-screen .rw-damage-total-value {
+  font: 900 24px/1 var(--rw-fd);
+  letter-spacing: .04em;
+}
+body.game-mode #reward-screen .rw-damage-total-value.gold {
+  color: var(--rw-gold);
+  text-shadow: 0 0 8px rgba(243, 214, 118, .4);
+}
+body.game-mode #reward-screen .rw-damage-total-value.crimson {
+  color: #ff8888;
+  text-shadow: 0 0 8px rgba(200, 56, 56, .4);
+}
+
+body.game-mode #reward-screen .rw-damage-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  min-height: 0;
+}
+body.game-mode #reward-screen .rw-damage-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border);
+}
+body.game-mode #reward-screen .rw-damage-row.is-top {
+  background: rgba(40, 28, 12, .65);
+  border-color: var(--rw-gold-deep);
+}
+body.game-mode #reward-screen .rw-damage-rank {
+  width: 24px;
+  text-align: center;
+  font: 900 14px/1 var(--rw-fd);
+  color: var(--rw-text-dark);
+}
+body.game-mode #reward-screen .rw-damage-rank.is-1 { color: var(--rw-gold); }
+body.game-mode #reward-screen .rw-damage-rank.is-2 { color: #d8e0e8; }
+body.game-mode #reward-screen .rw-damage-rank.is-3 { color: #e8b890; }
+body.game-mode #reward-screen .rw-damage-portrait {
+  width: 40px;
+  height: 40px;
+  background-color: #1a0e04;
+  background-position: center 12%;
+  background-size: cover;
+  border: 2px solid var(--rw-border-lt);
+  position: relative;
+  flex-shrink: 0;
+}
+body.game-mode #reward-screen .rw-damage-kind {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .2em;
+  padding: 2px 5px;
+  min-width: 30px;
+  text-align: center;
+}
+body.game-mode #reward-screen .rw-damage-kind.is-spell {
+  background: var(--rw-crimson-dp);
+  color: #f4a8a8;
+  border: 1px solid #f4a8a8;
+}
+body.game-mode #reward-screen .rw-damage-kind.is-unit {
+  background: #2a4a7a;
+  color: #a8c8e8;
+  border: 1px solid #7ab4e0;
+}
+body.game-mode #reward-screen .rw-damage-name-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.game-mode #reward-screen .rw-damage-name {
+  font: 700 13px/1 var(--rw-ft);
+  color: #f6e9c4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+body.game-mode #reward-screen .rw-damage-count {
+  font: 700 9px/1 var(--rw-ft);
+  color: var(--rw-text-dim);
+  letter-spacing: .14em;
+  flex-shrink: 0;
+}
+body.game-mode #reward-screen .rw-damage-bar {
+  flex: 0 0 160px;
+  position: relative;
+  height: 6px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rw-border);
+}
+body.game-mode #reward-screen .rw-damage-bar-fill {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  background: linear-gradient(90deg, var(--rw-gold), var(--rw-gold-deep));
+  box-shadow: 0 0 5px rgba(243, 214, 118, .4);
+}
+body.game-mode #reward-screen .rw-damage-value {
+  flex: 0 0 54px;
+  text-align: right;
+  font: 900 14px/1 var(--rw-fd);
+  color: #d8c9a0;
+}
+body.game-mode #reward-screen .rw-damage-row.is-top .rw-damage-value {
+  color: var(--rw-gold);
+  text-shadow: 0 0 6px rgba(243, 214, 118, .4);
+}
+body.game-mode #reward-screen .rw-damage-heal {
+  flex: 0 0 60px;
+  text-align: right;
+  font: 700 10px/1 var(--rw-ft);
+  color: #9ae07a;
+  letter-spacing: .1em;
+}
+
+/* ── ACTION BAR ── */
+body.game-mode #reward-screen .rw-actionbar {
+  height: 84px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(8, 4, 2, .92);
+  border-top: 1px solid var(--rw-border);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, .7);
+  flex-shrink: 0;
+}
+body.game-mode #reward-screen .rw-btn-back {
+  padding: 14px 28px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--rw-border), #1a0e04);
+  border: 1.5px solid var(--rw-border-lt);
+  color: var(--rw-text-dim);
+  font: 700 13px/1 var(--rw-ft);
+  letter-spacing: .28em;
+}
+body.game-mode #reward-screen .rw-actionbar-summary {
+  flex: 1;
+  text-align: center;
+  font: 400 11px/1.5 var(--rw-fb);
+  color: var(--rw-text-dark);
+  letter-spacing: .06em;
+}
+body.game-mode #reward-screen .rw-actionbar-summary .gold {
+  color: var(--rw-gold);
+  margin: 0 4px;
+  font-weight: 900;
+}
+body.game-mode #reward-screen .rw-btn-next {
+  padding: 14px 34px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+  border: 2px solid var(--rw-gold);
+  color: #1a0e04;
+  font: 900 14px/1 var(--rw-fd);
+  letter-spacing: .32em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+  box-shadow: 0 0 22px rgba(243, 214, 118, .45), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+body.game-mode #reward-screen .rw-stage[data-result="defeat"] .rw-btn-next {
+  background: linear-gradient(180deg, var(--rw-crimson), var(--rw-crimson-dp));
+  border-color: #ffaaaa;
+  color: #fff;
+  box-shadow: 0 0 22px rgba(200, 56, 56, .45);
+}
+
+/* ── Animations ── */
+@keyframes rw-pulseGain {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+@keyframes rw-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes rw-pulseDot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+  50% { opacity: .45; box-shadow: 0 0 8px currentColor; }
+}
+
+/* design-confirmed: 2026-05-18 사유: 시안 result_victory.jsx 블로커 fix (RewardsView + TopRank 큰 카드 + 마이너) */
+
+/* ── TopBar 마이너 fix (상대 title 2-line + ✕ 닫기 + status dot) ── */
+body.game-mode #reward-screen .rw-topbar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.game-mode #reward-screen .rw-topbar-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ae07a;
+  color: #9ae07a;
+  animation: rw-pulseDot 1.2s ease-in-out infinite;
+}
+body.game-mode #reward-screen .rw-stage[data-result="defeat"] .rw-topbar-status-dot {
+  background: var(--rw-crimson);
+  color: var(--rw-crimson);
+}
+body.game-mode #reward-screen .rw-topbar-opp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+body.game-mode #reward-screen .rw-topbar-opp-title {
+  font: 400 8px/1 var(--rw-fb);
+  letter-spacing: .42em;
+  color: var(--rw-text-dim);
+}
+body.game-mode #reward-screen .rw-topbar-opp-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px/1 var(--rw-ft);
+  letter-spacing: .15em;
+}
+body.game-mode #reward-screen .rw-topbar-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--rw-border-lt);
+  color: var(--rw-text-dim);
+  font: 400 14px/1 var(--rw-ft);
+}
+body.game-mode #reward-screen .rw-topbar-close:hover {
+  background: rgba(40, 12, 12, .5);
+  border-color: #7a3a2a;
+  color: #e89888;
+}
+
+/* ── Dialog box bevel + name plate (블로커 #4 fix) ── */
+body.game-mode #reward-screen .rw-dialog-portrait {
+  /* octagonal bevel via clip-path */
+  clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%);
+  position: relative;
+}
+body.game-mode #reward-screen .rw-dialog-portrait::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--rw-gold-deep), var(--rw-gold), var(--rw-gold-deep));
+  pointer-events: none;
+}
+body.game-mode #reward-screen .rw-dialog-role {
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+  border-color: var(--rw-gold);
+  color: #1a0e04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .2);
+}
+
+/* ── HeroXP gain bar 황금 색 (블로커 #3 fix) ── */
+body.game-mode #reward-screen .rw-hero-xp .rw-bar-fill-gain {
+  background: linear-gradient(180deg, #fff5d8, var(--rw-gold));
+  box-shadow: 0 0 10px rgba(243, 214, 118, .65), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+body.game-mode #reward-screen .rw-hero-xp .rw-hero-xp-gain {
+  color: var(--rw-gold);
+  text-shadow: 0 0 6px rgba(243, 214, 118, .4);
+}
+
+/* ── Spell XP per-item bar (블로커 #5 fix) ── */
+body.game-mode #reward-screen .rw-spell-xp-item-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+body.game-mode #reward-screen .rw-spell-xp-bar {
+  position: relative;
+  height: 5px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rw-border);
+  margin-top: 2px;
+}
+body.game-mode #reward-screen .rw-spell-xp-bar-fill {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+}
+body.game-mode #reward-screen .rw-spell-xp-bar-gain {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  background: linear-gradient(180deg, #fff5d8, var(--rw-gold));
+  box-shadow: 0 0 6px rgba(243, 214, 118, .5);
+}
+
+/* ── 우측 panel: 3 탭 + 총 피해 (블로커 #2 분리) ── */
+body.game-mode #reward-screen .rw-rpanel {
+  padding: 14px;
+  background: var(--rw-panel-bg);
+  border: 1px solid var(--rw-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+body.game-mode #reward-screen .rw-rpanel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+body.game-mode #reward-screen .rw-rpanel-tabs {
+  display: flex;
+  gap: 4px;
+}
+body.game-mode #reward-screen .rw-rpanel-tab {
+  padding: 6px 14px;
+  cursor: pointer;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border-lt);
+  color: var(--rw-text-dim);
+  font: 700 9px/1 var(--rw-ft);
+  letter-spacing: .22em;
+}
+body.game-mode #reward-screen .rw-rpanel-tab.is-active {
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+  border-color: var(--rw-gold);
+  color: #1a0e04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .2);
+}
+body.game-mode #reward-screen .rw-rpanel-totals {
+  display: flex;
+  gap: 10px;
+}
+body.game-mode #reward-screen .rw-rpanel-total {
+  padding: 6px 12px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border);
+  text-align: center;
+}
+body.game-mode #reward-screen .rw-rpanel-total-label {
+  font: 700 7px/1 var(--rw-ft);
+  letter-spacing: .25em;
+  color: var(--rw-text-dark);
+  margin-bottom: 4px;
+}
+body.game-mode #reward-screen .rw-rpanel-total-value {
+  font: 900 16px/1 var(--rw-fd);
+  letter-spacing: .03em;
+}
+body.game-mode #reward-screen .rw-rpanel-total-value.gold {
+  color: var(--rw-gold);
+  text-shadow: 0 0 6px rgba(243, 214, 118, .4);
+}
+body.game-mode #reward-screen .rw-rpanel-total-value.crimson {
+  color: #ff8888;
+}
+body.game-mode #reward-screen .rw-rpanel-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── ✦ 보상 탭 — RewardsView (블로커 #1 fix) ── */
+body.game-mode #reward-screen .rw-rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+body.game-mode #reward-screen .rw-rewards-league {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-gold-deep);
+  align-items: center;
+}
+body.game-mode #reward-screen .rw-league-badge {
+  flex: 0 0 68px;
+  width: 68px;
+  height: 76px;
+  background: linear-gradient(180deg, var(--rw-gold), var(--rw-gold-deep) 55%, #1a0e04);
+  clip-path: polygon(50% 0%, 96% 16%, 96% 52%, 50% 95%, 4% 52%, 4% 16%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a0e04;
+  font: 900 22px/1 var(--rw-fd);
+  filter: drop-shadow(0 0 12px rgba(243, 214, 118, .53));
+}
+body.game-mode #reward-screen .rw-league-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body.game-mode #reward-screen .rw-league-meta {
+  font: 400 8px/1 var(--rw-fb);
+  letter-spacing: .42em;
+  color: var(--rw-text-dark);
+}
+body.game-mode #reward-screen .rw-league-name {
+  font: 900 14px/1.2 var(--rw-fd);
+  color: var(--rw-gold);
+}
+body.game-mode #reward-screen .rw-league-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rw-border);
+  margin: 4px 0 2px;
+  overflow: hidden;
+}
+body.game-mode #reward-screen .rw-league-bar-fill {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  background: linear-gradient(180deg, var(--rw-gold-deep), var(--rw-gold-dark));
+}
+body.game-mode #reward-screen .rw-league-bar-gain {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  background: linear-gradient(180deg, #fff5d8, var(--rw-gold));
+  box-shadow: 0 0 8px rgba(243, 214, 118, .5);
+  animation: rw-pulseGain 1.4s ease-in-out infinite;
+}
+body.game-mode #reward-screen .rw-league-score-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 10px/1 var(--rw-ft);
+  letter-spacing: .1em;
+  color: var(--rw-text);
+}
+body.game-mode #reward-screen .rw-league-score-row .dim {
+  color: var(--rw-text-dark);
+}
+body.game-mode #reward-screen .rw-league-score-row .gold {
+  color: var(--rw-gold);
+  font-weight: 900;
+}
+body.game-mode #reward-screen .rw-league-score-gain {
+  text-shadow: 0 0 6px rgba(243, 214, 118, .4);
+}
+
+/* 자원 4-col */
+body.game-mode #reward-screen .rw-rewards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+body.game-mode #reward-screen .rw-rsrc {
+  padding: 12px 8px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border-lt);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: transform .15s;
+}
+body.game-mode #reward-screen .rw-rsrc:hover {
+  transform: translateY(-2px);
+  border-color: var(--rw-gold-deep);
+}
+body.game-mode #reward-screen .rw-rsrc-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+body.game-mode #reward-screen .rw-rsrc-label {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .25em;
+  color: var(--rw-text-dim);
+}
+body.game-mode #reward-screen .rw-rsrc-value {
+  font: 900 16px/1 var(--rw-fd);
+  color: var(--rw-gold);
+  text-shadow: 0 0 6px rgba(243, 214, 118, .35);
+}
+
+/* 신의 잔재 (relic) chip */
+body.game-mode #reward-screen .rw-rewards-relic {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(122, 59, 204, .25), rgba(122, 59, 204, .1));
+  border: 1px solid #7a3bcc;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(200, 154, 240, .25);
+}
+body.game-mode #reward-screen .rw-relic-icon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(200, 154, 240, .6));
+}
+body.game-mode #reward-screen .rw-relic-info {
+  flex: 1;
+}
+body.game-mode #reward-screen .rw-relic-label {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .32em;
+  color: #c89af0;
+  margin-bottom: 4px;
+}
+body.game-mode #reward-screen .rw-relic-value {
+  font: 900 16px/1 var(--rw-fd);
+  color: #fff;
+}
+body.game-mode #reward-screen .rw-relic-value span {
+  color: #fff5d8;
+  text-shadow: 0 0 6px rgba(255, 245, 216, .5);
+}
+
+/* 시즌 패스 */
+body.game-mode #reward-screen .rw-rewards-season {
+  padding: 12px 14px;
+  background: var(--rw-panel-ins);
+  border: 1px solid var(--rw-border);
+}
+body.game-mode #reward-screen .rw-season-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+body.game-mode #reward-screen .rw-season-label {
+  font: 700 9px/1 var(--rw-ft);
+  letter-spacing: .25em;
+  color: var(--rw-text-dim);
+}
+body.game-mode #reward-screen .rw-season-lv {
+  font: 900 14px/1 var(--rw-fd);
+  color: var(--rw-gold);
+}
+body.game-mode #reward-screen .rw-season-numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font: 700 10px/1 var(--rw-ft);
+  color: var(--rw-text);
+}
+body.game-mode #reward-screen .rw-season-numbers .dim {
+  color: var(--rw-text-dark);
+}
+body.game-mode #reward-screen .rw-season-xp-gain {
+  color: var(--rw-gold);
+  font-weight: 900;
+}
+
+/* ── 1~3위 탭 — TopRankCard 큰 카드 3개 (블로커 #2) ── */
+body.game-mode #reward-screen .rw-top3-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+body.game-mode #reward-screen .rw-top3-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  background: var(--rw-panel-ins);
+  border: 1.5px solid var(--rw-gold-deep);
+  align-items: center;
+}
+body.game-mode #reward-screen .rw-top3-card.is-1 {
+  background: rgba(40, 28, 12, .85);
+  border-color: var(--rw-gold);
+  box-shadow: 0 0 16px rgba(243, 214, 118, .35);
+}
+body.game-mode #reward-screen .rw-top3-medal {
+  flex: 0 0 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 900 28px/1 var(--rw-fd);
+  background: linear-gradient(180deg, var(--rw-gold), var(--rw-gold-deep) 55%, #1a0e04);
+  clip-path: polygon(50% 0%, 96% 16%, 96% 52%, 50% 95%, 4% 52%, 4% 16%);
+  color: #1a0e04;
+  filter: drop-shadow(0 0 8px rgba(243, 214, 118, .5));
+}
+body.game-mode #reward-screen .rw-top3-card.is-2 .rw-top3-medal {
+  background: linear-gradient(180deg, #d8e0e8, #8a9aa8 55%, #1a0e04);
+}
+body.game-mode #reward-screen .rw-top3-card.is-3 .rw-top3-medal {
+  background: linear-gradient(180deg, #e8b890, #a06030 55%, #1a0e04);
+}
+body.game-mode #reward-screen .rw-top3-portrait {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  background-color: #1a0e04;
+  background-position: center 12%;
+  background-size: cover;
+  border: 2px solid var(--rw-gold-deep);
+  position: relative;
+}
+body.game-mode #reward-screen .rw-top3-portrait::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rw-gold-deep), var(--rw-gold), var(--rw-gold-deep));
+}
+body.game-mode #reward-screen .rw-top3-body {
+  flex: 1;
+  min-width: 0;
+}
+body.game-mode #reward-screen .rw-top3-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+body.game-mode #reward-screen .rw-top3-name {
+  font: 900 16px/1.1 var(--rw-fd);
+  color: #f6e9c4;
+  text-shadow: 0 1px 2px #000;
+}
+body.game-mode #reward-screen .rw-top3-count {
+  font: 700 9px/1 var(--rw-ft);
+  color: var(--rw-text-dim);
+  letter-spacing: .15em;
+}
+body.game-mode #reward-screen .rw-top3-bar {
+  position: relative;
+  height: 8px;
+  margin-top: 6px;
+  background: rgba(8, 4, 2, .85);
+  border: 1px solid var(--rw-border);
+}
+body.game-mode #reward-screen .rw-top3-bar-fill {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  background: linear-gradient(90deg, var(--rw-gold), var(--rw-gold-deep));
+  box-shadow: 0 0 8px rgba(243, 214, 118, .5);
+}
+body.game-mode #reward-screen .rw-top3-value {
+  flex: 0 0 auto;
+  text-align: right;
+  margin-left: 8px;
+}
+body.game-mode #reward-screen .rw-top3-dmg {
+  font: 900 26px/1 var(--rw-fd);
+  color: var(--rw-gold);
+  text-shadow: 0 0 10px rgba(243, 214, 118, .5);
+}
+body.game-mode #reward-screen .rw-top3-dmg-label {
+  font: 700 8px/1 var(--rw-ft);
+  color: var(--rw-text-dark);
+  letter-spacing: .3em;
+  margin-top: 2px;
+  text-align: right;
+}
+body.game-mode #reward-screen .rw-top3-kind {
+  font: 700 8px/1 var(--rw-ft);
+  letter-spacing: .2em;
+  padding: 2px 6px;
+  margin-left: 6px;
+}
+body.game-mode #reward-screen .rw-top3-kind.is-spell {
+  background: var(--rw-crimson-dp);
+  color: #f4a8a8;
+  border: 1px solid #f4a8a8;
+}
+body.game-mode #reward-screen .rw-top3-kind.is-unit {
+  background: #2a4a7a;
+  color: #a8c8e8;
+  border: 1px solid #7ab4e0;
+}
+
+/* design-confirmed: 2026-06-07 — mockup/quest_reward_visions/ 확정 시안 1:1 이식 (사용자 "CSS 키프레임 그대로 이식 가능"). 우리 IP 고유 영입 시네마틱 (운명의 실타래 = lore-bible 모티프), GitHub 차용 대상 아님. */
+/* ═══════════ 퀘스트 카드 영입 연출 (scene_3 = 일반 5초 / fates_thread = jackpot 7초) ═══════════ */
+body.game-mode .rw-vision-overlay {
+  position: absolute; inset: 0; z-index: 9000;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; cursor: pointer;
+}
+body.game-mode .rwv-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+body.game-mode .rwv-stage .rwv-scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+
+/* ── scene_3 (일반) ── */
+body.game-mode .rwv-eyes { font-size: 54px; color: #f5d76e; opacity: 0; letter-spacing: 24px; text-shadow: 0 0 20px #f5d76e; }
+body.game-mode .rwv-narration { font-family: 'Noto Serif KR', serif; font-size: 16px; opacity: 0; text-align: center; line-height: 1.9; max-width: 70%; color: #d4c89c; }
+body.game-mode .rwv-normal .rwv-card { width: 200px; height: 268px; background: center/cover no-repeat, #1a1410; border: 2px solid #b8b8c0; border-radius: 5px; opacity: 0; transform: translateY(40px); }
+body.game-mode .rwv-label { position: absolute; bottom: 48px; font-size: 13px; letter-spacing: 3px; opacity: 0; color: #b8b8c0; }
+body.game-mode .rwv-normal.playing .rwv-eyes { animation: rwvEyes 1.2s ease-out 0.5s forwards; }
+body.game-mode .rwv-normal.playing .rwv-narration { animation: rwvFade 1.5s ease-out 1.8s forwards; }
+body.game-mode .rwv-normal.playing .rwv-card { animation: rwvCardSlide 1.5s cubic-bezier(.2,.7,.3,1) 3s forwards; }
+body.game-mode .rwv-normal.playing .rwv-label { animation: rwvFade 1s ease-out 4.2s forwards; }
+@keyframes rwvEyes { 0% { opacity: 0; letter-spacing: 60px; } 60% { opacity: 1; letter-spacing: 24px; } 100% { opacity: 0.85; letter-spacing: 24px; } }
+@keyframes rwvFade { to { opacity: 1; } }
+@keyframes rwvCardSlide { to { opacity: 1; transform: translateY(0); box-shadow: 0 0 18px rgba(184,184,192,0.45); } }
+
+/* ── fates_thread (jackpot) ── */
+body.game-mode .rwv-jackpot { background: #000; }
+body.game-mode .rwv-veil { position: absolute; inset: 0; background: #000; z-index: 10; }
+body.game-mode .rwv-thread { position: absolute; top: -40px; left: 50%; width: 2px; height: 60%; background: linear-gradient(180deg, #f5d76e 0%, transparent 100%); box-shadow: 0 0 12px #f5d76e, 0 0 24px rgba(245,215,110,0.5); opacity: 0; transform: translateX(-50%) scaleY(0); transform-origin: top; z-index: 5; }
+body.game-mode .rwv-jackpot .rwv-card { width: 280px; height: 388px; background: center/cover no-repeat; border: 3px solid #3a7bd5; border-radius: 5px; opacity: 0; transform: scale(0.7); filter: brightness(0.4); z-index: 3; }
+body.game-mode .rwv-glow { position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(245,215,110,0.4) 0%, transparent 50%); opacity: 0; z-index: 2; }
+body.game-mode .rwv-bigtext { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; font-family: 'Cinzel', serif; font-weight: 700; font-size: 20px; letter-spacing: 3px; color: #f5d76e; text-shadow: 0 0 12px #f5d76e, 0 0 24px rgba(245,215,110,0.6); opacity: 0; line-height: 1.6; z-index: 4; }
+body.game-mode .rwv-bigtext .ko { font-family: 'Noto Serif KR', serif; font-size: 16px; letter-spacing: 2px; display: block; margin-top: 6px; }
+body.game-mode .rwv-jackpot.playing .rwv-veil { animation: rwvFadeOut 1.2s ease-out 0.5s forwards; }
+body.game-mode .rwv-jackpot.playing .rwv-thread { animation: rwvThread 1.5s cubic-bezier(.2,.7,.3,1) 1.5s forwards; }
+body.game-mode .rwv-jackpot.playing .rwv-glow { animation: rwvGlow 2s ease-out 2.5s forwards; }
+body.game-mode .rwv-jackpot.playing .rwv-card { animation: rwvAlpha 2s cubic-bezier(.2,.7,.3,1) 3s forwards; }
+body.game-mode .rwv-jackpot.playing .rwv-bigtext { animation: rwvFade 1.5s ease-out 5s forwards; }
+@keyframes rwvFadeOut { to { opacity: 0; } }
+@keyframes rwvThread { 0% { opacity: 0; transform: translateX(-50%) scaleY(0); } 100% { opacity: 0.9; transform: translateX(-50%) scaleY(1); } }
+@keyframes rwvGlow { 0% { opacity: 0; } 60% { opacity: 1; } 100% { opacity: 0.7; } }
+@keyframes rwvAlpha { 0% { opacity: 0; transform: scale(0.7); filter: brightness(0.4); } 50% { opacity: 1; transform: scale(1.05); filter: brightness(1.1); } 100% { opacity: 1; transform: scale(1); filter: brightness(1); box-shadow: 0 0 40px rgba(245,215,110,0.6), inset 0 0 20px rgba(245,215,110,0.3); } }

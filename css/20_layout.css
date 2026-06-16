@@ -1,0 +1,4 @@
+/* Screen layout primitives (.screen, .screen.active).
+   Phase 2 (2026-04-12): .game-root 기준 100% 로 전환. 100vh 사용 금지. */
+.screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;}
+.screen.active{display:flex;flex-direction:column;align-items:center;}

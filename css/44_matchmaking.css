@@ -1,0 +1,806 @@
+/* design-confirmed: 2026-05-18 사유: 시안 matchmaking.jsx vanilla 마이그레이션 — Step 3-A (사용자 응급 우회 컨펌). custom: 시안 토큰 그대로, BC X / IP 고유 X. */
+/* ───────────────────────────────────────────────────────────────────
+   Matchmaking Screen v3 — 시안 matchmaking.jsx 정합 (2026-05-18)
+   1280×720 고정. 3-column duel layout.
+   카드 일러스트는 mkCardElV4 / portrait img/{id}.png — 시안 BC.UnitCard X.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* ── 공통 토큰 (formation 와 동일) ── */
+:root {
+  --mm-gold:       #f3d676;
+  --mm-gold-deep:  #c89030;
+  --mm-gold-dark:  #5a3a18;
+  --mm-border:     #3a2410;
+  --mm-border-lt:  #5a4020;
+  --mm-panel-bg:   rgba(20, 12, 6, .55);
+  --mm-panel-ins:  rgba(8, 4, 2, .78);
+  --mm-text:       #e8d5a3;
+  --mm-text-dim:   #a89478;
+  --mm-text-dark:  #7a6c52;
+  --mm-ft:         'Cinzel', 'Noto Serif KR', serif;
+  --mm-fd:         'Cinzel Decorative', serif;
+  --mm-fb:         'Noto Sans KR', sans-serif;
+}
+
+/* ── #match-screen 옛 룰 override (1280 고정) ── */
+body.game-mode #match-screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: none;
+  justify-content: unset;
+  align-items: unset;
+  overflow: hidden;
+}
+body.game-mode #match-screen.active {
+  display: block;
+  background: radial-gradient(ellipse at 50% 0%, #1a1208 0%, transparent 50%),
+              linear-gradient(180deg, #0a0604 0%, #050302 100%);
+}
+
+body.game-mode #match-screen .mm-stage {
+  width: 100%;
+  height: 100%;
+  color: var(--mm-text);
+  font: 400 12px/1.4 var(--mm-fb);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+body.game-mode #match-screen .mm-topbar {
+  height: 46px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(8, 4, 2, .92);
+  border-bottom: 1px solid var(--mm-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .7);
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+}
+body.game-mode #match-screen .mm-topbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+body.game-mode #match-screen .mm-topbar-eyebrow {
+  font: 400 8px/1 var(--mm-fb);
+  letter-spacing: .5em;
+  color: var(--mm-text-dark);
+}
+body.game-mode #match-screen .mm-topbar-title {
+  font: 900 14px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  letter-spacing: .05em;
+  text-shadow: 0 0 10px rgba(243, 214, 118, .4);
+}
+body.game-mode #match-screen .mm-topbar-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--mm-border);
+}
+body.game-mode #match-screen .mm-topbar-season {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 10px/1 var(--mm-ft);
+  color: var(--mm-text-dim);
+  letter-spacing: .22em;
+}
+body.game-mode #match-screen .mm-topbar-season .dim { color: var(--mm-border-lt); }
+body.game-mode #match-screen .mm-topbar-season .gold { color: var(--mm-gold); }
+body.game-mode #match-screen .mm-topbar-spacer { flex: 1; }
+body.game-mode #match-screen .mm-topbar-close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--mm-border-lt);
+  color: var(--mm-text-dim);
+  font: 400 14px/1 var(--mm-ft);
+}
+body.game-mode #match-screen .mm-topbar-close:hover {
+  background: rgba(40, 12, 12, .5);
+  border-color: #7a3a2a;
+  color: #e89888;
+}
+
+/* ── Chip 공통 ── */
+body.game-mode #match-screen .mm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: var(--mm-panel-ins);
+  border: 1px solid var(--mm-border-lt);
+  color: var(--mm-gold);
+  font: 700 9.5px/1 var(--mm-ft);
+  letter-spacing: .22em;
+  white-space: nowrap;
+}
+body.game-mode #match-screen .mm-chip-ping {
+  background: rgba(20, 40, 20, .7);
+  border-color: #3a5a2a;
+  color: #9ae07a;
+}
+body.game-mode #match-screen .mm-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9ae07a;
+  box-shadow: 0 0 6px #9ae07a;
+}
+body.game-mode #match-screen .mm-dot-pulse {
+  animation: mm-pulse 1s infinite;
+}
+
+/* ── MAIN 3-COLUMN ── */
+body.game-mode #match-screen .mm-main {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-height: 0;
+}
+
+/* ── SIDE PANEL (좌/우 공통) ── */
+body.game-mode #match-screen .mm-side {
+  flex: 0 0 420px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #0a0604;
+}
+body.game-mode #match-screen .mm-side-player {
+  border-right: 1px solid var(--mm-border);
+}
+body.game-mode #match-screen .mm-side-enemy {
+  border-left: 1px solid var(--mm-border);
+}
+body.game-mode #match-screen .mm-side-bg {
+  position: absolute;
+  inset: 0;
+  background: #1a0e04;
+  background-position: center 8%;
+  background-size: cover;
+  filter: contrast(1.08) saturate(1.1);
+  transition: filter .5s;
+}
+body.game-mode #match-screen .mm-side-bg-blur {
+  filter: blur(20px) brightness(.35) saturate(.5);
+}
+body.game-mode #match-screen .mm-side-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+body.game-mode #match-screen .mm-side-tint-player {
+  background: linear-gradient(180deg, rgba(40, 60, 90, .45) 0%, rgba(20, 30, 45, .35) 22%, transparent 38%);
+}
+body.game-mode #match-screen .mm-side-tint-enemy {
+  background: linear-gradient(180deg, rgba(90, 20, 20, .55) 0%, rgba(45, 12, 12, .4) 22%, transparent 38%);
+}
+body.game-mode #match-screen .mm-side-radial {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+body.game-mode #match-screen .mm-side-radial-player {
+  background: radial-gradient(ellipse at 35% 38%, transparent 32%, rgba(0, 0, 0, .78) 105%);
+}
+body.game-mode #match-screen .mm-side-radial-enemy {
+  background: radial-gradient(ellipse at 65% 38%, transparent 32%, rgba(0, 0, 0, .78) 105%);
+}
+body.game-mode #match-screen .mm-side-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 330px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(8, 4, 2, .88) 28%, #0a0604 65%);
+}
+
+/* SCAN overlay (mode='searching' on enemy side) */
+body.game-mode #match-screen .mm-scan-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 5;
+  pointer-events: none;
+}
+body.game-mode #match-screen .mm-scan-rings {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+body.game-mode #match-screen .mm-scan-ring {
+  position: absolute;
+  border-radius: 50%;
+}
+body.game-mode #match-screen .mm-scan-ring-1 {
+  inset: 0;
+  border: 2px solid var(--mm-gold-deep);
+  opacity: .6;
+  animation: mm-pulseRing 1.4s ease-out infinite;
+}
+body.game-mode #match-screen .mm-scan-ring-2 {
+  inset: 18px;
+  border: 2px solid var(--mm-gold);
+  opacity: .85;
+  animation: mm-pulseRing 1.4s ease-out .35s infinite;
+}
+body.game-mode #match-screen .mm-scan-ring-core {
+  position: absolute;
+  inset: 42px;
+  border: 1px solid var(--mm-gold);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--mm-gold-deep), transparent);
+}
+body.game-mode #match-screen .mm-scan-label {
+  font: 900 14px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  letter-spacing: .4em;
+}
+body.game-mode #match-screen .mm-scan-sub {
+  font: 400 11px/1 var(--mm-fb);
+  color: var(--mm-text-dim);
+  letter-spacing: .1em;
+}
+body.game-mode #match-screen .mm-side[data-mode="found"] .mm-scan-overlay { display: none; }
+
+/* SIDE chips (top-corner) */
+body.game-mode #match-screen .mm-side-chips {
+  position: absolute;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 4;
+}
+body.game-mode #match-screen .mm-side-chips-player {
+  left: 14px;
+  align-items: flex-start;
+}
+body.game-mode #match-screen .mm-side-chips-enemy {
+  right: 14px;
+  align-items: flex-end;
+}
+body.game-mode #match-screen .mm-side-label {
+  padding: 5px 10px;
+  font: 900 11px/1 var(--mm-ft);
+  letter-spacing: .32em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .18);
+}
+body.game-mode #match-screen .mm-side-label-player {
+  background: linear-gradient(180deg, var(--mm-gold-deep), var(--mm-gold-dark));
+  border: 1px solid var(--mm-gold);
+  color: #1a0e04;
+}
+body.game-mode #match-screen .mm-side-label-enemy {
+  background: linear-gradient(180deg, #c83838, #5a1010);
+  border: 1px solid #ffd8a0;
+  color: #fff5d8;
+}
+
+/* SIDE info card (bottom) */
+body.game-mode #match-screen .mm-side-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 4;
+}
+body.game-mode #match-screen .mm-side-player .mm-side-info { align-items: flex-start; text-align: left; }
+body.game-mode #match-screen .mm-side-enemy .mm-side-info { align-items: flex-end; text-align: right; }
+body.game-mode #match-screen .mm-side-title {
+  font: 400 9px/1 var(--mm-fb);
+  letter-spacing: .5em;
+  color: var(--mm-text-dim);
+  margin-bottom: 5px;
+  width: 100%;
+}
+body.game-mode #match-screen .mm-side-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+}
+body.game-mode #match-screen .mm-side-player .mm-side-name-row { justify-content: flex-start; }
+body.game-mode #match-screen .mm-side-enemy .mm-side-name-row { justify-content: flex-end; }
+body.game-mode #match-screen .mm-side-name {
+  font: 900 32px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  letter-spacing: .03em;
+  text-shadow: 0 0 12px rgba(243, 214, 118, .6), 0 2px 4px rgba(0, 0, 0, .9);
+}
+body.game-mode #match-screen .mm-side-lv {
+  font: 900 18px/1 var(--mm-ft);
+  color: var(--mm-text-dim);
+  text-shadow: 0 1px 2px #000;
+}
+body.game-mode #match-screen .mm-side-section-label {
+  font: 700 8px/1 var(--mm-ft);
+  letter-spacing: .32em;
+  color: var(--mm-text-dark);
+  margin-bottom: 6px;
+}
+body.game-mode #match-screen .mm-side-player .mm-side-section-label { text-align: left; }
+body.game-mode #match-screen .mm-side-enemy .mm-side-section-label { text-align: right; }
+body.game-mode #match-screen .mm-side-comps-wrap,
+body.game-mode #match-screen .mm-side-syn-wrap,
+body.game-mode #match-screen .mm-side-record-wrap {
+  width: 100%;
+}
+
+/* Companion portrait (시안 CompPortrait, size 62) */
+body.game-mode #match-screen .mm-side-comps {
+  display: flex;
+  gap: 7px;
+}
+body.game-mode #match-screen .mm-side-player .mm-side-comps { justify-content: flex-start; }
+body.game-mode #match-screen .mm-side-enemy .mm-side-comps { justify-content: flex-end; }
+body.game-mode #match-screen .mm-comp-portrait {
+  position: relative;
+  width: 62px;
+}
+body.game-mode #match-screen .mm-comp-portrait .mm-comp-img {
+  width: 62px;
+  height: 62px;
+  position: relative;
+  background-position: center 12%;
+  background-size: cover;
+  background-color: #1a0e04;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, .6), 0 2px 4px rgba(0, 0, 0, .7);
+}
+body.game-mode #match-screen .mm-comp-lvl {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: linear-gradient(180deg, var(--mm-gold-deep), var(--mm-gold-dark));
+  border: 1px solid var(--mm-gold);
+  color: #1a0e04;
+  font: 900 10px/18px var(--mm-ft);
+  text-align: center;
+}
+body.game-mode #match-screen .mm-comp-stripe {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+}
+body.game-mode #match-screen .mm-comp-name {
+  margin-top: 4px;
+  font: 700 9px/1.2 var(--mm-fb);
+  color: #d8c9a0;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Synergy chip */
+body.game-mode #match-screen .mm-side-syn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+body.game-mode #match-screen .mm-side-player .mm-side-syn { justify-content: flex-start; }
+body.game-mode #match-screen .mm-side-enemy .mm-side-syn { justify-content: flex-end; }
+body.game-mode #match-screen .mm-syn-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  background: var(--mm-panel-ins);
+  border: 1px solid var(--mm-border-lt);
+}
+body.game-mode #match-screen .mm-syn-chip.is-active {
+  background: rgba(40, 28, 12, .95);
+  border-color: var(--mm-gold-deep);
+  box-shadow: 0 0 8px rgba(243, 214, 118, .27);
+}
+body.game-mode #match-screen .mm-syn-glyph {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 4, 2, .7);
+  border: 1px solid var(--mm-border-lt);
+  color: var(--mm-gold);
+  font: 700 12px/1 var(--mm-ft);
+}
+body.game-mode #match-screen .mm-syn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+body.game-mode #match-screen .mm-syn-label {
+  font: 700 8px/1 var(--mm-ft);
+  letter-spacing: .22em;
+  color: var(--mm-text-dim);
+}
+body.game-mode #match-screen .mm-syn-count {
+  font: 900 12px/1 var(--mm-ft);
+  color: var(--mm-text-dark);
+}
+body.game-mode #match-screen .mm-syn-chip.is-active .mm-syn-count { color: var(--mm-gold); }
+body.game-mode #match-screen .mm-syn-active-tag {
+  font: 700 8px/1 var(--mm-ft);
+  letter-spacing: .2em;
+  color: #9ae07a;
+  margin-left: 4px;
+}
+
+/* Record row */
+body.game-mode #match-screen .mm-side-record {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+body.game-mode #match-screen .mm-side-enemy .mm-side-record { justify-content: flex-end; flex-direction: row-reverse; }
+body.game-mode #match-screen .mm-rec-wl {
+  font: 900 16px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  text-shadow: 0 0 6px rgba(243, 214, 118, .4);
+}
+body.game-mode #match-screen .mm-rec-wl .mm-rec-letter {
+  color: var(--mm-text-dark);
+  font: 700 11px/1 var(--mm-ft);
+}
+body.game-mode #match-screen .mm-rec-wl .mm-rec-slash {
+  color: var(--mm-border-lt);
+  margin: 0 4px;
+}
+body.game-mode #match-screen .mm-rec-recent {
+  display: flex;
+  gap: 3px;
+}
+body.game-mode #match-screen .mm-rec-recent-box {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #5a2020;
+  background: rgba(40, 12, 12, .85);
+}
+body.game-mode #match-screen .mm-rec-recent-box.is-win {
+  background: linear-gradient(180deg, #ffd8a0, var(--mm-gold-deep));
+  border-color: var(--mm-gold);
+  box-shadow: 0 0 4px rgba(243, 214, 118, .53);
+}
+body.game-mode #match-screen .mm-rec-streak {
+  padding: 4px 9px;
+  font: 700 9.5px/1 var(--mm-ft);
+  letter-spacing: .22em;
+  border: 1px solid var(--mm-gold-deep);
+  color: var(--mm-gold);
+  background: var(--mm-panel-ins);
+}
+body.game-mode #match-screen .mm-rec-streak.is-danger {
+  background: rgba(80, 12, 12, .8);
+  border-color: #7a3a20;
+  color: #ffb070;
+}
+
+/* ── CENTER SPINE ── */
+body.game-mode #match-screen .mm-center {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(180deg, #1a1208 0%, #0a0604 60%, #050302 100%);
+  border-left: 1.5px solid var(--mm-border);
+  border-right: 1.5px solid var(--mm-border);
+  padding: 18px 18px 16px;
+}
+body.game-mode #match-screen .mm-center-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.game-mode #match-screen .mm-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mm-gold);
+  box-shadow: 0 0 8px var(--mm-gold);
+  animation: mm-pulse 1s ease-in-out infinite;
+}
+body.game-mode #match-screen .mm-center[data-mode="found"] .mm-status-dot {
+  background: #9ae07a;
+  box-shadow: 0 0 8px #9ae07a;
+}
+body.game-mode #match-screen .mm-status-text {
+  font: 900 12px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  letter-spacing: .5em;
+}
+body.game-mode #match-screen .mm-status-sub {
+  font: 400 10px/1.4 var(--mm-fb);
+  color: var(--mm-text-dim);
+  letter-spacing: .18em;
+  margin-top: 5px;
+}
+
+/* League badge */
+body.game-mode #match-screen .mm-league {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+body.game-mode #match-screen .mm-league-badge {
+  width: 68px;
+  height: 76px;
+  background: linear-gradient(180deg, var(--mm-gold), var(--mm-gold-deep) 55%, #1a0e04);
+  clip-path: polygon(50% 0%, 96% 16%, 96% 52%, 50% 95%, 4% 52%, 4% 16%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a0e04;
+  font: 900 22px/1 var(--mm-fd);
+  text-shadow: 0 0 4px var(--mm-gold);
+  filter: drop-shadow(0 0 12px rgba(243, 214, 118, .53)) drop-shadow(0 4px 6px rgba(0, 0, 0, .85));
+}
+body.game-mode #match-screen .mm-league-text {
+  text-align: left;
+}
+body.game-mode #match-screen .mm-league-season-label {
+  font: 400 8px/1 var(--mm-fb);
+  letter-spacing: .42em;
+  color: var(--mm-text-dark);
+}
+body.game-mode #match-screen .mm-league-name {
+  font: 900 16px/1.2 var(--mm-fd);
+  color: var(--mm-gold);
+  margin-top: 4px;
+}
+body.game-mode #match-screen .mm-league-rank {
+  font: 700 10px/1 var(--mm-ft);
+  color: var(--mm-text-dim);
+  letter-spacing: .2em;
+  margin-top: 4px;
+}
+
+/* VS giant */
+body.game-mode #match-screen .mm-vs-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  align-self: stretch;
+}
+body.game-mode #match-screen .mm-vs-halo {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(200, 144, 48, .35) 0%, transparent 60%);
+  filter: blur(8px);
+  animation: mm-breathe 3s ease-in-out infinite;
+}
+body.game-mode #match-screen .mm-vs-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+body.game-mode #match-screen .mm-vs-text {
+  font: 900 120px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  letter-spacing: .06em;
+  text-shadow: 0 0 20px rgba(243, 214, 118, .7), 0 0 40px rgba(243, 214, 118, .4), 0 6px 8px rgba(0, 0, 0, .95);
+}
+body.game-mode #match-screen .mm-vs-divider {
+  margin-top: -6px;
+  width: 160px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mm-gold-deep), transparent);
+}
+body.game-mode #match-screen .mm-vs-predict {
+  margin-top: 14px;
+  display: flex;
+  gap: 14px;
+}
+body.game-mode #match-screen .mm-vs-predict-win,
+body.game-mode #match-screen .mm-vs-predict-lose {
+  padding: 8px 14px;
+  font: 700 11px/1.2 var(--mm-ft);
+  letter-spacing: .2em;
+  text-align: center;
+}
+body.game-mode #match-screen .mm-vs-predict-win {
+  background: rgba(20, 40, 20, .5);
+  border: 1px solid #4a7a3a;
+  color: #9ae07a;
+}
+body.game-mode #match-screen .mm-vs-predict-win span {
+  font-size: 18px;
+  color: #bce8a0;
+  text-shadow: 0 0 8px rgba(154, 224, 122, .4);
+}
+body.game-mode #match-screen .mm-vs-predict-lose {
+  background: rgba(40, 20, 20, .5);
+  border: 1px solid #7a4a3a;
+  color: #f0a888;
+}
+body.game-mode #match-screen .mm-vs-predict-lose span {
+  font-size: 18px;
+  color: #f0c8a8;
+  text-shadow: 0 0 8px rgba(200, 136, 136, .4);
+}
+
+/* Countdown ring */
+body.game-mode #match-screen .mm-cd-ring {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 10px;
+}
+body.game-mode #match-screen .mm-cd-ring svg {
+  position: absolute;
+  inset: 0;
+}
+body.game-mode #match-screen #mm-cd-arc {
+  transition: stroke-dashoffset .9s linear;
+  filter: drop-shadow(0 0 6px rgba(243, 214, 118, .53));
+}
+body.game-mode #match-screen .mm-cd-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+body.game-mode #match-screen .mm-cd-num {
+  font: 900 28px/1 var(--mm-fd);
+  color: var(--mm-gold);
+  text-shadow: 0 0 8px rgba(243, 214, 118, .6);
+}
+body.game-mode #match-screen .mm-cd-label {
+  font: 700 7px/1 var(--mm-ft);
+  color: var(--mm-text-dark);
+  letter-spacing: .28em;
+  margin-top: 2px;
+}
+
+/* Action button (primary) */
+body.game-mode #match-screen .mm-action {
+  width: 100%;
+  padding: 14px 0;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--mm-gold-deep), var(--mm-gold-dark));
+  border: 2px solid var(--mm-gold);
+  color: #1a0e04;
+  font: 900 15px/1 var(--mm-fd);
+  letter-spacing: .4em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+  box-shadow: 0 0 22px rgba(243, 214, 118, .45), inset 0 1px 0 rgba(255, 255, 255, .3);
+  transition: all .2s;
+}
+body.game-mode #match-screen .mm-action.mm-action-disabled,
+body.game-mode #match-screen .mm-action:disabled {
+  cursor: wait;
+  background: linear-gradient(180deg, var(--mm-gold-dark), #1a0e04);
+  border-color: var(--mm-border-lt);
+  color: var(--mm-text-dark);
+  box-shadow: none;
+  text-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+body.game-mode #match-screen .mm-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+body.game-mode #match-screen .mm-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mm-gold);
+  animation: mm-pulseDot 1.2s ease-in-out infinite;
+}
+body.game-mode #match-screen .mm-dots span:nth-child(2) { animation-delay: .2s; }
+body.game-mode #match-screen .mm-dots span:nth-child(3) { animation-delay: .4s; }
+
+/* Secondary row */
+body.game-mode #match-screen .mm-secondary {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  align-self: stretch;
+}
+body.game-mode #match-screen .mm-btn-back,
+body.game-mode #match-screen .mm-btn-forfeit {
+  padding: 9px 8px;
+  cursor: pointer;
+  font: 700 10px/1 var(--mm-ft);
+  letter-spacing: .25em;
+}
+body.game-mode #match-screen .mm-btn-back {
+  background: rgba(20, 12, 6, .6);
+  border: 1px solid var(--mm-border-lt);
+  color: var(--mm-text-dim);
+}
+body.game-mode #match-screen .mm-btn-forfeit {
+  background: rgba(40, 12, 12, .55);
+  border: 1px solid #7a3a2a;
+  color: #e89888;
+}
+
+/* Footer */
+body.game-mode #match-screen .mm-footer {
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+}
+body.game-mode #match-screen .mm-autoskip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--mm-text-dim);
+  font: 700 9px/1 var(--mm-ft);
+  letter-spacing: .22em;
+}
+body.game-mode #match-screen .mm-autoskip input {
+  accent-color: var(--mm-gold);
+  width: 13px;
+  height: 13px;
+}
+body.game-mode #match-screen .mm-rescan {
+  padding: 5px 10px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--mm-border-lt);
+  color: var(--mm-text-dim);
+  font: 700 9px/1 var(--mm-ft);
+  letter-spacing: .22em;
+}
+body.game-mode #match-screen .mm-rescan:disabled {
+  cursor: not-allowed;
+  color: var(--mm-gold-dark);
+  opacity: .4;
+}
+
+/* ── Animations (custom: 시안 정합 단순 keyframe — IP 고유 X / GitHub 차용 X) ── */
+@keyframes mm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+@keyframes mm-pulseDot {
+  0%, 100% { opacity: .3; transform: scale(.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes mm-pulseRing {
+  0% { transform: scale(.6); opacity: .9; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes mm-breathe {
+  0%, 100% { transform: scale(1); opacity: .85; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
