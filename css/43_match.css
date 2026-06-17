@@ -307,16 +307,14 @@ body.game-mode #tcg-screen .tcg-target-line svg{
   height: 100%;
   display: block;
 }
+/* design-confirmed: 2026-06-17 사유: 사용자 디자인 선택 "V2 풀 테이퍼 솔리드" (arrow_viz ATKV[2] 컨펌값). 옛 가는 점선(stroke 3 + dash + marching-ants) → 채움 테이퍼 샤프트(w0:8→w1:17, JS _pjTaper). "v2처럼 두꺼운 화살표" */
 body.game-mode #tcg-screen .tcg-target-line .line-stroke{
-  stroke: #ffd700;
-  stroke-width: 3;
-  stroke-dasharray: 8 4;
-  fill: none;
-  opacity: .85;
-  animation: tcgLineDash 0.8s linear infinite;
+  fill: #ffd700;
+  stroke: none;
+  opacity: .9;
 }
 body.game-mode #tcg-screen .tcg-target-line .line-attack{
-  stroke: #ff5050;
+  fill: #ff5050;
 }
 /* design-confirmed: 2026-06-16 사유: arrow_viz 갤러리 v2 검수 + 사용자 "게임 적용" 컨펌. V2 화살촉(원형 tip 대체). drop-shadow=삼각 실루엣 미세 depth(box-shadow 금지). fill 은 JS 가 mode 별 inline. */
 body.game-mode #tcg-screen .tcg-target-line .line-head{

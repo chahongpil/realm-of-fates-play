@@ -2135,9 +2135,20 @@
     // Phase 1A.4.5 — 시각 발사체 이벤트 (fly→projectile→damage→fate sequence).
     // 효과 적용 전에 push 해서 "발사체 발사 → 타겟 적중 → 데미지 popup" 순서 보장.
     if(st && Array.isArray(st.events)){
+      /* diagnosis-confirmed: 2026-06-17 사유: feature — magic 데미지 스펠을 원소 마법탄(유닛 _animMagicAttack 재사용)으로 라우팅하기 위해 시전자/타겟/dmgType/dmg 동봉 (사용자 "스펠도 불원소 마법피해면 불원소 구체"). 기존 키 유지 → 옛 _animProjectile 하위호환. */
+      const _caster = Match._resolveCaster(side, card) || side.hero;
+      const _oppSide = (sideKey === 'player') ? 'enemy' : 'player';
+      const _tgtSide = (st[_oppSide].board.indexOf(target) >= 0 || st[_oppSide].hero === target) ? _oppSide : sideKey;
+      const _dmgAmt = (Array.isArray(card.effects) ? (card.effects.find(e => e && e.op === 'damage') || {}).amount : card.ATK) || 0;
       st.events.push({
         type: 'projectile',
         targetUid: target.uid,
+        targetSide: _tgtSide,
+        attackerUid: _caster && _caster.uid,
+        attackerSide: sideKey,
+        dmgType: card.dmgType,
+        magicKind: card.magicKind,
+        dmg: _dmgAmt,
         element: card.element || 'holy',
         cardId: card.id,
       });

@@ -758,6 +758,8 @@
   // damage 는 _damage() 가 push 하므로 모든 데미지 (스펠/공격/반사/DOT) 가 popup.
 
   function _animProjectile(ev){
+    /* diagnosis-confirmed: 2026-06-17 사유: feature — magic 데미지 스펠(dmg>0)은 원소 마법탄(_animMagicAttack, 유닛 발사체 재사용)으로 라우팅. 사용자 "스펠도 불원소 마법피해면 불원소 구체". 그 외(버프·ranged·무캐스터)는 기존 ✦ 유지. _pjFX 6원소 키 보유 → 전 원소 자동 적용. */
+    if(ev.dmgType === 'magic' && ev.dmg > 0 && ev.attackerUid && _pjFX[ev.element]) return _animMagicAttack(ev);
     return new Promise(resolve => {
       const target = document.querySelector('[data-uid="' + ev.targetUid + '"]');
       if(!target){ resolve(); return; }
@@ -1998,7 +2000,8 @@
   function _pjQuadD(t,p0,c,p1){ const m=1-t; return {x:2*m*(c.x-p0.x)+2*t*(p1.x-c.x), y:2*m*(c.y-p0.y)+2*t*(p1.y-c.y)}; }
   const _pjEase = (function(){ function cb(p1x,p1y,p2x,p2y){ function A(a,b){return 1-3*b+3*a;} function B(a,b){return 3*b-6*a;} function C(a){return 3*a;} function calc(t,a,b){return((A(a,b)*t+B(a,b))*t+C(a))*t;} function slope(t,a,b){return 3*A(a,b)*t*t+2*B(a,b)*t+C(a);} return function(x){ if(x<=0)return 0; if(x>=1)return 1; let t=x; for(let i=0;i<6;i++){ const xe=calc(t,p1x,p2x)-x; const d=slope(t,p1x,p2x); if(Math.abs(xe)<1e-4||Math.abs(d)<1e-6)break; t-=xe/d; } return calc(t,p1y,p2y); }; } return cb(.55,0,.1,1); })();
   function _pjTaper(p0,c,p1,w0,w1,tEnd,N){ const L=[],R=[]; for(let i=0;i<=N;i++){ const t=(i/N)*tEnd; const pt=_pjQuad(t,p0,c,p1); const d=_pjQuadD(t,p0,c,p1); const len=Math.hypot(d.x,d.y)||1; const nx=-d.y/len,ny=d.x/len; const w=(w0+(w1-w0)*t)/2; L.push([pt.x+nx*w,pt.y+ny*w]); R.push([pt.x-nx*w,pt.y-ny*w]); } const pts=L.concat(R.reverse()); return 'M '+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ')+' Z'; }
-  function _pjScale(){ return (window.__rofRootScale||1) * (_pjDmg>=10?2:(_pjDmg>=6?1.5:1)); }   // 화면 카드비례 × 피해밴드(≤5 ×1 / 6~9 ×1.5 / 10+ ×2)
+  /* diagnosis-confirmed: 2026-06-17 사유: bug-fix repro — 라이브 발사체 band×1 축소(궁병 화살 box 75px@rootScale1.125 실측) + 갤러리 소스 대조(viewBox1280 ROOT-scaled + SIZE=1.5)로 SIZE 누락 확정 */
+  function _pjScale(){ return (window.__rofRootScale||1) * 1.5 * (_pjDmg>=10?2:(_pjDmg>=6?1.5:1)); }   // SIZE(1.5) × 화면 카드비례(rootScale) × 피해밴드(≤5 ×1 / 6~9 ×1.5 / 10+ ×2). 2026-06-17 fix: 라이브 포팅 시 빠졌던 갤러리 SIZE=1.5 복원 — 갤러리는 ROOT-scaled SVG(viewBox 1280)라 base×1.5×s, 라이브는 body-level SVG라 1.5 누락→67% 축소(사용자 "엄청 작은") 였음
   function _pjReduce(){ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function _pjTrail(pt,color,o){ o=o||{}; const c=_pjCircle(pt.x+(Math.random()-.5)*4,pt.y+(Math.random()-.5)*4,o.r||2.5,color,o.op||.6); c.style.filter='drop-shadow(0 0 3px '+color+')'; _pjSvg().appendChild(c); const dx=(o.dx!=null?o.dx:(Math.random()-.5)*8),dy=(o.dy!=null?o.dy:(Math.random()-.5)*8); c.animate([{opacity:o.op||.6,transform:'translate(0,0)'},{opacity:0,transform:'translate('+dx+'px,'+dy+'px)'}],{duration:o.dur||300,easing:'ease-out'}).onfinish=()=>c.remove(); }
   function _pjSparkle(pt,color){ const s=_pjEl('text',{x:pt.x,y:pt.y,'font-size':9,'text-anchor':'middle','dominant-baseline':'central',fill:color}); s.textContent='✦'; s.style.filter='drop-shadow(0 0 3px '+color+')'; _pjSvg().appendChild(s); s.animate([{opacity:.9,transform:'scale(1)'},{opacity:0,transform:'scale(.3)'}],{duration:320,easing:'ease-out'}).onfinish=()=>s.remove(); }
@@ -4116,16 +4119,19 @@
     };
 
     // SVG path: 곡선 (제어점은 두 점 중간 살짝 위)
+    /* diagnosis-confirmed: 2026-06-17 사유: refactor — 조준선 샤프트 V2 풀 테이퍼 솔리드 적용(사용자 디자인 선택, arrow_viz ATKV[2] 컨펌값). 전투 로직 무관, 조준선 렌더 path 만 교체. */
     const cx = (from.x + to.x) / 2;
     const cy = (from.y + to.y) / 2 - 40;
-    const path = `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
+    const ctrl = {x: cx, y: cy};
     const stroke = line.querySelector('.line-stroke');
     const head = line.querySelector('.line-head');
-    if(stroke) stroke.setAttribute('d', path);
+    // 2026-06-17 V2 풀 테이퍼 솔리드 샤프트 (arrow_viz ATKV[2] w0:8→w1:17, N=26). 옛 가는 점선 stroke 대체.
+    //   _pjTaper(채움 outline path) 재사용 — 곡선(from→ctrl→to) 따라 8→17px 점점 굵어지는 닫힌 폴리곤. CSS 는 fill.
+    if(stroke) stroke.setAttribute('d', _pjTaper(from, ctrl, to, 8, 17, 1, 26));
     // V2 화살촉 — 베지어 끝점 접선(= to-control 방향)으로 삼각형 회전. 원형 tip 대체.
     if(head){
       const ang = Math.atan2(to.y - cy, to.x - cx);
-      const hl = 15, hw = 9;  // 화살촉 길이 / 반폭
+      const hl = 22, hw = 15;  // 화살촉 길이 / 반폭 — 2026-06-17 V2 정합 (arrow_viz ATKV[2] headLen:22 / headBase:30→half 15). 옛 15/9 는 V2의 ~60% 크기라 "두껍지 않다" 였음
       const bcx = to.x - Math.cos(ang) * hl, bcy = to.y - Math.sin(ang) * hl;
       const px = -Math.sin(ang), py = Math.cos(ang);
       head.setAttribute('d', 'M ' + to.x + ' ' + to.y +

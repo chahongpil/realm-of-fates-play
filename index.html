@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="css/41_formation.css?v=20260509b">
 <link rel="stylesheet" href="css/42_screens.css?v=20260601a">
 <!-- PHASE 6 TCG 매치 화면 (2026-05-05 Phase D-1) -->
-<link rel="stylesheet" href="css/43_match.css?v=20260616c"> <!-- design-confirmed: 2026-06-16 사유: cache-bust — 데미지 3밴드 임팩트 + 타겟 화살표 V2 화살촉 (.line-head) -->
+<link rel="stylesheet" href="css/43_match.css?v=20260617a"> <!-- design-confirmed: 2026-06-17 사유: cache-bust — 조준 화살표 샤프트 V2 풀 테이퍼 솔리드 (.line-stroke fill) -->
 <link rel="stylesheet" href="css/44_matchmaking.css">
 <link rel="stylesheet" href="css/45_reward.css">
 <link rel="stylesheet" href="css/46_book_of_life.css">
@@ -42,9 +42,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script defer src="js/00_namespace.js"></script>
 <script defer src="js/10_constants.js"></script>
-<script defer src="js/11_data_units.js?v=20260616b"></script>
+<script defer src="js/11_data_units.js?v=20260617b"></script>
 <script defer src="js/11_data_heroes.js"></script>
-<script defer src="js/12_data_skills.js?v=20260616a"></script>
+<script defer src="js/12_data_skills.js?v=20260617a"></script>
 <script defer src="js/13_data_relics.js"></script>
 <script defer src="js/14_data_images.js"></script>
 <!-- 2026-05-24 — 11b/12b (UNITS_V6/SKILLS_V6 STEP 1 시범) trash 이동. 정본은 11_data_units.js / 12_data_skills.js. -->
@@ -59,7 +59,6 @@
 <script defer src="js/31_ui.js"></script>
 <script defer src="js/32_auth.js"></script>
 <!-- S1: Supabase Backend (오프라인 시 자동 폴백) -->
-<!-- offline deploy mirror: cloud backend disabled -->
 <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="js/35_backend.js"></script>
 <script defer src="js/36_chat.js"></script>
@@ -89,9 +88,9 @@
 <script defer src="js/56_game_quests.js"></script>  <!-- 2026-05-31 퀘스트 상태/로직 (RoF.Quest) — 50_game_core 뒤 -->
 <script defer src="js/58_quest_ui.js?v=20260601a"></script>  <!-- 2026-06-01 퀘스트 게시판 UI (RoF.QuestUI) — 시안 적용 -->
 <!-- PHASE 6 TCG 신엔진 (2026-05-05 Phase C) — 코어 상태 머신 -->
-<script defer src="js/60_turnbattle_v6.js?v=20260617a"></script> <!-- cache-bust: unit-attack 에 dmgType+element 동봉 (발사체 분기) -->
+<script defer src="js/60_turnbattle_v6.js?v=20260617b"></script> <!-- cache-bust: 2026-06-17 스펠 magic projectile 라우팅(시전자/dmgType/dmg 동봉) -->
 <!-- PHASE 6 TCG 매치 UI (2026-05-05 Phase D-1) — RoF.Match 와 DOM 연동 -->
-<script defer src="js/61_match_ui.js?v=20260617a"></script> <!-- cache-bust: 발사체 VFX (원거리 화살 + 마법탄 6원소, impact-and-absorb) -->
+<script defer src="js/61_match_ui.js?v=20260617c"></script> <!-- cache-bust: 2026-06-17 발사체 크기 SIZE×1.5 복원 + 화살촉/샤프트 V2 + 스펠 magic 마법탄 라우팅 -->
 <!-- 2026-06-07: 카드 오버레이 (통합 레벨업 + 카드 부여 보상) — RoF.UI.showLevelUp / showCardReward -->
 <script defer src="js/62_card_overlays.js?v=20260607a"></script>
 <script defer src="js/70_formation_v6.js"></script>
