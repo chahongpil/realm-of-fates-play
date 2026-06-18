@@ -2986,10 +2986,10 @@
     if(roundChanged && st.round >= 1){
       _lastRound = st.round;
       _lastChargeSide = activeSide;
-      setTimeout(() => {
-        UI._playSoulChargeAnim('player');
-        UI._playSoulChargeAnim('enemy');
-      }, 100);
+      // 2026-06-17 fix (버그1) — 양측 무조건 → 충전된(=턴 시작) active side 만 점등.
+      //   옛 P0-12 "양쪽 동시 충전"은 실제 룰(각 side 가 자기 턴 시작에 _onSoulRecharge)과 불일치 →
+      //   적 턴인데 내(player) 영혼 구체가 점등하는 사고. _playSoulChargeAnim self-gate 도 동반(심층 가드).
+      setTimeout(() => { UI._playSoulChargeAnim(activeSide); }, 100);
     }
   };
 
@@ -3004,6 +3004,8 @@
     const numEl  = document.getElementById(soulNumId);
     const stage  = document.getElementById('tcg-screen');
     if(!heroEl || !orbEl || !numEl || !stage) return;
+    // 2026-06-17 fix (버그1 심층 가드) — 비활성 측(내 턴 아닌데) 충전 연출 차단. 어떤 호출 경로든 active side 만 점등.
+    if(Match.state && Match.state.side && Match.state.side !== sideKey) return;
     // stage 기준 상대 좌표 (game-root scale 적용된 화면 좌표 → stage 기준 차감 → base 1280×720 좌표)
     const stageR = stage.getBoundingClientRect();
     const heroR  = heroEl.getBoundingClientRect();
@@ -3745,9 +3747,9 @@
         return;
       }
       const r = Match.api.attack('player', _selected.uid, {targetUid: unit.uid});
-      if(!r.ok) console.log('[match-ui] attack fail:', r.reason);
+      if(!r.ok){ console.log('[match-ui] attack fail:', r.reason); _selected = null; UI.renderState(); return; }
       _selected = null;
-      UI.renderState();
+      _afterPlayerAttackVisual();   // 2026-06-17 구조 fix — eager renderState 제거, _processEvents 단일 렌더 주체
       return;
     }
 
@@ -3772,6 +3774,22 @@
       return entry && entry.sideKey === 'player';
     }
     return st.side === 'player';
+  }
+
+  /* diagnosis-confirmed: 2026-06-17 사유: bug-fix repro — 라이브 계측(attack 직후 eBoard:[]·soul/side 동기변경) + 워크플로 3렌즈 high. 사용자 동의 구조 fix(B). */
+  // 2026-06-17 구조 fix (버그1/2/3 공통근본) — 보드 공격 성공 직후 처리.
+  //   옛 흐름: 클릭 핸들러가 Match.api.attack 동기 완료(데미지→_cleanupBoard 유닛제거→_advanceBoardTurn→_endRound 영혼충전·턴전환)
+  //            직후 UI.renderState() 를 동기 호출 → 최종 상태(유닛 사라짐/영혼 충전/턴 바뀜)를 애니보다 먼저 페인트 → desync.
+  //   신 흐름: eager renderState 제거. board phase 는 _processEvents 가 단일 렌더 주체
+  //            (큐의 unit-attack/damage/unit-death/round 이벤트를 순차 재생하며 부분상태 점진 반영 + cascade 끝 최종 renderState).
+  //   여기선 (a) 선택 글로우/조준선만 즉시 경량 해제 (full render 아님) (b) _processEvents 트리거(옛 renderState 가 line 355 에서 겸하던 역할).
+  function _afterPlayerAttackVisual(){
+    try {
+      document.querySelectorAll('#tcg-screen .is-attacker-active, #tcg-screen .is-target-valid')
+        .forEach(e => e.classList.remove('is-attacker-active', 'is-target-valid'));
+      if(UI._renderTargetLine) UI._renderTargetLine();  // _selected=null → 조준선 제거
+    } catch(e){ console.warn('[match-ui] _afterPlayerAttackVisual cleanup err:', e); }
+    if(UI._processEvents) UI._processEvents();
   }
 
   UI._onHeroClick = function(sideKey){
@@ -3834,9 +3852,9 @@
       }
       // 적 영웅 공격 — targetUid 만 '__hero__' 표지
       const r = Match.api.attack('player', _selected.uid, {targetUid: '__hero__'});
-      if(!r.ok) console.log('[match-ui] hero attack fail:', r.reason);
+      if(!r.ok){ console.log('[match-ui] hero attack fail:', r.reason); _selected = null; UI.renderState(); return; }
       _selected = null;
-      UI.renderState();
+      _afterPlayerAttackVisual();   // 2026-06-17 구조 fix — eager renderState 제거, _processEvents 단일 렌더 주체
       return;
     }
 
